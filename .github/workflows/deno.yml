@@ -33,5 +33,3 @@ jobs:
       run: make install
     - name: Build
       run: make build
-    - name: Run Dev Environment
-      run: make start-dev
