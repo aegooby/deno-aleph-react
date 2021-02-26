@@ -9,9 +9,9 @@ build:
 	aleph build
 
 start-dev:
-	open http://localhost:8080 &
+	open http://localhost:8080
 	aleph dev
 
 start-rel:
-	open http://localhost:8080 &
+	open http://localhost:8080
 	aleph start
