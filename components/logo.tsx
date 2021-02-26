@@ -1,9 +1,9 @@
 
 import * as React from "react";
 
-interface Props
+export interface Props
 {
-    size?: number;
+    size: number;
 }
 
 export default class Logo extends React.Component<Props, unknown>
