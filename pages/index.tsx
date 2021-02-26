@@ -2,7 +2,7 @@
 import { useDeno } from "aleph";
 import * as React from "react";
 
-import Logo from "../components/Logo.tsx";
+import Logo from "../components/logo.tsx";
 import useCounter from "../lib/useCounter.ts";
 
 export default function Home() 
@@ -10,10 +10,11 @@ export default function Home()
     const [count, isSyncing, increase, decrease] = useCounter();
     const version = useDeno(() => Deno.version.deno);
 
+    const logo = <Logo size={75} />;
     const element =
         <div className="page">
             <link rel="stylesheet" href="../style/index.css" />
-            <p className="logo"><Logo size={150} /></p>
+            <p className="logo">{logo}</p>
             <h1>Welcome to <strong>Deno</strong></h1>
             <div className="counter">
                 <span>Counter:</span>
