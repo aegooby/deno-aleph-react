@@ -2,7 +2,7 @@
 import { useDeno } from "aleph";
 import * as React from "react";
 
-import * as Logo from "../components/logo.tsx";
+import Logo from "../components/Logo.tsx";
 import useCounter from "../lib/useCounter.ts";
 
 export default function Home() 
