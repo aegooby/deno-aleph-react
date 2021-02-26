@@ -13,7 +13,7 @@ export default function Home()
     const element =
         <div className="page">
             <link rel="stylesheet" href="../style/index.css" />
-            <p className="logo"><Logo size={75} /></p>
+            <p className="logo"><Logo size={150} /></p>
             <h1>Welcome to <strong>Deno</strong></h1>
             <p className="links">
                 <a href="#" target="_blank">About</a>

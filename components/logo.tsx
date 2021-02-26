@@ -14,6 +14,6 @@ export default class Logo extends React.Component<Props, unknown>
     }
     render(): React.ReactElement
     {
-        return <img src="/logo.svg" height={this.props.size} title="Aleph.js" />;
+        return <img src="/logo.gif" height={this.props.size} title="Deno" />;
     }
 }
