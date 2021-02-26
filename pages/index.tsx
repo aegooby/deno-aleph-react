@@ -15,15 +15,6 @@ export default function Home()
             <link rel="stylesheet" href="../style/index.css" />
             <p className="logo"><Logo size={150} /></p>
             <h1>Welcome to <strong>Deno</strong></h1>
-            <p className="links">
-                <a href="#" target="_blank">About</a>
-                <span></span>
-                <a href="#" target="_blank">Get Started</a>
-                <span></span>
-                <a href="#" target="_blank">Docs</a>
-                <span></span>
-                <a href="#" target="_blank">Github</a>
-            </p>
             <div className="counter">
                 <span>Counter:</span>
                 {isSyncing && (<em>...</em>)}
