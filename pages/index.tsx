@@ -1,3 +1,4 @@
+
 import { useDeno } from "aleph";
 import * as React from "react";
 
@@ -13,15 +14,15 @@ export default function Home()
         <div className="page">
             <link rel="stylesheet" href="../style/index.css" />
             <p className="logo"><Logo size={75} /></p>
-            <h1>Welcome to use <strong>Aleph.js</strong>!</h1>
+            <h1>Welcome to <strong>Deno</strong></h1>
             <p className="links">
-                <a href="https://alephjs.org" target="_blank">Website</a>
+                <a href="#" target="_blank">About</a>
                 <span></span>
-                <a href="https://alephjs.org/docs/get-started" target="_blank">Get Started</a>
+                <a href="#" target="_blank">Get Started</a>
                 <span></span>
-                <a href="https://alephjs.org/docs" target="_blank">Docs</a>
+                <a href="#" target="_blank">Docs</a>
                 <span></span>
-                <a href="https://github.com/alephjs/aleph.js" target="_blank">Github</a>
+                <a href="#" target="_blank">Github</a>
             </p>
             <div className="counter">
                 <span>Counter:</span>
