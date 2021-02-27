@@ -29,7 +29,5 @@ jobs:
       uses: denolib/setup-deno@v2.3.0
       with:
         deno-version: ${{ matrix.deno }} # tests across multiple Deno versions
-    - name: Install
-      run: make install
-    - name: Build
-      run: make build
+    - name: Test
+      run: make start & sleep 5 ; kill $!

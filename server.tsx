@@ -33,11 +33,11 @@ export class Server
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <meta httpEquiv="Content-Security-Policy" />
-                    <link rel="stylesheet" href="style/index.css" />
+                    <link rel="stylesheet" href="static/index.css" />
                 </head>
                 <body>
                     <div id="root">
-                        <script src={"http://localhost:" + this.port + "/client/.bundle/client.js"} defer></script>
+                        <script src={"http://localhost:" + this.port + "/.deno/client.js"} defer></script>
                     </div>
                 </body>
             </html>;
@@ -82,7 +82,12 @@ export class Server
     }
 }
 
-const serverAttributes = { port: 8000, directory: ".", html404: "404.html" };
+const serverAttributes =
+{
+    port: 8000,
+    directory: ".",
+    html404: "static/404.html"
+};
 
 const server = new Server(serverAttributes);
 await server.serve();
