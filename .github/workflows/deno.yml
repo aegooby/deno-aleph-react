@@ -30,6 +30,6 @@ jobs:
       with:
         deno-version: ${{ matrix.deno }}
     - name: Bundle server dependencies
-      uses: make bundle
+      run: make bundle
     - name: Test server
       run: make start & sleep 5 ; kill $!
