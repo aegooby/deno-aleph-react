@@ -6,7 +6,7 @@ import * as colors from "https://deno.land/std/fmt/colors.ts";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom-server";
 
-interface ServerAttributes
+export interface ServerAttributes
 {
     port: number;
     directory: string;
