@@ -9,5 +9,5 @@ import App from "../App.tsx";
 /* !@deno-react-lint */
 // deno-lint-ignore ban-ts-comment
 // @ts-ignore
-ReactDOM.hydrate(<App denoVersion={"0.0.0"} />, document.querySelector("#root"));
+ReactDOM.hydrate(<App />, document.querySelector("#root"));
 /* ¡@deno-react-lint */

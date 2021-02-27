@@ -7,5 +7,5 @@ bundle:
 
 start:
 	make bundle
-	open http://localhost:8080
+	open http://localhost:8000
 	deno run --allow-all --import-map import-map.json --unstable server.tsx

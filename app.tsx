@@ -1,28 +1,22 @@
 
 import * as React from "react";
 
-interface Props
-{
-    denoVersion?: string;
-}
+import Logo from "./components/Logo.tsx";
 
-export default class App extends React.Component<Props, unknown>
+export default class App extends React.Component<unknown, unknown>
 {
-    constructor(props: Props)
+    constructor(props: unknown)
     {
         super(props);
     }
     render(): React.ReactElement
     {
-        const reactVersion = React.version;
-
         const element =
             <div className="page">
-                <p className="logo"></p>
-                <h1><strong>Deno</strong> v{this.props.denoVersion}</h1>
-                <div className="counter">
-                </div>
-                <p className="copyinfo">React v{reactVersion} (deno-react)</p>
+                <p className="logo"><Logo size={125} /></p>
+                <h1><strong>Deno</strong></h1>
+                <h2>http server</h2>
+                <p className="copyinfo">React v{React.version}</p>
             </div>;
 
         return element;
