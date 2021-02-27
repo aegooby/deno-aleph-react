@@ -1,17 +1,12 @@
 
 clean:
-	rm -rf .aleph
+	rm -rf .deno-react
 
-install:
-	deno install -A -f -n aleph https://deno.land/x/aleph@v0.3.0-alpha.1/cli.ts
+bundle:
+	[ ! -d client/.bundle ] && mkdir client/.bundle
+	deno bundle client/client.tsx --import-map import-map.json --config client/tsconfig.json --unstable client/.bundle/client.js
 
-build:
-	aleph build
-
-start-dev:
-	open http://localhost:8080
-	aleph dev
-
-start-rel:
-	open http://localhost:8080
-	aleph start
+start:
+	make bundle
+	open http://localhost:8000
+	deno run --allow-all --import-map import-map.json --unstable server.tsx

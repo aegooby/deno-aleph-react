@@ -1,29 +1,24 @@
 
 import * as React from "react";
 
-interface Props
-{
-    Page: React.ComponentType<unknown>;
-    /** @todo Find alternative to lint ignore. */
-    // deno-lint-ignore no-explicit-any
-    pageProps: any;
-}
+import Logo from "./components/Logo.tsx";
 
-export default class App extends React.Component<Props, unknown>
+export default class App extends React.Component<unknown, unknown>
 {
-    constructor(props: Props)
+    constructor(props: unknown)
     {
         super(props);
     }
     render(): React.ReactElement
     {
         const element =
-            <main>
-                <head>
-                    <title>Hello World - Aleph.js</title>
-                </head>
-                <this.props.Page {...this.props.pageProps} />
-            </main>;
+            <div className="page">
+                <p className="logo"><Logo size={300} /></p>
+                <h1><strong>http</strong> server</h1>
+                <h2>React v{React.version}</h2>
+                <p className="copyinfo">© 0000 Company Inc.</p>
+            </div>;
+
         return element;
     }
 }

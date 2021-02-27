@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "experimentalDecorators": true,
+        "jsx": "react",
+        "lib": [
+            "deno.ns",
+            "deno.unstable",
+            "dom"
+        ],
+        "strict": true,
+    }
+}
