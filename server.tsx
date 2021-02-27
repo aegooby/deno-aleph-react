@@ -1,6 +1,7 @@
 
-import * as http from "https://deno.land/std@0.88.0/http/mod.ts";
-import * as path from "https://deno.land/std@0.88.0/path/mod.ts";
+import * as http from "https://deno.land/std/http/mod.ts";
+import * as path from "https://deno.land/std/path/mod.ts";
+import * as colors from "https://deno.land/std/fmt/colors.ts";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom-server";
@@ -62,6 +63,9 @@ export class Server
                 }
                 catch (error)
                 {
+                    const logString = colors.bold(colors.red(" [!] ")) +
+                        "Route " + request.url + " not found";
+                    console.log(logString);
                     request.respond({ body: await this.static(this.html404) });
                 }
                 break;
@@ -69,7 +73,10 @@ export class Server
     }
     async serve(): Promise<void>
     {
-        console.log(" [*] Server is running on http://localhost:" + this.port);
+        const logString = colors.bold(colors.cyan(" [*] ")) +
+            "Server is running on " +
+            colors.italic(colors.magenta("http://localhost:" + this.port));
+        console.log(logString);
         for await (const request of this.httpServer)
             this.respond(request);
     }
