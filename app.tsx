@@ -14,9 +14,9 @@ export default class App extends React.Component<unknown, unknown>
         const element =
             <div className="page">
                 <p className="logo"><Logo size={300} /></p>
-                <h1><strong>Deno</strong></h1>
-                <h2>http server</h2>
-                <p className="copyinfo">React v{React.version}</p>
+                <h1><strong>http</strong> server</h1>
+                <h2>React v{React.version}</h2>
+                <p className="copyinfo">© 0000 Company Inc.</p>
             </div>;
 
         return element;

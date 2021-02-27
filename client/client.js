@@ -5915,9 +5915,9 @@ class App extends me {
             className: "logo"
         }, Oe(Logo, {
             size: 300
-        })), Oe("h1", null, Oe("strong", null, "Deno")), Oe("h2", null, "http server"), Oe("p", {
+        })), Oe("h1", null, Oe("strong", null, "http"), " server"), Oe("h2", null, "React v", Ue), Oe("p", {
             className: "copyinfo"
-        }, "React v", Ue));
+        }, "\xa9 0000 Company Inc."));
         return element;
     }
 }
