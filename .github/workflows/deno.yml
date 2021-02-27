@@ -28,6 +28,8 @@ jobs:
     - name: Setup Deno
       uses: denolib/setup-deno@v2.3.0
       with:
-        deno-version: ${{ matrix.deno }} # tests across multiple Deno versions
-    - name: Test
+        deno-version: ${{ matrix.deno }}
+    - name: Bundle server dependencies
+      uses: make bundle
+    - name: Test server
       run: make start & sleep 5 ; kill $!
