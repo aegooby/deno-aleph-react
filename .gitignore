@@ -2,10 +2,8 @@
 # MacOS
 .DS_Store
 
-# Aleph
-Thumbs.db
-.aleph/
-dist/
+# Server
+.bundle
 
 # Logs
 logs

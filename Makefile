@@ -3,7 +3,8 @@ clean:
 	rm -rf .deno-react
 
 bundle:
-	deno bundle client/client.tsx --import-map import-map.json --config client/tsconfig.json --unstable client/client.js
+	[ ! -d client/.bundle ] && mkdir client/.bundle
+	deno bundle client/client.tsx --import-map import-map.json --config client/tsconfig.json --unstable client/.bundle/client.js
 
 start:
 	make bundle
