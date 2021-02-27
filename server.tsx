@@ -75,7 +75,7 @@ export class Server
     {
         const logString = colors.bold(colors.cyan(" [*] ")) +
             "Server is running on " +
-            colors.italic(colors.magenta("http://localhost:" + this.port));
+            colors.underline(colors.magenta("http://localhost:" + this.port));
         console.log(logString);
         for await (const request of this.httpServer)
             this.respond(request);
