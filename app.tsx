@@ -3,10 +3,7 @@ import * as React from "react";
 
 interface Props
 {
-    Page: React.ComponentType<unknown>;
-    /** @todo Find alternative to lint ignore. */
-    // deno-lint-ignore no-explicit-any
-    pageProps: any;
+    denoVersion?: string;
 }
 
 export default class App extends React.Component<Props, unknown>
@@ -17,13 +14,17 @@ export default class App extends React.Component<Props, unknown>
     }
     render(): React.ReactElement
     {
+        const reactVersion = React.version;
+
         const element =
-            <main>
-                <head>
-                    <title>Hello World - Aleph.js</title>
-                </head>
-                <this.props.Page {...this.props.pageProps} />
-            </main>;
+            <div className="page">
+                <p className="logo"></p>
+                <h1><strong>Deno</strong> v{this.props.denoVersion}</h1>
+                <div className="counter">
+                </div>
+                <p className="copyinfo">React v{reactVersion} (deno-react)</p>
+            </div>;
+
         return element;
     }
 }
