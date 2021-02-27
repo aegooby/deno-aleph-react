@@ -5914,7 +5914,7 @@ class App extends me {
         }, Oe("p", {
             className: "logo"
         }, Oe(Logo, {
-            size: 125
+            size: 300
         })), Oe("h1", null, Oe("strong", null, "Deno")), Oe("h2", null, "http server"), Oe("p", {
             className: "copyinfo"
         }, "React v", Ue));
