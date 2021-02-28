@@ -4,6 +4,7 @@
 
 # Server
 .deno
+*.pem
 
 # Logs
 logs
