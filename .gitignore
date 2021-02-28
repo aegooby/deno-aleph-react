@@ -4,11 +4,7 @@
 
 # Server
 .deno
-*.pem
-
-# HTTPS
-*.key
-*.crt
+remote.pem
 
 # Logs
 logs
