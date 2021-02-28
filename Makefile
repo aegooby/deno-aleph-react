@@ -6,10 +6,15 @@ install:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
 
 image:
-	docker build -t aegooby/server .
+	docker build --tag aegooby/server .
 
 container:
 	docker run -it --init -p 80:8000 aegooby/server:latest
+
+https-localhost:
+	printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth" > localhost.tmp
+	openssl req -x509 -out localhost.crt -keyout localhost.key -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost' -extensions EXT -config localhost.tmp
+	rm -rf localhost.tmp
 
 cache: export DENO_DIR=.deno/cache
 cache:

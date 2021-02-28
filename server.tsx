@@ -17,18 +17,22 @@ export class Server
 {
     httpServer: http.Server;
 
-    port: number;
     directory: string;
     html404: string;
-    htmlReact: React.ReactElement;
     html: string;
     constructor({ port, directory, html404 }: ServerAttributes)
     {
-        this.port = port;
         this.directory = directory;
-        this.httpServer = http.serve({ port: this.port });
+        const serveTLSOptions =
+        {
+            hostname: "localhost",
+            port: port,
+            certFile: "./localhost.crt",
+            keyFile: "./localhost.key",
+        };
+        this.httpServer = http.serveTLS(serveTLSOptions);
         this.html404 = html404;
-        this.htmlReact =
+        const htmlReact: React.ReactElement =
             <html lang="en">
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -41,7 +45,23 @@ export class Server
                     </div>
                 </body>
             </html>;
-        this.html = "<!DOCTYPE html>" + ReactDOMServer.renderToString(this.htmlReact);
+        this.html = "<!DOCTYPE html>" + ReactDOMServer.renderToString(htmlReact);
+    }
+    get port(): number
+    {
+        const address = this.httpServer.listener.addr as Deno.NetAddr;
+        return address.port;
+    }
+    get hostname(): string
+    {
+        const address = this.httpServer.listener.addr as Deno.NetAddr;
+        if (address.hostname === "::1")
+            return "localhost";
+        return address.hostname;
+    }
+    get url(): string
+    {
+        return "https://" + this.hostname + ":" + this.port;
     }
     async static(url: string): Promise<Deno.Reader>
     {
@@ -50,7 +70,9 @@ export class Server
     }
     async respond(request: http.ServerRequest): Promise<void>
     {
-
+        const logString = colors.bold(colors.green(" [$] ")) +
+            "Received " + request.method + " request: " + request.url;
+        console.log(logString);
         switch (request.url)
         {
             case "/":
@@ -75,7 +97,7 @@ export class Server
     {
         const logString = colors.bold(colors.cyan(" [*] ")) +
             "Server is running on " +
-            colors.underline(colors.magenta("http://localhost:" + this.port));
+            colors.underline(colors.magenta(this.url));
         console.log(logString);
         for await (const request of this.httpServer)
             this.respond(request);

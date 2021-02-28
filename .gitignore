@@ -6,6 +6,10 @@
 .deno
 *.pem
 
+# HTTPS
+*.key
+*.crt
+
 # Logs
 logs
 *.log
