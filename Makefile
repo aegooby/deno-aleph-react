@@ -18,7 +18,7 @@ https:
 cache: export DENO_DIR=.deno/cache
 cache:
 	[ -d .deno/cache ] || mkdir -p .deno/cache
-	deno cache --import-map import-map.json --unstable server.tsx
+	deno cache --import-map import-map.json --unstable server/server.tsx client/client.tsx
 
 bundle: export DENO_DIR=.deno/cache
 bundle:
