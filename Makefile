@@ -9,7 +9,7 @@ image:
 	docker build --tag aegooby/server .
 
 container:
-	docker run -it --init -p 443:443 aegooby/server:latest
+	docker run -it --init -p 443:8443 aegooby/server:latest
 
 https:
 	[ -d .https ] || mkdir -p .https

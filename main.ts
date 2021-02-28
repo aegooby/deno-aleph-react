@@ -3,7 +3,7 @@ import * as Server from "./server/server.tsx";
 
 const serverAttributes =
 {
-    port: 443,
+    port: 8443,
     directory: ".",
     html404: "static/404.html"
 };

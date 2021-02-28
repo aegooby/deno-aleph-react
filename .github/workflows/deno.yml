@@ -23,13 +23,13 @@ jobs:
         deno: ["v1.x", "nightly"]
 
     steps:
-    - name: Setup repo
-      uses: actions/checkout@v2
-    - name: Setup Deno
-      uses: denolib/setup-deno@v2.3.0
-      with:
-        deno-version: ${{ matrix.deno }}
-    - name: Bundle server dependencies
-      run: make bundle
-    - name: Test server
-      run: sudo make start & sudo sleep 5 ; sudo kill $!
+      - name: Setup repo
+        uses: actions/checkout@v2
+      - name: Setup Deno
+        uses: denolib/setup-deno@v2.3.0
+        with:
+          deno-version: ${{ matrix.deno }}
+      - name: Bundle server dependencies
+        run: make bundle
+      - name: Test server
+        run: make start & sleep 5 ; kill $!
