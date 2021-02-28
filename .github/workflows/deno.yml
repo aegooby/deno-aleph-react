@@ -32,4 +32,4 @@ jobs:
     - name: Bundle server dependencies
       run: make bundle
     - name: Test server
-      run: sudo make start & sleep 5 ; kill $!
+      run: sudo make start & sudo sleep 5 ; sudo kill $!
