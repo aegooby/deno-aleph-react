@@ -27,8 +27,8 @@ export class Server
         {
             hostname: "localhost",
             port: port,
-            certFile: "./localhost.crt",
-            keyFile: "./localhost.key",
+            certFile: ".deno/https/localhost.crt",
+            keyFile: ".deno/https/localhost.key",
         };
         this.httpServer = http.serveTLS(serveTLSOptions);
         this.html404 = html404;
