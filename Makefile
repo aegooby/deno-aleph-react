@@ -30,4 +30,4 @@ start:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
 	make bundle
-	deno run --allow-all --import-map import-map.json --unstable server.tsx
+	deno run --allow-all --import-map import-map.json --unstable main.ts

@@ -1,7 +1,7 @@
 
-import * as http from "https://deno.land/std/http/mod.ts";
-import * as path from "https://deno.land/std/path/mod.ts";
-import * as colors from "https://deno.land/std/fmt/colors.ts";
+import * as http from "http";
+import * as path from "path";
+import * as colors from "colors";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom-server";
@@ -103,13 +103,3 @@ export class Server
             this.respond(request);
     }
 }
-
-const serverAttributes =
-{
-    port: 8000,
-    directory: ".",
-    html404: "static/404.html"
-};
-
-const server = new Server(serverAttributes);
-await server.serve();
