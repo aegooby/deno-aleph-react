@@ -6,6 +6,22 @@ import * as colors from "colors";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom-server";
 
+export class Console
+{
+    static log(message: string): void
+    {
+        console.log(colors.bold(colors.cyan("  [*]  ")) + message);
+    }
+    static success(message: string): void
+    {
+        console.log(colors.bold(colors.green("  [$]  ")) + message);
+    }
+    static error(message: string): void
+    {
+        console.error(colors.bold(colors.red("  [!]  ")) + message);
+    }
+}
+
 export interface ServerAttributes
 {
     port: number;
@@ -55,7 +71,7 @@ export class Server
     get hostname(): string
     {
         const address = this.httpServer.listener.addr as Deno.NetAddr;
-        if (address.hostname === "::1")
+        if ((["::1", "127.0.0.1"]).includes(address.hostname))
             return "localhost";
         return address.hostname;
     }
@@ -70,9 +86,7 @@ export class Server
     }
     async respond(request: http.ServerRequest): Promise<void>
     {
-        const logString = colors.bold(colors.green(" [$] ")) +
-            "Received " + request.method + " request: " + request.url;
-        console.log(logString);
+        Console.success("Received " + request.method + " request: " + request.url);
         switch (request.url)
         {
             case "/":
@@ -85,9 +99,7 @@ export class Server
                 }
                 catch (error)
                 {
-                    const logString = colors.bold(colors.red(" [!] ")) +
-                        "Route " + request.url + " not found";
-                    console.log(logString);
+                    Console.error("Route " + request.url + " not found");
                     request.respond({ body: await this.static(this.html404) });
                 }
                 break;
@@ -95,10 +107,7 @@ export class Server
     }
     async serve(): Promise<void>
     {
-        const logString = colors.bold(colors.cyan(" [*] ")) +
-            "Server is running on " +
-            colors.underline(colors.magenta(this.url));
-        console.log(logString);
+        Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.httpServer)
             this.respond(request);
     }
