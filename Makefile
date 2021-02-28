@@ -6,10 +6,10 @@ install:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
 
 image:
-	docker build -t aegooby/deno-react-server:_ .
+	docker build -t aegooby/server .
 
 container:
-	docker run -it --init -p 80:8000 aegooby/deno-react-server:_
+	docker run -it --init -p 80:8000 aegooby/server:latest
 
 cache: export DENO_DIR=.deno/cache
 cache:
