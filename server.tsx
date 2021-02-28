@@ -37,7 +37,7 @@ export class Server
                 </head>
                 <body>
                     <div id="root">
-                        <script src={"http://localhost:" + this.port + "/.deno/client.js"} defer></script>
+                        <script src={".deno/client.js"} defer></script>
                     </div>
                 </body>
             </html>;
