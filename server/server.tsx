@@ -1,10 +1,9 @@
 
 import * as http from "http";
+import * as httpFile from "http-file";
 import * as path from "path";
+import * as fs from "fs";
 import * as colors from "colors";
-
-import * as React from "react";
-import * as ReactDOMServer from "react-dom-server";
 
 export class Console
 {
@@ -29,14 +28,17 @@ export interface ServerAttributes
     protocol: Protocol;
     hostname: string;
     port: number;
+
+    routes?: Map<string, string>;
 }
 
 export class Server
 {
     httpServer: http.Server;
     protocol: Protocol;
+    routes: Map<string, string> = new Map<string, string>();
 
-    constructor({ protocol, hostname, port }: ServerAttributes)
+    constructor({ protocol, hostname, port, routes }: ServerAttributes)
     {
         this.protocol = protocol;
         const serveOptions =
@@ -62,6 +64,14 @@ export class Server
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
+        if (routes)
+            this.routes = routes;
+        else
+        {
+            this.routes.set("/", "/static/index.html");
+            this.routes.set("/favicon.ico", "/static/favicon.ico");
+            this.routes.set("/404.html", "/static/404.html");
+        }
     }
     get port(): number
     {
@@ -79,36 +89,32 @@ export class Server
     {
         return this.protocol + "://" + this.hostname + ":" + this.port;
     }
-    async static(url: string): Promise<Deno.Reader>
+    async static(request: http.ServerRequest): Promise<void>
     {
-        const requestPath = path.join(".", url);
-        return await Deno.open(requestPath);
+        request.respond(await httpFile.serveFile(request, request.url));
     }
-    async respond(request: http.ServerRequest): Promise<void>
+    async route(request: http.ServerRequest): Promise<void>
     {
-        Console.success("Received " + request.method + " request: " + request.url);
-        switch (request.url)
+        function resolveURL(url: string): string
         {
-            case "/":
-                await request.respond({ body: await this.static("/static/index.html") });
-                break;
-            default:
-                try
-                {
-                    await request.respond({ body: await this.static(request.url) });
-                }
-                catch (error)
-                {
-                    Console.error("Route " + request.url + " not found");
-                    request.respond({ body: await this.static("/static/404.html") });
-                }
-                break;
+            return path.join(".", url);
         }
+        const originalURL = request.url;
+        Console.success("Received " + request.method + " request: " + originalURL);
+        if (this.routes.has(request.url))
+            request.url = this.routes.get(request.url) as string;
+        request.url = resolveURL(request.url);
+        if (!await fs.exists(request.url))
+        {
+            Console.error("Route " + originalURL + " not found");
+            request.url = "static/404.html";
+        }
+        await this.static(request);
     }
     async serve(): Promise<void>
     {
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.httpServer)
-            this.respond(request);
+            await this.route(request);
     }
 }
