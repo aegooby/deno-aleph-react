@@ -12,7 +12,7 @@ export default class App extends React.Component<unknown, unknown>
         const element =
             <div className="page">
                 <p className="logo">
-                    <img src="static/logo.gif" height={300} title="Deno" />
+                    <img src="static/logo.gif" height={300} />
                 </p>
                 <h1><strong>https</strong> server</h1>
                 <h2>React v{React.version}</h2>
