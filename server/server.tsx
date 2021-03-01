@@ -29,7 +29,6 @@ export interface ServerAttributes
     protocol: Protocol;
     hostname: string;
     port: number;
-    html404: string;
 }
 
 export class Server
@@ -37,9 +36,7 @@ export class Server
     httpServer: http.Server;
     protocol: Protocol;
 
-    html404: string;
-    html: string;
-    constructor({ protocol, hostname, port, html404 }: ServerAttributes)
+    constructor({ protocol, hostname, port }: ServerAttributes)
     {
         this.protocol = protocol;
         const serveOptions =
@@ -65,21 +62,6 @@ export class Server
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
-        this.html404 = html404;
-        const htmlReact: React.ReactElement =
-            <html lang="en">
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                    <meta httpEquiv="Content-Security-Policy" />
-                    <link rel="stylesheet" href="static/index.css" />
-                </head>
-                <body>
-                    <div id="root">
-                        <script src={".deno/client.js"} defer></script>
-                    </div>
-                </body>
-            </html>;
-        this.html = "<!DOCTYPE html>" + ReactDOMServer.renderToString(htmlReact);
     }
     get port(): number
     {
@@ -108,17 +90,17 @@ export class Server
         switch (request.url)
         {
             case "/":
-                request.respond({ body: this.html });
+                await request.respond({ body: await this.static("/static/index.html") });
                 break;
             default:
                 try
                 {
-                    request.respond({ body: await this.static(request.url) });
+                    await request.respond({ body: await this.static(request.url) });
                 }
                 catch (error)
                 {
                     Console.error("Route " + request.url + " not found");
-                    request.respond({ body: await this.static(this.html404) });
+                    request.respond({ body: await this.static("/static/404.html") });
                 }
                 break;
         }

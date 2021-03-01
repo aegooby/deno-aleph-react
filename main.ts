@@ -22,8 +22,6 @@ try
         protocol: protocol,
         hostname: hostname,
         port: port,
-        directory: ".",
-        html404: "static/404.html"
     };
     const server = new Server.Server(serverAttributes);
     await server.serve();
