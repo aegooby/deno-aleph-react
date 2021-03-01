@@ -13,21 +13,28 @@ container:
 
 https:
 	[ -d .https ] || mkdir -p .https
-	cd .https && minica --domains localhost
+	cd .https && minica --domains localhost --ip-addresses 0.0.0.0
 
 cache: export DENO_DIR=.deno/cache
 cache:
 	[ -d .deno/cache ] || mkdir -p .deno/cache
-	deno cache --import-map import-map.json --unstable server/server.tsx client/client.tsx
+	deno cache --import-map import-map.json --unstable server/server.tsx client/client.tsx main.ts
 
 bundle: export DENO_DIR=.deno/cache
 bundle:
 	[ -d .deno ] || make cache
 	deno bundle client/client.tsx --import-map import-map.json --config client/tsconfig.json --unstable .deno/client.js
 
-start: export DENO_DIR=.deno/cache
-start:
+start-dev: export DENO_DIR=.deno/cache
+start-dev:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
 	make bundle
-	deno run --allow-all --import-map import-map.json --unstable main.ts
+	deno run --allow-all --import-map import-map.json --unstable main.ts --hostname localhost
+
+start-docker: export DENO_DIR=.deno/cache
+start-docker:
+	[ -d .deno/cache ] || make cache
+	[ -d .https ] || make https
+	make bundle
+	deno run --allow-all --import-map import-map.json --unstable main.ts --hostname 0.0.0.0

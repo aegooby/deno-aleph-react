@@ -11,4 +11,4 @@ ENV PATH="$DENO_INSTALL/bin:$PATH"
 ADD . .
 RUN make cache
 
-CMD [ "make", "start" ]
+CMD [ "make", "start-docker" ]

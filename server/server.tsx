@@ -24,6 +24,7 @@ export class Console
 
 export interface ServerAttributes
 {
+    hostname: string;
     port: number;
     directory: string;
     html404: string;
@@ -36,12 +37,12 @@ export class Server
     directory: string;
     html404: string;
     html: string;
-    constructor({ port, directory, html404 }: ServerAttributes)
+    constructor({ hostname, port, directory, html404 }: ServerAttributes)
     {
         this.directory = directory;
         const serveTLSOptions =
         {
-            hostname: "localhost",
+            hostname: hostname,
             port: port,
             certFile: ".https/localhost/cert.pem",
             keyFile: ".https/localhost/key.pem",
