@@ -1,8 +1,6 @@
 
 import * as React from "react";
 
-import Logo from "./Logo.tsx";
-
 export default class App extends React.Component<unknown, unknown>
 {
     constructor(props: unknown)
@@ -13,7 +11,9 @@ export default class App extends React.Component<unknown, unknown>
     {
         const element =
             <div className="page">
-                <p className="logo"><Logo size={300} /></p>
+                <p className="logo">
+                    <img src="static/logo.gif" height={300} title="Deno" />
+                </p>
                 <h1><strong>https</strong> server</h1>
                 <h2>React v{React.version}</h2>
                 <p className="copyinfo">© 0000 Company Inc.</p>
