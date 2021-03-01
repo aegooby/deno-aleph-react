@@ -1,5 +1,5 @@
 
-import * as yargs from "https://deno.land/x/yargs/deno.ts";
+import * as yargs from "yargs";
 
 import * as Server from "./server/server.tsx";
 
@@ -8,16 +8,18 @@ const args = yargs.default(Deno.args)
     .hide("help")
     .hide("version")
     .hide("hostname")
-    .demandOption(["hostname"])
+    .demandOption(["protocol", "hostname", "port"])
     .parse();
 
-const hostname = args.hostname ? args.hostname : "localhost";
-const port = args.port ? args.port : 8443;
+const protocol: Server.Protocol = args.protocol;
+const hostname: string = args.hostname;
+const port: number = args.port;
 
 try
 {
     const serverAttributes =
     {
+        protocol: protocol,
         hostname: hostname,
         port: port,
         directory: ".",

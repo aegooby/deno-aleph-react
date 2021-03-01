@@ -22,24 +22,31 @@ export class Console
     }
 }
 
+export type Protocol = "unknown" | "http" | "https";
+
 export interface ServerAttributes
 {
+    protocol: Protocol;
     hostname: string;
     port: number;
-    directory: string;
     html404: string;
 }
 
 export class Server
 {
     httpServer: http.Server;
+    protocol: Protocol;
 
-    directory: string;
     html404: string;
     html: string;
-    constructor({ hostname, port, directory, html404 }: ServerAttributes)
+    constructor({ protocol, hostname, port, html404 }: ServerAttributes)
     {
-        this.directory = directory;
+        this.protocol = protocol;
+        const serveOptions =
+        {
+            hostname: hostname,
+            port: port,
+        };
         const serveTLSOptions =
         {
             hostname: hostname,
@@ -47,7 +54,17 @@ export class Server
             certFile: ".https/localhost/cert.pem",
             keyFile: ".https/localhost/key.pem",
         };
-        this.httpServer = http.serveTLS(serveTLSOptions);
+        switch (this.protocol)
+        {
+            case "http":
+                this.httpServer = http.serve(serveOptions);
+                break;
+            case "https":
+                this.httpServer = http.serveTLS(serveTLSOptions);
+                break;
+            default:
+                throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
+        }
         this.html404 = html404;
         const htmlReact: React.ReactElement =
             <html lang="en">
@@ -78,7 +95,7 @@ export class Server
     }
     get url(): string
     {
-        return "https://" + this.hostname + ":" + this.port;
+        return this.protocol + "://" + this.hostname + ":" + this.port;
     }
     async static(url: string): Promise<Deno.Reader>
     {

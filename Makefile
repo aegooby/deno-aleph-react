@@ -30,11 +30,11 @@ start-dev:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
 	make bundle
-	deno run --allow-all --import-map import-map.json --unstable main.ts --hostname localhost
+	deno run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname localhost --port 8443
 
 start-docker: export DENO_DIR=.deno/cache
 start-docker:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
 	make bundle
-	deno run --allow-all --import-map import-map.json --unstable main.ts --hostname 0.0.0.0
+	deno run --allow-all --import-map import-map.json --unstable main.ts --protocol http --hostname 0.0.0.0 --port 8443

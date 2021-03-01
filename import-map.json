@@ -3,6 +3,7 @@
         "http": "https://deno.land/std/http/mod.ts",
         "path": "https://deno.land/std/path/mod.ts",
         "colors": "https://deno.land/std/fmt/colors.ts",
+        "yargs": "https://deno.land/x/yargs/deno.ts",
         "react": "https://esm.sh/react",
         "react-dom": "https://esm.sh/react-dom",
         "react-dom-server": "https://esm.sh/react-dom/server"
