@@ -27,7 +27,7 @@ start-dev: export DENO_DIR=.deno/cache
 start-dev:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
-	denon --config denon.yaml run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname localhost --port 8443
+	denon --config denon.yml run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname localhost --port 8443
 
 start-docker: export DENO_DIR=.deno/cache
 start-docker:
