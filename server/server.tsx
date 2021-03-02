@@ -113,6 +113,31 @@ export class Server
     }
     async serve(): Promise<void>
     {
+        const compilerOptions: Deno.CompilerOptions =
+        {
+            allowJs: true,
+            experimentalDecorators: true,
+            noImplicitAny: true,
+            jsx: "react",
+            lib: [
+                "deno.ns",
+                "deno.unstable",
+                "dom"
+            ],
+            strict: true
+        };
+        const emitOptions: Deno.EmitOptions =
+        {
+            bundle: "esm",
+            check: true,
+            compilerOptions: compilerOptions,
+            importMapPath: "import-map.json",
+        };
+        Console.log("Bundling client scripts...");
+        const emit = await Deno.emit("client/client.tsx", emitOptions);
+        const array = new TextEncoder().encode(emit.files["deno:///bundle.js"]);
+        Deno.writeFile(".deno/client.js", array);
+        Console.success("Bundled client scripts!");
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.httpServer)
             await this.route(request);

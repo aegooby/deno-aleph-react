@@ -4,6 +4,7 @@ clean:
 
 install:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
+	deno install -qAf --unstable https://deno.land/x/denon/denon.ts
 
 image:
 	docker build --tag aegooby/server .
@@ -29,12 +30,10 @@ start-dev: export DENO_DIR=.deno/cache
 start-dev:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
-	make bundle
-	deno run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname localhost --port 8443
+	denon --config denon.yaml run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname localhost --port 8443
 
 start-docker: export DENO_DIR=.deno/cache
 start-docker:
 	[ -d .deno/cache ] || make cache
 	[ -d .https ] || make https
-	make bundle
 	deno run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname 0.0.0.0 --port 8443
