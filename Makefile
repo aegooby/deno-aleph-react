@@ -2,8 +2,10 @@
 clean:
 	rm -rf .deno
 
-install:
+install-deno:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
+
+install-denon:
 	deno install -qAf --unstable https://deno.land/x/denon/denon.ts
 
 image:
@@ -20,11 +22,6 @@ cache: export DENO_DIR=.deno/cache
 cache:
 	[ -d .deno/cache ] || mkdir -p .deno/cache
 	deno cache --import-map import-map.json --unstable **/*.tsx main.ts
-
-bundle: export DENO_DIR=.deno/cache
-bundle:
-	[ -d .deno ] || make cache
-	deno bundle client/client.tsx --import-map import-map.json --config client/tsconfig.json --unstable .deno/client.js
 
 start-dev: export DENO_DIR=.deno/cache
 start-dev:
