@@ -1,24 +1,20 @@
 
 import * as React from "react";
 
-export default class App extends React.Component<unknown, unknown>
+import Index from "./Pages/Index.tsx";
+import * as UIRouter from "./Router/UIRouter.tsx";
+
+export default class App extends React.Component
 {
-    constructor(props: unknown)
+    routes: Map<string, React.ReactElement> = new Map<string, React.ReactElement>();
+    constructor(props: Readonly<unknown>)
     {
         super(props);
+
+        this.routes.set("/", <Index />);
     }
     render(): React.ReactElement
     {
-        const element =
-            <div className="page">
-                <p className="logo">
-                    <img src="static/logo.webp" height={300} />
-                </p>
-                <h1><strong>https</strong>erver</h1>
-                <h2>React v{React.version}</h2>
-                <p className="copyinfo">© 0000 Company, Inc.</p>
-            </div>;
-
-        return element;
+        return <UIRouter.Component routes={this.routes} />;
     }
 }

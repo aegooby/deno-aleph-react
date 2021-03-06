@@ -8,7 +8,7 @@
         "yargs": "https://deno.land/x/yargs/deno.ts",
         "react": "https://esm.sh/react",
         "react-dom": "https://esm.sh/react-dom",
-        "react-dom-server": "https://esm.sh/react-dom/server"
+        "react-dom/server": "https://esm.sh/react-dom/server"
     },
     "scopes": {}
 }
