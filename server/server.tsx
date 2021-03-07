@@ -95,15 +95,11 @@ export class Server
     }
     async route(request: http.ServerRequest): Promise<void>
     {
-        function resolveURL(url: string): string
-        {
-            return path.join(".", url);
-        }
         const originalURL = request.url;
         Console.success("Received " + request.method + " request: " + originalURL);
         if (this.routes.has(request.url))
             request.url = this.routes.get(request.url) as string;
-        request.url = resolveURL(request.url);
+        request.url = path.join(".", request.url);
         if (!await fs.exists(request.url))
         {
             Console.error("Route " + originalURL + " not found");
