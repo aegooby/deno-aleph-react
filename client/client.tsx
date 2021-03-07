@@ -2,8 +2,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import App from "../components/App.tsx";
-
 interface GlobalThis
 {
     document:
@@ -47,17 +45,5 @@ export class Client
     hydrate(element: React.ReactElement): void
     {
         ReactDOM.hydrate(element, Client.document.querySelector("#root"));
-    }
-    static main(): void
-    {
-        try
-        {
-            const client = new Client();
-            client.hydrate(<App />);
-        }
-        catch (error)
-        {
-            Console.log(error);
-        }
     }
 }
