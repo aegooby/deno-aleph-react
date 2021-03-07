@@ -41,9 +41,9 @@ export interface ClientAttributes
 
 export class Client
 {
-    static document = (globalThis as typeof globalThis & GlobalThis).document;
     hydrate(element: React.ReactElement): void
     {
-        ReactDOM.hydrate(element, Client.document.querySelector("#root"));
+        const document = (globalThis as typeof globalThis & GlobalThis).document;
+        ReactDOM.hydrate(element, document.querySelector("#root"));
     }
 }
