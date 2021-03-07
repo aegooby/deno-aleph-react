@@ -1,6 +1,6 @@
 
 clean:
-	rm -rf .deno
+	rm -rf .httpsaurus
 
 install-deno:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
@@ -9,28 +9,28 @@ install-denon:
 	deno install -qAf --unstable https://deno.land/x/denon/denon.ts
 
 image:
-	docker build --tag aegooby/server .
+	docker build --tag httpsaurus/server .
 
 container:
-	docker run -it --init -p 443:8443 aegooby/server:latest
+	docker run -it --init -p 443:8443 httpsaurus/server:latest
 
 https:
 	[ -d .https ] || mkdir -p .https
 	cd .https && minica --domains localhost --ip-addresses 0.0.0.0
 
-cache: export DENO_DIR=.deno/cache
+cache: export DENO_DIR=.httpsaurus/cache
 cache:
-	[ -d .deno/cache ] || mkdir -p .deno/cache
-	deno cache --import-map import-map.json --unstable **/*.tsx main.ts
+	[ -d .httpsaurus/cache ] || mkdir -p .httpsaurus/cache
+	deno cache --import-map import-map.json --unstable **/*.tsx
 
-start-dev: export DENO_DIR=.deno/cache
+start-dev: export DENO_DIR=.httpsaurus/cache
 start-dev:
-	[ -d .deno/cache ] || make cache
+	[ -d .httpsaurus/cache ] || make cache
 	[ -d .https ] || make https
-	denon --config denon.yml run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname localhost --port 8443
+	denon --config denon.yml run --allow-all --import-map import-map.json --unstable server/server.tsx --protocol https --hostname localhost --port 8443
 
-start-docker: export DENO_DIR=.deno/cache
+start-docker: export DENO_DIR=.httpsaurus/cache
 start-docker:
-	[ -d .deno/cache ] || make cache
+	[ -d .httpsaurus/cache ] || make cache
 	[ -d .https ] || make https
-	deno run --allow-all --import-map import-map.json --unstable main.ts --protocol https --hostname 0.0.0.0 --port 8443
+	deno run --allow-all --import-map import-map.json --unstable server/server.tsx --protocol https --hostname 0.0.0.0 --port 8443
