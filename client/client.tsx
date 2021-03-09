@@ -30,15 +30,6 @@ export class Console
     }
 }
 
-export type Protocol = "unknown" | "http" | "https";
-
-export interface ClientAttributes
-{
-    protocol: Protocol;
-    hostname: string;
-    port: number;
-}
-
 export class Client
 {
     document = (globalThis as typeof globalThis & GlobalThis).document;

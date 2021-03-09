@@ -7,13 +7,16 @@ import * as colors from "https://deno.land/std/fmt/colors.ts";
 
 export class Console
 {
+    static dev: boolean;
     static log(message: string): void
     {
-        console.log(colors.bold(colors.cyan("  [*]  ")) + message);
+        if (Console.dev)
+            console.log(colors.bold(colors.cyan("  [*]  ")) + message);
     }
     static success(message: string): void
     {
-        console.log(colors.bold(colors.green("  [$]  ")) + message);
+        if (Console.dev)
+            console.log(colors.bold(colors.green("  [$]  ")) + message);
     }
     static warn(message: string): void
     {
@@ -34,6 +37,8 @@ export interface ServerAttributes
     port: number;
 
     routes?: Map<string, string>;
+
+    dev?: boolean;
 }
 
 export class Server
@@ -41,8 +46,9 @@ export class Server
     #httpServer: http.Server;
     #protocol: Protocol;
     #routes: Map<string, string> = new Map<string, string>();
+    #dev: boolean;
 
-    constructor({ protocol, hostname, port, routes }: ServerAttributes)
+    constructor({ protocol, hostname, port, routes, dev = false }: ServerAttributes)
     {
         this.#protocol = protocol;
         const serveOptions =
@@ -76,6 +82,8 @@ export class Server
             this.#routes.set("/favicon.ico", "/static/favicon.ico");
             this.#routes.set("/404.html", "/static/404.html");
         }
+        this.#dev = dev;
+        Console.dev = this.#dev;
     }
     get port(): number
     {
