@@ -124,7 +124,6 @@ export class Server
             experimentalDecorators: true,
             importHelpers: true,
             importsNotUsedAsValues: "remove",
-            inlineSources: true,
             jsx: "react",
             jsxFactory: "React.createElement",
             jsxFragmentFactory: "React.Fragment",
@@ -141,15 +140,20 @@ export class Server
         };
         const emitOptions: Deno.EmitOptions =
         {
-            bundle: "esm",
+            bundle: "iife",
             check: true,
             compilerOptions: compilerOptions,
             importMapPath: "import-map.json",
         };
         Console.log("Bundling client scripts...");
         const emit = await Deno.emit("client/bundle.tsx", emitOptions);
-        const array = new TextEncoder().encode(emit.files["deno:///bundle.js"]);
-        Deno.writeFile(".httpsaurus/bundle.js", array);
+        if (emit.diagnostics.length)
+            Console.warn(Deno.formatDiagnostics(emit.diagnostics));
+        const encoder = new TextEncoder();
+        const bundleSource = encoder.encode(emit.files["deno:///bundle.js"]);
+        const bundleSourceMap = encoder.encode(emit.files["deno:///bundle.js.map"]);
+        Deno.writeFile(".httpsaurus/bundle.js", bundleSource);
+        Deno.writeFile(".httpsaurus/bundle.js.map", bundleSourceMap);
         Console.success("Bundled client scripts!");
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.#httpServer)
