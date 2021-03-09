@@ -1,7 +1,7 @@
 
 import * as React from "react";
 
-import Index from "./Pages/Index.tsx";
+import Index from "../Pages/Index.tsx";
 import * as UIRouter from "./Router/UIRouter.tsx";
 
 export default class App extends React.Component

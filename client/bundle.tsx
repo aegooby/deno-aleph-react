@@ -2,7 +2,7 @@
 import * as React from "react";
 import * as Client from "./client.tsx";
 
-import App from "../components/App.tsx";
+import App from "../components/Core/App.tsx";
 
 try
 {

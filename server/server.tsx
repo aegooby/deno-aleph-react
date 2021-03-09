@@ -5,8 +5,6 @@ import * as path from "path";
 import * as fs from "fs";
 import * as colors from "colors";
 
-import * as yargs from "yargs";
-
 export class Console
 {
     static log(message: string): void
@@ -144,38 +142,38 @@ export class Server
         for await (const request of this.#httpServer)
             await this.route(request);
     }
-    static async main(): Promise<void>
-    {
-        const args = yargs.default(Deno.args)
-            .usage("usage: $0 server/server.tsx --hostname <host> [--port <port>] [--help]")
-            .hide("help")
-            .hide("version")
-            .hide("hostname")
-            .demandOption(["protocol", "hostname", "port"])
-            .parse();
-
-        const protocol: Protocol = args.protocol;
-        const hostname: string = args.hostname;
-        const port: number = args.port;
-
-        try
-        {
-            const serverAttributes =
-            {
-                protocol: protocol,
-                hostname: hostname,
-                port: port,
-            };
-            const server = new Server(serverAttributes);
-            await server.serve();
-        }
-        catch (error)
-        {
-            Console.error(error.toString());
-            Deno.exit(1);
-        }
-    }
 }
 
 if (import.meta.main)
-    await Server.main();
+{
+    const yargs = await import("yargs");
+
+    const args = yargs.default(Deno.args)
+        .usage("usage: $0 server/server.tsx --hostname <host> [--port <port>] [--help]")
+        .hide("help")
+        .hide("version")
+        .hide("hostname")
+        .demandOption(["protocol", "hostname", "port"])
+        .parse();
+
+    const protocol: Protocol = args.protocol;
+    const hostname: string = args.hostname;
+    const port: number = args.port;
+
+    try
+    {
+        const serverAttributes =
+        {
+            protocol: protocol,
+            hostname: hostname,
+            port: port,
+        };
+        const server = new Server(serverAttributes);
+        await server.serve();
+    }
+    catch (error)
+    {
+        Console.error(error.toString());
+        Deno.exit(1);
+    }
+}
