@@ -138,11 +138,12 @@ export class Server
             module: "esnext",
             noImplicitAny: true,
             sourceMap: true,
-            lib: [
-                "deno.ns",
-                "deno.unstable",
-                "dom"
-            ],
+            lib:
+                [
+                    "deno.ns",
+                    "deno.unstable",
+                    "dom"
+                ],
             strict: true,
             target: "esnext"
         };
@@ -165,5 +166,9 @@ export class Server
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.#httpServer)
             await this.route(request);
+    }
+    close(): void
+    {
+        this.#httpServer.close();
     }
 }
