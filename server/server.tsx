@@ -143,37 +143,3 @@ export class Server
             await this.route(request);
     }
 }
-
-if (import.meta.main)
-{
-    const yargs = await import("yargs");
-
-    const args = yargs.default(Deno.args)
-        .usage("usage: $0 server/server.tsx --hostname <host> [--port <port>] [--help]")
-        .hide("help")
-        .hide("version")
-        .hide("hostname")
-        .demandOption(["protocol", "hostname", "port"])
-        .parse();
-
-    const protocol: Protocol = args.protocol;
-    const hostname: string = args.hostname;
-    const port: number = args.port;
-
-    try
-    {
-        const serverAttributes =
-        {
-            protocol: protocol,
-            hostname: hostname,
-            port: port,
-        };
-        const server = new Server(serverAttributes);
-        await server.serve();
-    }
-    catch (error)
-    {
-        Console.error(error.toString());
-        Deno.exit(1);
-    }
-}
