@@ -116,15 +116,28 @@ export class Server
         const compilerOptions: Deno.CompilerOptions =
         {
             allowJs: true,
+            checkJs: true,
+            downlevelIteration: true,
+            emitDeclarationOnly: false,
+            emitDecoratorMetadata: true,
+            esModuleInterop: true,
             experimentalDecorators: true,
-            noImplicitAny: true,
+            importHelpers: true,
+            importsNotUsedAsValues: "remove",
+            inlineSources: true,
             jsx: "react",
+            jsxFactory: "React.createElement",
+            jsxFragmentFactory: "React.Fragment",
+            module: "esnext",
+            noImplicitAny: true,
+            sourceMap: true,
             lib: [
                 "deno.ns",
                 "deno.unstable",
                 "dom"
             ],
-            strict: true
+            strict: true,
+            target: "esnext"
         };
         const emitOptions: Deno.EmitOptions =
         {
