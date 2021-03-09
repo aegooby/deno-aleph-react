@@ -1,6 +1,0 @@
-watcher:
-  interval: 350
-  exts: ["js", "jsx", "ts", "tsx", "json"]
-  match: ["**/*.*"]
-  skip: [".github/*", ".httpsaurus/*"]
-  legacy: false

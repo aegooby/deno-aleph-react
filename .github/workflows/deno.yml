@@ -29,8 +29,6 @@ jobs:
         uses: denolib/setup-deno@v2.3.0
         with:
           deno-version: ${{ matrix.deno }}
-      - name: Setup Denon
-        run: make install-denon
       - name: Cache dependencies
         run: make cache
       - name: Test server

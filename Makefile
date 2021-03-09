@@ -5,9 +5,6 @@ clean:
 install-deno:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
 
-install-denon:
-	deno install -qAf --unstable https://deno.land/x/denon/denon.ts
-
 image:
 	docker build --tag httpsaurus/server .
 
@@ -27,7 +24,7 @@ start-dev: export DENO_DIR=.httpsaurus/cache
 start-dev:
 	[ -d .httpsaurus/cache ] || make cache
 	[ -d .https ] || make https
-	denon --config denon.yml run --allow-all --import-map import-map.json --unstable server/daemon.tsx --protocol https --hostname localhost --port 8443
+	deno run --allow-all --import-map import-map.json --unstable server/daemon.tsx --protocol https --hostname localhost --port 8443
 
 start-docker: export DENO_DIR=.httpsaurus/cache
 start-docker:
