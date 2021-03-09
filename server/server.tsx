@@ -81,6 +81,7 @@ export class Server
             this.#routes.set("/", "/static/index.html");
             this.#routes.set("/favicon.ico", "/static/favicon.ico");
             this.#routes.set("/404.html", "/static/404.html");
+            this.#routes.set("/robots.txt", "/static/robots.txt");
         }
         this.#dev = dev;
         Console.dev = this.#dev;
@@ -101,16 +102,14 @@ export class Server
     {
         return this.#protocol + "://" + this.hostname + ":" + this.port;
     }
-    async static(request: http.ServerRequest): Promise<void>
+    async file(request: http.ServerRequest): Promise<void>
     {
         try
         {
-            await request.respond(await httpFile.serveFile(request, request.url));
+            const response = await httpFile.serveFile(request, request.url);
+            await request.respond(response);
         }
-        catch (error)
-        {
-            Console.error(error);
-        }
+        catch (error) { Console.error(error); }
     }
     async route(request: http.ServerRequest): Promise<void>
     {
@@ -124,7 +123,7 @@ export class Server
             Console.error("Route " + originalURL + " not found");
             request.url = "static/404.html";
         }
-        await this.static(request);
+        await this.file(request);
     }
     async serve(): Promise<void>
     {
