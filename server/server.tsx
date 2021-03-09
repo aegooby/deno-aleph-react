@@ -140,7 +140,7 @@ export class Server
         };
         const emitOptions: Deno.EmitOptions =
         {
-            bundle: "iife",
+            bundle: "esm",
             check: true,
             compilerOptions: compilerOptions,
             importMapPath: "import-map.json",
