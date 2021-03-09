@@ -103,7 +103,14 @@ export class Server
     }
     async static(request: http.ServerRequest): Promise<void>
     {
-        request.respond(await httpFile.serveFile(request, request.url));
+        try
+        {
+            await request.respond(await httpFile.serveFile(request, request.url));
+        }
+        catch (error)
+        {
+            Console.error(error);
+        }
     }
     async route(request: http.ServerRequest): Promise<void>
     {
