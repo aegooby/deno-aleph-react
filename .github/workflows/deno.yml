@@ -32,4 +32,4 @@ jobs:
       - name: Cache Dependencies
         run: make cache
       - name: Test Server
-        run: make start-dev & sleep 10 ; kill $!
+        run: make test
