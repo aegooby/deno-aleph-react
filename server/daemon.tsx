@@ -1,7 +1,7 @@
 
 import * as Server from "./server.tsx";
 
-import * as yargs from "yargs";
+import * as yargs from "https://deno.land/x/yargs/deno.ts";
 
 const args = yargs.default(Deno.args)
     .usage("usage: $0 server/daemon.tsx --hostname <host> [--port <port>] [--help]")

@@ -1,9 +1,9 @@
 
-import * as http from "http";
-import * as httpFile from "http-file";
-import * as path from "path";
-import * as fs from "fs";
-import * as colors from "colors";
+import * as http from "https://deno.land/std/http/mod.ts";
+import * as httpFile from "https://deno.land/std/http/file_server.ts";
+import * as path from "https://deno.land/std/path/mod.ts";
+import * as fs from "https://deno.land/std/fs/mod.ts";
+import * as colors from "https://deno.land/std/fmt/colors.ts";
 
 export class Console
 {
@@ -143,7 +143,6 @@ export class Server
             bundle: "esm",
             check: true,
             compilerOptions: compilerOptions,
-            importMapPath: "import-map.json",
         };
         Console.log("Bundling client scripts...");
         const emit = await Deno.emit("client/bundle.tsx", emitOptions);
