@@ -31,3 +31,9 @@ start-docker:
 	[ -d .httpsaurus/cache ] || make cache
 	[ -d .https ] || make https
 	deno run --allow-all --unstable server/daemon.tsx --protocol https --hostname 0.0.0.0 --port 8443
+
+test: export DENO_DIR=.httpsaurus/cache
+test:
+	[ -d .httpsaurus/cache ] || make cache
+	[ -d .https ] || make https
+	deno test --allow-all --unstable tests/
