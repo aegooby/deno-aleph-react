@@ -25,7 +25,6 @@ try
                 },
                 sanitizeOps: false,
                 sanitizeResources: false,
-                sanitizeExit: true,
             },
             {
                 name: ": run for 5 seconds (HTTPS)",
@@ -46,7 +45,6 @@ try
                 },
                 sanitizeOps: false,
                 sanitizeResources: false,
-                sanitizeExit: true,
             },
             {
                 name: ": fetch (HTTP)",
@@ -68,7 +66,6 @@ try
                 },
                 sanitizeOps: false,
                 sanitizeResources: false,
-                sanitizeExit: true,
             },
         ];
     for (const test of tests)
