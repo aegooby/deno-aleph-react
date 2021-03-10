@@ -5,6 +5,60 @@ import * as path from "https://deno.land/std/path/mod.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as colors from "https://deno.land/std/fmt/colors.ts";
 
+const mediaTypes: Record<string, string> =
+{
+    ".gz": "application/gzip",
+    ".js": "application/javascript",
+    ".json": "application/json",
+    ".map": "application/json",
+    ".mjs": "application/javascript",
+    ".wasm": "application/wasm",
+
+    ".ogg": "audio/ogg",
+    ".wav": "audio/wav",
+
+    ".apng": "image/apng",
+    ".avif": "image/avif",
+    ".gif": "image/gif",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".webp": "image/webp",
+
+    ".css": "text/css",
+    ".html": "text/html",
+    ".htm": "text/html",
+    ".jsx": "text/jsx",
+    ".md": "text/markdown",
+    ".txt": "text/plain",
+    ".ts": "text/typescript",
+    ".tsx": "text/tsx",
+
+    ".webm": "video/webm",
+};
+
+const staticMediaTypes: string[] =
+    [
+        "application/javascript",
+
+        "audio/ogg",
+        "audio/wav",
+
+        "image/apng",
+        "image/avif",
+        "image/gif",
+        "image/jpeg",
+        "image/jpeg",
+        "image/png",
+        "image/svg+xml",
+        "image/webp",
+
+        "text/css",
+
+        "video/webm",
+    ];
+
 export class Console
 {
     static dev: boolean;
@@ -43,10 +97,14 @@ export interface ServerAttributes
 
 export class Server
 {
-    #httpServer: http.Server;
     #protocol: Protocol;
+    #httpServer: http.Server;
+
     #routes: Map<string, string> = new Map<string, string>();
+
     #dev: boolean;
+
+    #cacheTime: number = 3153600 as number;
 
     constructor({ protocol, hostname, port, routes, dev = false }: ServerAttributes)
     {
@@ -102,16 +160,42 @@ export class Server
     {
         return this.#protocol + "://" + this.hostname + ":" + this.port;
     }
-    async file(request: http.ServerRequest): Promise<void>
+    private async file(request: http.ServerRequest): Promise<http.Response>
     {
-        try
+        const filePath = request.url;
+        const [file, fileInfo] = await Promise.all([Deno.open(filePath), Deno.stat(filePath)]);
+        const headers = new Headers();
+        headers.set("content-length", fileInfo.size.toString());
+        const contentType = mediaTypes[path.extname(filePath)];
+        if (contentType)
+            headers.set("content-type", contentType);
+        if (request.headers.get("cache-control") !== "no-cache" && staticMediaTypes.includes(contentType))
+            headers.set("cache-control", "max-age=" + this.#cacheTime);
+
+        const response: http.Response =
         {
-            const response = await httpFile.serveFile(request, request.url);
-            await request.respond(response);
-        }
+            body: file,
+            headers: headers,
+        };
+        request.done.then(function () { file.close(); });
+        return response;
+    }
+    private async ok(request: http.ServerRequest): Promise<void>
+    {
+        const response = await this.file(request);
+        response.status = 200;
+        try { await request.respond(response); }
         catch (error) { Console.error(error); }
     }
-    async route(request: http.ServerRequest): Promise<void>
+    private async notFound(request: http.ServerRequest)
+    {
+        request.url = "static/404.html";
+        const response = await this.file(request);
+        response.status = 404;
+        try { await request.respond(response); }
+        catch (error) { Console.error(error); }
+    }
+    private async route(request: http.ServerRequest): Promise<void>
     {
         const originalURL = request.url;
         Console.success("Received " + request.method + " request: " + originalURL);
@@ -121,9 +205,10 @@ export class Server
         if (!await fs.exists(request.url))
         {
             Console.error("Route " + originalURL + " not found");
-            request.url = "static/404.html";
+            await this.notFound(request);
         }
-        await this.file(request);
+        else
+            await this.ok(request);
     }
     async serve(): Promise<void>
     {
