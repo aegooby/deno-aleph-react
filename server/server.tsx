@@ -40,8 +40,6 @@ const mediaTypes: Record<string, string> =
 
 const staticMediaTypes: string[] =
     [
-        "application/javascript",
-
         "audio/ogg",
         "audio/wav",
 
