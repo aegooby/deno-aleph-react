@@ -1,6 +1,5 @@
 
 import * as http from "https://deno.land/std/http/mod.ts";
-import * as httpFile from "https://deno.land/std/http/file_server.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as colors from "https://deno.land/std/fmt/colors.ts";
