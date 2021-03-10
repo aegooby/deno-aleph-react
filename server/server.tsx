@@ -115,8 +115,8 @@ export class Server
         {
             hostname: hostname,
             port: port,
-            certFile: ".https/localhost/cert.pem",
-            keyFile: ".https/localhost/key.pem",
+            certFile: "cert/localhost/cert.pem",
+            keyFile: "cert/localhost/key.pem",
         };
         switch (this.#protocol)
         {
