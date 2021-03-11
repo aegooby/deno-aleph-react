@@ -4,9 +4,6 @@ import * as path from "https://deno.land/std/path/mod.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as colors from "https://deno.land/std/fmt/colors.ts";
 
-import * as graphql from "https://esm.sh/graphql";
-import * as query from "https://esm.sh/query-string";
-
 import * as console from "./console.tsx";
 import * as bundler from "./bundler.tsx";
 
@@ -162,8 +159,8 @@ export class Server
 
         const response: http.Response =
         {
-            body: file,
             headers: headers,
+            body: file,
         };
         request.done.then(function () { file.close(); });
         return response;
@@ -175,17 +172,13 @@ export class Server
         try { await request.respond(response); }
         catch (error) { console.Console.error(error); }
     }
-    private async notFound(request: http.ServerRequest)
+    private async notFound(request: http.ServerRequest): Promise<void>
     {
         request.url = "static/404.html";
         const response = await this.file(request);
         response.status = 404;
         try { await request.respond(response); }
         catch (error) { console.Console.error(error); }
-    }
-    private async graphql()
-    {
-
     }
     private async route(request: http.ServerRequest): Promise<void>
     {
