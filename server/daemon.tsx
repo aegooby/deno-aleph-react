@@ -1,5 +1,5 @@
 
-import * as Server from "./server.tsx";
+import * as server from "./server.tsx";
 
 import * as yargs from "https://deno.land/x/yargs/deno.ts";
 
@@ -11,7 +11,7 @@ const args = yargs.default(Deno.args)
     .demandOption(["protocol", "hostname", "port"])
     .parse();
 
-const protocol: Server.Protocol = args.protocol;
+const protocol: server.Protocol = args.protocol;
 const hostname: string = args.hostname;
 const port: number = args.port;
 const dev: boolean = args.dev;
@@ -25,11 +25,11 @@ try
         port: port,
         dev: dev,
     };
-    const server = new Server.Server(serverAttributes);
-    await server.serve();
+    const httpserver = new server.Server(serverAttributes);
+    await httpserver.serve();
 }
 catch (error)
 {
-    Server.Console.error(error.toString());
+    server.Console.error(error.toString());
     Deno.exit(1);
 }

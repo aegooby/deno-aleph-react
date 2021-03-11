@@ -1,3 +1,3 @@
 
-export * as Server from "./server/server.tsx";
-export * as Client from "./client/client.tsx";
+export * as server from "./server/server.tsx";
+export * as client from "./client/client.tsx";

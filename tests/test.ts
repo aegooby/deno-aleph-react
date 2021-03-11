@@ -12,11 +12,11 @@ try
                 {
                     const serverAttributes =
                     {
-                        protocol: "http" as httpsaurus.Server.Protocol,
+                        protocol: "http" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
                     };
-                    const server = new httpsaurus.Server.Server(serverAttributes);
+                    const server = new httpsaurus.server.Server(serverAttributes);
                     const time = delay.delay(5000);
                     const serve = server.serve();
                     await time;
@@ -32,11 +32,11 @@ try
                 {
                     const serverAttributes =
                     {
-                        protocol: "https" as httpsaurus.Server.Protocol,
+                        protocol: "https" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
                     };
-                    const server = new httpsaurus.Server.Server(serverAttributes);
+                    const server = new httpsaurus.server.Server(serverAttributes);
                     const time = delay.delay(5000);
                     const serve = server.serve();
                     await time;
@@ -52,11 +52,11 @@ try
                 {
                     const serverAttributes =
                     {
-                        protocol: "http" as httpsaurus.Server.Protocol,
+                        protocol: "http" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
                     };
-                    const server = new httpsaurus.Server.Server(serverAttributes);
+                    const server = new httpsaurus.server.Server(serverAttributes);
                     const complete = server.serve();
                     const response = await fetch("http://localhost:8443/");
                     assert.assert(response.ok);
@@ -73,6 +73,6 @@ try
 }
 catch (error)
 {
-    httpsaurus.Server.Console.error(error.toString());
+    httpsaurus.server.Console.error(error.toString());
     Deno.exit(1);
 }
