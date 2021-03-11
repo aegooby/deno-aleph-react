@@ -4,6 +4,8 @@ import * as path from "https://deno.land/std/path/mod.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as colors from "https://deno.land/std/fmt/colors.ts";
 
+import * as query from "https://esm.sh/query-string";
+
 import * as console from "./console.tsx";
 import * as bundler from "./bundler.tsx";
 
@@ -184,6 +186,10 @@ export class Server
     {
         const originalURL = request.url;
         console.Console.success("Received " + request.method + " request: " + originalURL);
+
+        /* Invalidate cache on new queries */
+        /** @todo Use hash of file data instead */
+        request.url = query.parseUrl(request.url).url;
 
         /* Checks if this URL should be rerouted (alias) */
         if (this.routes.has(request.url))

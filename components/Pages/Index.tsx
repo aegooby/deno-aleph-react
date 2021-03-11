@@ -12,7 +12,7 @@ export default class Index extends React.Component<unknown, unknown>
         const element =
             <div className="page">
                 <p className="logo">
-                    <img src="static/logo.webp" height={304} width={256} alt="logo" />
+                    <img src="/static/logo.webp" height={304} width={256} alt="logo" />
                 </p>
                 <h1><strong>https</strong>aurus</h1>
                 <h2>React v{React.version}</h2>
