@@ -208,7 +208,7 @@ export class Server
     async serve(): Promise<void>
     {
         console.Console.log("Bundling client scripts...");
-        (new bundler.Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
+        await (new bundler.Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
         console.Console.success("Bundled client scripts!");
         console.Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.#httpServer)
