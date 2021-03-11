@@ -6,9 +6,9 @@ import * as colors from "https://deno.land/std/fmt/colors.ts";
 
 import * as query from "https://esm.sh/query-string";
 
-import * as console from "./console.tsx";
-import * as bundler from "./bundler.tsx";
-
+import { Bundler } from "./bundler.tsx";
+export { Bundler } from "./bundler.tsx";
+import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
 const mediaTypes: Record<string, string> =
@@ -123,7 +123,7 @@ export class Server
             this.routes.set("/robots.txt", "/static/robots.txt");
         }
         this.dev = dev;
-        console.Console.dev = this.dev;
+        Console.dev = this.dev;
     }
     public get port(): number
     {
@@ -145,11 +145,11 @@ export class Server
     {
         /* Open file and get file length */
         const filePath = request.url;
-        const [file, fileInfo] = await Promise.all([Deno.open(filePath), Deno.stat(filePath)]);
+        const [body, info] = await Promise.all([Deno.open(filePath), Deno.stat(filePath)]);
 
         /* Set headers */
         const headers = new Headers();
-        headers.set("content-length", fileInfo.size.toString());
+        headers.set("content-length", info.size.toString());
         const contentType = mediaTypes[path.extname(filePath)];
         if (contentType)
             headers.set("content-type", contentType);
@@ -162,9 +162,9 @@ export class Server
         const response: http.Response =
         {
             headers: headers,
-            body: file,
+            body: body,
         };
-        request.done.then(function () { file.close(); });
+        request.done.then(function () { body.close(); });
         return response;
     }
     private async ok(request: http.ServerRequest): Promise<void>
@@ -172,7 +172,7 @@ export class Server
         const response = await this.file(request);
         response.status = 200;
         try { await request.respond(response); }
-        catch (error) { console.Console.error(error); }
+        catch (error) { Console.error(error); }
     }
     private async notFound(request: http.ServerRequest): Promise<void>
     {
@@ -180,12 +180,12 @@ export class Server
         const response = await this.file(request);
         response.status = 404;
         try { await request.respond(response); }
-        catch (error) { console.Console.error(error); }
+        catch (error) { Console.error(error); }
     }
     private async route(request: http.ServerRequest): Promise<void>
     {
         const originalURL = request.url;
-        console.Console.success("Received " + request.method + " request: " + originalURL);
+        Console.success("Received " + request.method + " request: " + originalURL);
 
         /* Invalidate cache on new queries */
         /** @todo Use hash of file data instead */
@@ -199,17 +199,17 @@ export class Server
         request.url = path.join(".", request.url);
         if (!await fs.exists(request.url))
         {
-            console.Console.error("Route " + originalURL + " not found");
+            Console.error("Route " + originalURL + " not found");
             return await this.notFound(request);
         }
         return await this.ok(request);
     }
     public async serve(): Promise<void>
     {
-        console.Console.log("Bundling client scripts...");
-        await (new bundler.Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
-        console.Console.success("Bundled client scripts!");
-        console.Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
+        Console.log("Bundling client scripts...");
+        await (new Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
+        Console.success("Bundled client scripts!");
+        Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.httpServer)
             await this.route(request);
     }

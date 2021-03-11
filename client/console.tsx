@@ -1,20 +1,20 @@
 
 export class Console
 {
-    public static log(message: string): void
+    public static log(message: unknown): void
     {
-        console.log("  [*]  " + message);
+        console.log("[*]  " + message);
     }
-    public static success(message: string): void
+    public static success(message: unknown): void
     {
-        console.log("  [$]  " + message);
+        console.log("[$]  " + message);
     }
-    public static warn(message: string): void
+    public static warn(message: unknown): void
     {
-        console.warn("  [?]  " + message);
+        console.warn("[?]  " + message);
     }
-    public static error(message: string): void
+    public static error(message: unknown): void
     {
-        console.error("  [!]  " + message);
+        console.error("[!]  " + message);
     }
 }
