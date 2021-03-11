@@ -85,8 +85,6 @@ export class Server
 
     private dev: boolean;
 
-    private cacheTime: number = 3153600 as number;
-
     constructor({ protocol, hostname, port, routes, dev = false }: ServerAttributes)
     {
         this.protocol = protocol;
@@ -154,10 +152,7 @@ export class Server
         if (contentType)
             headers.set("content-type", contentType);
 
-        /* Cache static content */
-        /** @todo Be more intelligent about cache time */
-        if (request.headers.get("cache-control") !== "no-cache" && staticMediaTypes.includes(contentType))
-            headers.set("cache-control", "max-age=" + this.cacheTime);
+        /** @todo Add caching. */
 
         const response: http.Response =
         {
@@ -188,7 +183,6 @@ export class Server
         Console.success("Received " + request.method + " request: " + originalURL);
 
         /* Invalidate cache on new queries */
-        /** @todo Use hash of file data instead */
         request.url = query.parseUrl(request.url).url;
 
         /* Checks if this URL should be rerouted (alias) */
