@@ -76,18 +76,18 @@ export interface ServerAttributes
 
 export class Server
 {
-    #protocol: Protocol;
-    #httpServer: http.Server;
+    private protocol: Protocol;
+    private httpServer: http.Server;
 
-    #routes: Map<string, string> = new Map<string, string>();
+    private routes: Map<string, string> = new Map<string, string>();
 
-    #dev: boolean;
+    private dev: boolean;
 
-    #cacheTime: number = 3153600 as number;
+    private cacheTime: number = 3153600 as number;
 
     constructor({ protocol, hostname, port, routes, dev = false }: ServerAttributes)
     {
-        this.#protocol = protocol;
+        this.protocol = protocol;
         const serveOptions =
         {
             hostname: hostname,
@@ -100,44 +100,44 @@ export class Server
             certFile: "cert/localhost/cert.pem",
             keyFile: "cert/localhost/key.pem",
         };
-        switch (this.#protocol)
+        switch (this.protocol)
         {
             case "http":
-                this.#httpServer = http.serve(serveOptions);
+                this.httpServer = http.serve(serveOptions);
                 break;
             case "https":
-                this.#httpServer = http.serveTLS(serveTLSOptions);
+                this.httpServer = http.serveTLS(serveTLSOptions);
                 break;
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
         if (routes)
-            this.#routes = routes;
+            this.routes = routes;
         else
         {
-            this.#routes.set("/", "/static/index.html");
-            this.#routes.set("/favicon.ico", "/static/favicon.ico");
-            this.#routes.set("/404.html", "/static/404.html");
-            this.#routes.set("/robots.txt", "/static/robots.txt");
+            this.routes.set("/", "/static/index.html");
+            this.routes.set("/favicon.ico", "/static/favicon.ico");
+            this.routes.set("/404.html", "/static/404.html");
+            this.routes.set("/robots.txt", "/static/robots.txt");
         }
-        this.#dev = dev;
-        console.Console.dev = this.#dev;
+        this.dev = dev;
+        console.Console.dev = this.dev;
     }
-    get port(): number
+    public get port(): number
     {
-        const address = this.#httpServer.listener.addr as Deno.NetAddr;
+        const address = this.httpServer.listener.addr as Deno.NetAddr;
         return address.port;
     }
-    get hostname(): string
+    public get hostname(): string
     {
-        const address = this.#httpServer.listener.addr as Deno.NetAddr;
+        const address = this.httpServer.listener.addr as Deno.NetAddr;
         if ((["::1", "127.0.0.1"]).includes(address.hostname))
             return "localhost";
         return address.hostname;
     }
-    get url(): string
+    public get url(): string
     {
-        return this.#protocol + "://" + this.hostname + ":" + this.port;
+        return this.protocol + "://" + this.hostname + ":" + this.port;
     }
     private async file(request: http.ServerRequest): Promise<http.Response>
     {
@@ -155,7 +155,7 @@ export class Server
         /* Cache static content */
         /** @todo Be more intelligent about cache time */
         if (request.headers.get("cache-control") !== "no-cache" && staticMediaTypes.includes(contentType))
-            headers.set("cache-control", "max-age=" + this.#cacheTime);
+            headers.set("cache-control", "max-age=" + this.cacheTime);
 
         const response: http.Response =
         {
@@ -186,8 +186,8 @@ export class Server
         console.Console.success("Received " + request.method + " request: " + originalURL);
 
         /* Checks if this URL should be rerouted (alias) */
-        if (this.#routes.has(request.url))
-            request.url = this.#routes.get(request.url) as string;
+        if (this.routes.has(request.url))
+            request.url = this.routes.get(request.url) as string;
 
         /* Converts URL to filepath */
         request.url = path.join(".", request.url);
@@ -198,17 +198,17 @@ export class Server
         }
         return await this.ok(request);
     }
-    async serve(): Promise<void>
+    public async serve(): Promise<void>
     {
         console.Console.log("Bundling client scripts...");
         await (new bundler.Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
         console.Console.success("Bundled client scripts!");
         console.Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
-        for await (const request of this.#httpServer)
+        for await (const request of this.httpServer)
             await this.route(request);
     }
-    close(): void
+    public close(): void
     {
-        this.#httpServer.close();
+        this.httpServer.close();
     }
 }

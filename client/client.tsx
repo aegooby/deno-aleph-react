@@ -2,32 +2,14 @@
 import * as React from "https://esm.sh/react";
 import * as ReactDOM from "https://esm.sh/react-dom";
 
+export { Console } from "./console.tsx";
+
 interface GlobalThis
 {
     document:
     {
         querySelector: (_: string) => DocumentFragment;
     };
-}
-
-export class Console
-{
-    static log(message: string): void
-    {
-        console.log("  [*]  " + message);
-    }
-    static success(message: string): void
-    {
-        console.log("  [$]  " + message);
-    }
-    static warn(message: string): void
-    {
-        console.warn("  [?]  " + message);
-    }
-    static error(message: string): void
-    {
-        console.error("  [!]  " + message);
-    }
 }
 
 export class Client

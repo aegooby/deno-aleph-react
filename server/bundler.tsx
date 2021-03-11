@@ -5,8 +5,8 @@ import * as console from "./console.tsx";
 
 export class Bundler
 {
-    compilerOptions: Deno.CompilerOptions;
-    emitOptions: Deno.EmitOptions;
+    private compilerOptions: Deno.CompilerOptions;
+    private emitOptions: Deno.EmitOptions;
     constructor()
     {
         this.compilerOptions =
@@ -42,7 +42,7 @@ export class Bundler
             compilerOptions: this.compilerOptions,
         };
     }
-    async bundle(source: string, destDir: string)
+    public async bundle(source: string, destDir: string)
     {
         const emit = await Deno.emit(source, this.emitOptions);
         if (emit.diagnostics.length)
