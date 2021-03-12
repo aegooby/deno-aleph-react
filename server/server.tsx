@@ -85,18 +85,18 @@ export class Server
 
     private dev: boolean;
 
-    constructor({ protocol, hostname, port, routes, dev = false }: ServerAttributes)
+    constructor(attributes: ServerAttributes)
     {
-        this.protocol = protocol;
+        this.protocol = attributes.protocol;
         const serveOptions =
         {
-            hostname: hostname,
-            port: port,
+            hostname: attributes.hostname,
+            port: attributes.port,
         };
         const serveTLSOptions =
         {
-            hostname: hostname,
-            port: port,
+            hostname: attributes.hostname,
+            port: attributes.port,
             certFile: "cert/localhost/cert.pem",
             keyFile: "cert/localhost/key.pem",
         };
@@ -111,8 +111,8 @@ export class Server
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
-        if (routes)
-            this.routes = routes;
+        if (attributes.routes)
+            this.routes = attributes.routes;
         else
         {
             this.routes.set("/", "/static/index.html");
@@ -120,7 +120,7 @@ export class Server
             this.routes.set("/404.html", "/static/404.html");
             this.routes.set("/robots.txt", "/static/robots.txt");
         }
-        this.dev = dev;
+        this.dev = attributes.dev ? attributes.dev : false;
         Console.dev = this.dev;
     }
     public get port(): number
