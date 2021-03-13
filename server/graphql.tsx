@@ -6,6 +6,8 @@ import "https://cdn.skypack.dev/reflect-metadata";
 import * as typegraphql from "https://cdn.skypack.dev/type-graphql@0.8.0";
 import * as playground from "https://esm.sh/graphql-playground-html";
 
+import { Console } from "./console.tsx";
+
 @typegraphql.Resolver()
 class HelloResolver
 {
@@ -92,20 +94,26 @@ export class GraphQL
         };
         return response;
     }
-    public async resolve(request: http.ServerRequest): Promise<http.Response>
+    public async respond(request: http.ServerRequest): Promise<void>
     {
         if (!this.schema)
             await this.build();
         if (request.url !== "/graphql")
-            throw new Error("Retard it's not GraphQL in GraphQL read the title FUCKO");
-        switch (request.method)
+            throw new Error("Invalid request URL for GraphQL");
+        try
         {
-            case "GET":
-                return this.playground(request);
-            case "POST":
-                return await this.query(request);
-            default:
-                throw new Error("Invalid HTTP method for GraphQL");
+            switch (request.method)
+            {
+                case "GET":
+                    await request.respond(this.playground(request));
+                    break;
+                case "POST":
+                    await request.respond(await this.query(request));
+                    break;
+                default:
+                    throw new Error("Invalid HTTP method for GraphQL");
+            }
         }
+        catch (error) { Console.error(error); }
     }
 }

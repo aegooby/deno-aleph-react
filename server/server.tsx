@@ -189,7 +189,9 @@ export class Server
         request.url = query.parseUrl(request.url).url;
 
         if (request.url === "/graphql")
-            return request.respond(await this.graphql.resolve(request));
+        {
+            return await this.graphql.respond(request);
+        }
 
         /* Checks if this URL should be rerouted (alias) */
         if (this.routes.has(request.url))
