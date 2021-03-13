@@ -11,6 +11,8 @@ export { Bundler } from "./bundler.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
+import { GraphQL } from "./graphql.tsx";
+
 const mediaTypes: Record<string, string> =
 {
     ".gz": "application/gzip",
@@ -78,6 +80,7 @@ export interface ServerAttributes
 
 export class Server
 {
+    private graphql: GraphQL = new GraphQL();
     private protocol: Protocol;
     private httpServer: http.Server;
 
@@ -184,6 +187,9 @@ export class Server
 
         /* Invalidate cache on new queries */
         request.url = query.parseUrl(request.url).url;
+
+        if (request.url === "/graphql")
+            return request.respond(await this.graphql.resolve(request));
 
         /* Checks if this URL should be rerouted (alias) */
         if (this.routes.has(request.url))
