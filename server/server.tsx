@@ -11,7 +11,7 @@ export { Bundler } from "./bundler.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
-import { GraphQL } from "./graphql.tsx";
+import * as graphql from "./graphql.tsx";
 
 const mediaTypes: Record<string, string> =
 {
@@ -80,7 +80,9 @@ export interface ServerAttributes
 
 export class Server
 {
-    private graphql: GraphQL = new GraphQL();
+    private graphql: graphql.GraphQL =
+        new graphql.GraphQL({ schema: "graphql/schema.gql", resolvers: graphql.resolvers });
+
     private protocol: Protocol;
     private httpServer: http.Server;
 
@@ -189,9 +191,7 @@ export class Server
         request.url = query.parseUrl(request.url).url;
 
         if (request.url === "/graphql")
-        {
             return await this.graphql.respond(request);
-        }
 
         /* Checks if this URL should be rerouted (alias) */
         if (this.routes.has(request.url))
@@ -210,7 +210,8 @@ export class Server
     {
         Console.log("Bundling client scripts...");
         await (new Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
-        Console.success("Bundled client scripts!");
+        Console.log("Building GraphQL...");
+        await this.graphql.build({ url: this.url });
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         for await (const request of this.httpServer)
             await this.route(request);

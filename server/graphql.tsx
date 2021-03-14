@@ -2,28 +2,41 @@
 import * as http from "https://deno.land/std/http/mod.ts";
 
 import * as graphql from "https://esm.sh/graphql";
-import "https://cdn.skypack.dev/reflect-metadata";
-import * as typegraphql from "https://cdn.skypack.dev/type-graphql@0.8.0";
 import * as playground from "https://esm.sh/graphql-playground-html";
 
 import { Console } from "./console.tsx";
 
-@typegraphql.Resolver()
-class HelloResolver
+interface GraphQLAttributes
 {
-    @typegraphql.Query(() => String)
-    public hello()
-    {
-        return "Hello";
-    }
+    schema: string;
+    resolvers: unknown;
 }
+
+interface GraphQLBuildAttributes
+{
+    url: string;
+}
+
+export const resolvers =
+{
+    hello: function () { return "penile"; }
+};
 
 export class GraphQL
 {
-    private schema?: graphql.GraphQLSchema;
-    public async build(): Promise<void>
+    private schemaPath: string;
+    private schema: graphql.GraphQLSchema = new graphql.GraphQLSchema({});
+    private resolvers: unknown;
+    private playgroundHTML: string = "" as const;
+    constructor(attributes: GraphQLAttributes)
     {
-        this.schema = await typegraphql.buildSchema({ resolvers: [HelloResolver] });
+        this.schemaPath = attributes.schema;
+        this.resolvers = attributes.resolvers;
+    }
+    private async buildSchema()
+    {
+        const schemaFile = await Deno.readTextFile(this.schemaPath);
+        this.schema = graphql.buildSchema(schemaFile);
     }
     private async query(request: http.ServerRequest): Promise<http.Response>
     {
@@ -52,8 +65,9 @@ export class GraphQL
             }
             const graphqlargs: graphql.GraphQLArgs =
             {
-                schema: this.schema!,
+                schema: this.schema,
                 source: query.query,
+                rootValue: this.resolvers,
                 variableValues: query.variables,
                 operationName: query.operationName,
             };
@@ -67,6 +81,7 @@ export class GraphQL
         }
         catch (error)
         {
+            Console.warn("Encountered GraphQL error");
             const json =
             {
                 data: null,
@@ -80,24 +95,22 @@ export class GraphQL
             return response;
         }
     }
-    private playground(request: http.ServerRequest): http.Response
+    private renderPlayground(url: string)
     {
         const playgroundOptions: playground.RenderPageOptions =
         {
-            endpoint: "https://localhost:8443/graphql",
-            subscriptionEndpoint: "https://localhost:8443/"
+            endpoint: url + "/graphql",
+            subscriptionEndpoint: url,
         };
-        const response: http.Response =
-        {
-            status: 200,
-            body: playground.renderPlaygroundPage(playgroundOptions),
-        };
-        return response;
+        this.playgroundHTML = playground.renderPlaygroundPage(playgroundOptions);
+    }
+    public async build(attributes: GraphQLBuildAttributes)
+    {
+        await this.buildSchema();
+        this.renderPlayground(attributes.url);
     }
     public async respond(request: http.ServerRequest): Promise<void>
     {
-        if (!this.schema)
-            await this.build();
         if (request.url !== "/graphql")
             throw new Error("Invalid request URL for GraphQL");
         try
@@ -105,7 +118,7 @@ export class GraphQL
             switch (request.method)
             {
                 case "GET":
-                    await request.respond(this.playground(request));
+                    await request.respond({ status: 200, body: this.playgroundHTML });
                     break;
                 case "POST":
                     await request.respond(await this.query(request));
