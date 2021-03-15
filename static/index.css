@@ -100,7 +100,8 @@ body
 
 .page .copyinfo 
 {
-    margin-top: 30px;
+    margin-top: 1em;
+    margin-bottom: 1em;
     font-size: 14px;
     color: #555;
     line-height: 1.5;
