@@ -4,7 +4,7 @@ import * as server from "./server.tsx";
 import * as yargs from "https://deno.land/x/yargs/deno.ts";
 
 const args = yargs.default(Deno.args)
-    .usage("usage: $0 server/daemon.tsx --protocol <protocol> --hostname <host> --port <port> [--dev] [--help]")
+    .usage("usage: $0 server/daemon.tsx --protocol <protocol> --hostname <host> --port <port> [--help]")
     .hide("help")
     .hide("version")
     .hide("hostname")

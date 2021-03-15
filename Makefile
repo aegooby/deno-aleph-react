@@ -19,7 +19,7 @@ cache:
 start-dev: export DENO_DIR=.httpsaurus/cache
 start-dev:
 	[ -d .httpsaurus/cache ] || make cache
-	deno run --allow-all --unstable server/daemon.tsx --protocol https --hostname localhost --port 8443 --dev
+	deno run --allow-all --unstable server/daemon.tsx --protocol https --hostname localhost --port 8443
 
 start-docker: export DENO_DIR=.httpsaurus/cache
 start-docker:
