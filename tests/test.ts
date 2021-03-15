@@ -44,6 +44,7 @@ try
                         protocol: "https" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
+                        cert: "cert/localhost",
 
                         resolvers: { request: function () { return "response"; } },
                         routes:
