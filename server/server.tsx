@@ -72,6 +72,7 @@ export interface ServerAttributes
     protocol: Protocol;
     hostname: string;
     port: number;
+    cert?: string;
 
     resolvers: unknown;
     routes: Record<string, string>;
@@ -90,26 +91,32 @@ export class Server
     constructor(attributes: ServerAttributes)
     {
         this.protocol = attributes.protocol;
-        const serveOptions =
-        {
-            hostname: attributes.hostname,
-            port: attributes.port,
-        };
-        const serveTLSOptions =
-        {
-            hostname: attributes.hostname,
-            port: attributes.port,
-            certFile: "cert/localhost/cert.pem",
-            keyFile: "cert/localhost/key.pem",
-        };
         switch (this.protocol)
         {
             case "http":
-                this.httpServer = http.serve(serveOptions);
-                break;
+                {
+                    const serveOptions =
+                    {
+                        hostname: attributes.hostname,
+                        port: attributes.port,
+                    };
+                    this.httpServer = http.serve(serveOptions);
+                    break;
+                }
             case "https":
-                this.httpServer = http.serveTLS(serveTLSOptions);
-                break;
+                {
+                    if (!attributes.cert)
+                        throw new Error("HTTPS certificate directory not specified");
+                    const serveTLSOptions =
+                    {
+                        hostname: attributes.hostname,
+                        port: attributes.port,
+                        certFile: path.join(attributes.cert, "fullchain.pem"),
+                        keyFile: path.join(attributes.cert, "privkey.pem",)
+                    };
+                    this.httpServer = http.serveTLS(serveTLSOptions);
+                    break;
+                }
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
