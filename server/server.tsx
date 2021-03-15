@@ -11,7 +11,7 @@ export { Bundler } from "./bundler.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
-import * as graphql from "./graphql.tsx";
+import { GraphQL } from "./graphql.tsx";
 
 const mediaTypes: Record<string, string> =
 {
@@ -73,22 +73,19 @@ export interface ServerAttributes
     hostname: string;
     port: number;
 
-    routes?: Map<string, string>;
-
-    dev?: boolean;
+    resolvers: unknown;
+    routes: Record<string, string>;
 }
 
 export class Server
 {
-    private graphql: graphql.GraphQL =
-        new graphql.GraphQL({ schema: "graphql/schema.gql", resolvers: graphql.resolvers });
+    private graphql: GraphQL;
 
     private protocol: Protocol;
     private httpServer: http.Server;
 
     private routes: Map<string, string> = new Map<string, string>();
 
-    private dev: boolean;
 
     constructor(attributes: ServerAttributes)
     {
@@ -116,17 +113,9 @@ export class Server
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
-        if (attributes.routes)
-            this.routes = attributes.routes;
-        else
-        {
-            this.routes.set("/", "/static/index.html");
-            this.routes.set("/favicon.ico", "/static/favicon.ico");
-            this.routes.set("/404.html", "/static/404.html");
-            this.routes.set("/robots.txt", "/static/robots.txt");
-        }
-        this.dev = attributes.dev ? attributes.dev : false;
-        Console.dev = this.dev;
+        for (const key in attributes.routes)
+            this.routes.set(key, attributes.routes[key]);
+        this.graphql = new GraphQL({ schema: "graphql/schema.gql", resolvers: attributes.resolvers });
     }
     public get port(): number
     {

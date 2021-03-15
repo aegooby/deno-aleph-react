@@ -15,6 +15,15 @@ try
                         protocol: "http" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
+
+                        resolvers: { request: function () { return "response"; } },
+                        routes:
+                        {
+                            "/": "/static/index.html",
+                            "/favicon.ico": "/static/favicon.ico",
+                            "/404.html": "/static/404.html",
+                            "/robots.txt": "/static/robots.txt",
+                        }
                     };
                     const server = new httpsaurus.server.Server(serverAttributes);
                     const time = delay.delay(5000);
@@ -35,6 +44,15 @@ try
                         protocol: "https" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
+
+                        resolvers: { request: function () { return "response"; } },
+                        routes:
+                        {
+                            "/": "/static/index.html",
+                            "/favicon.ico": "/static/favicon.ico",
+                            "/404.html": "/static/404.html",
+                            "/robots.txt": "/static/robots.txt",
+                        }
                     };
                     const server = new httpsaurus.server.Server(serverAttributes);
                     const time = delay.delay(5000);
@@ -55,6 +73,15 @@ try
                         protocol: "http" as httpsaurus.server.Protocol,
                         hostname: "localhost",
                         port: 8443,
+
+                        resolvers: { request: function () { return "response"; } },
+                        routes:
+                        {
+                            "/": "/static/index.html",
+                            "/favicon.ico": "/static/favicon.ico",
+                            "/404.html": "/static/404.html",
+                            "/robots.txt": "/static/robots.txt",
+                        }
                     };
                     const server = new httpsaurus.server.Server(serverAttributes);
                     const complete = server.serve();

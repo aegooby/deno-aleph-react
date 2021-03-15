@@ -14,7 +14,6 @@ const args = yargs.default(Deno.args)
 const protocol: server.Protocol = args.protocol;
 const hostname: string = args.hostname;
 const port: number = args.port;
-const dev: boolean = args.dev;
 
 try
 {
@@ -23,7 +22,15 @@ try
         protocol: protocol,
         hostname: hostname,
         port: port,
-        dev: dev,
+
+        resolvers: { request: function () { return "response"; } },
+        routes:
+        {
+            "/": "/static/index.html",
+            "/favicon.ico": "/static/favicon.ico",
+            "/404.html": "/static/404.html",
+            "/robots.txt": "/static/robots.txt",
+        }
     };
     const httpserver = new server.Server(serverAttributes);
     await httpserver.serve();

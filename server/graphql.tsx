@@ -17,11 +17,6 @@ interface GraphQLBuildAttributes
     url: string;
 }
 
-export const resolvers =
-{
-    hello: function () { return "penile"; }
-};
-
 export class GraphQL
 {
     private schemaPath: string;

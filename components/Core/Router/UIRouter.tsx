@@ -3,7 +3,7 @@ import * as React from "https://esm.sh/react";
 
 interface Props
 {
-    routes: Map<string, React.ReactElement>;
+    routes: Record<string, React.ReactElement>;
 }
 interface State
 {
@@ -12,10 +12,14 @@ interface State
 
 export class Component extends React.Component<Props, State>
 {
+    private routes: Map<string, React.ReactElement> = new Map<string, React.ReactElement>();
     constructor(props: Props)
     {
         super(props);
         this.state = { route: "/" };
+
+        for (const key in this.props.routes)
+            this.routes.set(key, this.props.routes[key]);
 
         this.reroute = this.reroute.bind(this);
     }
@@ -25,11 +29,11 @@ export class Component extends React.Component<Props, State>
     }
     render(): React.ReactElement
     {
-        if (this.props.routes.has(this.state.route))
+        if (this.routes.has(this.state.route))
         {
             const element =
                 <Context.Provider value={this}>
-                    {this.props.routes.get(this.state.route) as React.ReactElement}
+                    {this.routes.get(this.state.route) as React.ReactElement}
                 </Context.Provider>;
             return element;
         }
