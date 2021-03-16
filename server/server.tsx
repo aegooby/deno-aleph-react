@@ -168,12 +168,21 @@ export class Server
 
         /** @todo Add caching. */
 
+        if (contentType === "application/javascript")
+        {
+            const array = new Uint8Array(3);
+            body.seek(info.size - 3, Deno.SeekMode.Start);
+            await body.read(array);
+            console.log((new TextDecoder()).decode(array));
+            body.seek(0, Deno.SeekMode.Start);
+        }
+
         const response: http.Response =
         {
             headers: headers,
             body: body,
         };
-        // request.done.then(function () { body.close(); });
+        request.done.then(function () { body.close(); });
         return response;
     }
     private async ok(request: http.ServerRequest): Promise<void>
@@ -188,7 +197,8 @@ export class Server
         request.url = "static/404.html";
         const response = await this.file(request);
         response.status = 404;
-        try { await request.respond(response); }
+        try
+        { await request.respond(response); }
         catch (error) { Console.error(error); }
     }
     private async respond(request: http.ServerRequest): Promise<void>
@@ -224,7 +234,7 @@ export class Server
 
         const response: http.Response =
         {
-            status: 302,
+            status: 307,
             headers: headers,
             body: ""
         };
