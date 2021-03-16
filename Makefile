@@ -13,7 +13,7 @@ image:
 	docker build --tag httpsaurus/server .
 
 container:
-	docker run --interactive --tty --init --detach --publish 443:8443 httpsaurus/server:latest
+	docker run --interactive --tty --init --detach --publish 443:443 httpsaurus/server:latest
 
 cache: export DENO_DIR=.httpsaurus/cache
 cache:
