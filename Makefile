@@ -2,6 +2,10 @@
 clean:
 	rm -rf .httpsaurus
 
+prune:
+	docker container prune --force
+	docker image prune --force
+
 install-deno:
 	curl -fsSL https://deno.land/x/install/install.sh | sh
 
