@@ -163,9 +163,6 @@ export class Server
 
         /** @todo Add caching. */
 
-        if (contentType === "application/javascript")
-            console.log((new TextDecoder()).decode(body));
-
         const response: http.Response =
         {
             headers: headers,
@@ -179,6 +176,8 @@ export class Server
         {
             const response = await this.file(request);
             response.status = 200;
+            if (response.headers!.get("content-type") === "application/javascript")
+                console.log((new TextDecoder()).decode(response.body as Uint8Array));
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
