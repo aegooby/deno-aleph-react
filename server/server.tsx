@@ -164,14 +164,20 @@ export class Server
     {
         /* Open file and get file length */
         const filePath = request.url;
-        const file = await Deno.open(filePath, { read: true });
-        const body = await Deno.readAll(file);
-        file.close();
+        const body = await Deno.open(filePath, { read: true });
         const info = await Deno.stat(filePath);
+
+        /* Clean up file RID */
+        request.done.then(function () { body.close(); });
 
         /* Set headers */
         const headers = new Headers();
-        headers.set("content-length", info.size.toString());
+
+        if (info.size > 16384)
+            headers.set("transfer-encoding", "chunked");
+        else
+            headers.set("content-length", info.size.toString());
+
         const contentType = mediaTypes[path.extname(filePath)];
         if (contentType)
             headers.set("content-type", contentType);
@@ -181,8 +187,7 @@ export class Server
         const response: http.Response =
         {
             headers: headers,
-            body: body.length > 16384 && textMediaTypes.includes(contentType) ?
-                (new TextDecoder()).decode(body) : body,
+            body: body,
         };
         return response;
     }
@@ -191,7 +196,7 @@ export class Server
         try 
         {
             const response = await this.file(request);
-            response.status = 200;
+            response.status = http.Status.OK;
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
@@ -202,7 +207,7 @@ export class Server
         {
             request.url = "static/404.html";
             const response = await this.file(request);
-            response.status = 404;
+            response.status = http.Status.NotFound;
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
@@ -240,7 +245,7 @@ export class Server
 
         const response: http.Response =
         {
-            status: 307,
+            status: http.Status.TemporaryRedirect,
             headers: headers,
             body: ""
         };
