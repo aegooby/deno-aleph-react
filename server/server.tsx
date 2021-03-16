@@ -95,35 +95,28 @@ export class Server
     constructor(attributes: ServerAttributes)
     {
         this.protocol = attributes.protocol;
+        const serveOptions =
+        {
+            hostname: attributes.hostname,
+            port: attributes.httpPort,
+        };
+        const serveTLSOptions =
+        {
+            hostname: attributes.hostname,
+            port: attributes.httpsPort!,
+            certFile: path.join(attributes.cert!, "fullchain.pem"),
+            keyFile: path.join(attributes.cert!, "privkey.pem"),
+        };
         switch (this.protocol)
         {
             case "http":
                 {
-                    const serveOptions =
-                    {
-                        hostname: attributes.hostname,
-                        port: attributes.httpPort,
-                    };
                     this.httpServer = http.serve(serveOptions);
                     break;
                 }
             case "https":
                 {
-                    if (!attributes.cert)
-                        throw new Error("HTTPS certificate directory not specified");
-                    const serveOptions =
-                    {
-                        hostname: attributes.hostname,
-                        port: attributes.httpPort,
-                    };
                     this.httpServer = http.serve(serveOptions);
-                    const serveTLSOptions =
-                    {
-                        hostname: attributes.hostname,
-                        port: attributes.httpsPort!,
-                        certFile: path.join(attributes.cert, "fullchain.pem"),
-                        keyFile: path.join(attributes.cert, "privkey.pem"),
-                    };
                     this.httpsServer = http.serveTLS(serveTLSOptions);
                     break;
                 }
@@ -168,15 +161,6 @@ export class Server
 
         /** @todo Add caching. */
 
-        if (contentType === "application/javascript")
-        {
-            const array = new Uint8Array(3);
-            body.seek(info.size - 3, Deno.SeekMode.Start);
-            await body.read(array);
-            console.log((new TextDecoder()).decode(array));
-            body.seek(0, Deno.SeekMode.Start);
-        }
-
         const response: http.Response =
         {
             headers: headers,
@@ -187,18 +171,28 @@ export class Server
     }
     private async ok(request: http.ServerRequest): Promise<void>
     {
-        const response = await this.file(request);
-        response.status = 200;
-        try { await request.respond(response); }
+        try 
+        {
+            const response = await this.file(request);
+            response.status = 200;
+            if (response.headers!.get("content-type") === "application/javascript")
+            {
+                const array = await Deno.readAll(response.body as Deno.Reader);
+                console.log((new TextDecoder()).decode(array));
+            }
+            await request.respond(response);
+        }
         catch (error) { Console.error(error); }
     }
     private async notFound(request: http.ServerRequest): Promise<void>
     {
-        request.url = "static/404.html";
-        const response = await this.file(request);
-        response.status = 404;
         try
-        { await request.respond(response); }
+        {
+            request.url = "static/404.html";
+            const response = await this.file(request);
+            response.status = 404;
+            await request.respond(response);
+        }
         catch (error) { Console.error(error); }
     }
     private async respond(request: http.ServerRequest): Promise<void>
