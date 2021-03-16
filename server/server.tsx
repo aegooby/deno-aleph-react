@@ -125,16 +125,12 @@ export class Server
         switch (this.protocol)
         {
             case "http":
-                {
-                    this.httpServer = http.serve(serveOptions);
-                    break;
-                }
+                this.httpServer = http.serve(serveOptions);
+                break;
             case "https":
-                {
-                    this.httpServer = http.serve(serveOptions);
-                    this.httpsServer = http.serveTLS(serveTLSOptions);
-                    break;
-                }
+                this.httpServer = http.serve(serveOptions);
+                this.httpsServer = http.serveTLS(serveTLSOptions);
+                break;
             default:
                 throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
         }
@@ -173,7 +169,7 @@ export class Server
         /* Set headers */
         const headers = new Headers();
 
-        if (info.size > 16384)
+        if (info.size > 0x4000)
             headers.set("transfer-encoding", "chunked");
         else
             headers.set("content-length", info.size.toString());
