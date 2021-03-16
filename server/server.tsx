@@ -161,7 +161,9 @@ export class Server
             headers: headers,
             body: body,
         };
-        request.done.then(function () { body.close(); });
+        request.done
+            .then(function () { body.close(); })
+            .catch(function (error) { Console.error(error); });
         return response;
     }
     private async ok(request: http.ServerRequest): Promise<void>
