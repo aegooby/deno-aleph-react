@@ -144,7 +144,8 @@ export class Server
     {
         /* Open file and get file length */
         const filePath = request.url;
-        const [body, info] = await Promise.all([Deno.open(filePath), Deno.stat(filePath)]);
+        const body = await Deno.open(filePath, { read: true });
+        const info = await Deno.stat(filePath);
 
         /* Set headers */
         const headers = new Headers();
