@@ -150,6 +150,8 @@ export class Server
         /* Open file and get file length */
         const filePath = request.url;
         const file = await Deno.open(filePath, { read: true });
+        const array = await Deno.readAll(file);
+        file.close();
         const info = await Deno.stat(filePath);
 
         /* Set headers */
@@ -164,9 +166,9 @@ export class Server
         const response: http.Response =
         {
             headers: headers,
-            body: await Deno.readAll(file),
+            body: (new TextDecoder()).decode(array),
         };
-        request.done.then(function () { file.close(); });
+        // request.done.then(function () { file.close(); });
         return response;
     }
     private async ok(request: http.ServerRequest): Promise<void>
