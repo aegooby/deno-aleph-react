@@ -149,7 +149,7 @@ export class Server
     {
         /* Open file and get file length */
         const filePath = request.url;
-        const body = await Deno.open(filePath, { read: true });
+        const body = await Deno.readAll(await Deno.open(filePath, { read: true }));
         const info = await Deno.stat(filePath);
 
         /* Set headers */
@@ -175,11 +175,6 @@ export class Server
         {
             const response = await this.file(request);
             response.status = 200;
-            if (response.headers!.get("content-type") === "application/javascript")
-            {
-                const array = await Deno.readAll(response.body as Deno.Reader);
-                console.log((new TextDecoder()).decode(array));
-            }
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
