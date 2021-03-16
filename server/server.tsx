@@ -156,8 +156,6 @@ export class Server
 
         /** @todo Add caching. */
 
-        Console.log("Content-Length: " + headers.get("content-length"));
-
         const response: http.Response =
         {
             headers: headers,
