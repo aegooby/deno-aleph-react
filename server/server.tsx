@@ -46,6 +46,21 @@ const mediaTypes: Record<string, string> =
     ".webm": "video/webm",
 };
 
+const textMediaTypes: string[] =
+    [
+        "application/javascript",
+        "application/json",
+
+        "text/css",
+        "text/html",
+        "text/html",
+        "text/jsx",
+        "text/markdown",
+        "text/plain",
+        "text/typescript",
+        "text/tsx",
+    ];
+
 const staticMediaTypes: string[] =
     [
         "audio/ogg",
@@ -166,7 +181,8 @@ export class Server
         const response: http.Response =
         {
             headers: headers,
-            body: body,
+            body: body.length > 16384 && textMediaTypes.includes(contentType) ?
+                (new TextDecoder()).decode(body) : body,
         };
         return response;
     }
@@ -176,8 +192,6 @@ export class Server
         {
             const response = await this.file(request);
             response.status = 200;
-            if (response.headers!.get("content-type") === "application/javascript")
-                console.log((new TextDecoder()).decode(response.body as Uint8Array));
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
