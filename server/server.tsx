@@ -150,7 +150,7 @@ export class Server
         /* Open file and get file length */
         const filePath = request.url;
         const file = await Deno.open(filePath, { read: true });
-        const array = await Deno.readAll(file);
+        const body = await Deno.readAll(file);
         file.close();
         const info = await Deno.stat(filePath);
 
@@ -163,10 +163,13 @@ export class Server
 
         /** @todo Add caching. */
 
+        if (contentType === "application/javascript")
+            console.log((new TextDecoder()).decode(body));
+
         const response: http.Response =
         {
             headers: headers,
-            body: array,
+            body: body,
         };
         return response;
     }
