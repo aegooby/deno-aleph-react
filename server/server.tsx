@@ -173,22 +173,14 @@ export class Server
             headers: headers,
             body: body,
         };
-        request.done.then(function () 
-        {
-            Console.log("Request done");
-            body.close();
-        });
+        // request.done.then(function () { body.close(); });
         return response;
     }
     private async ok(request: http.ServerRequest): Promise<void>
     {
         const response = await this.file(request);
         response.status = 200;
-        try 
-        {
-            await request.respond(response);
-            Console.log("Responded");
-        }
+        try { await request.respond(response); }
         catch (error) { Console.error(error); }
     }
     private async notFound(request: http.ServerRequest): Promise<void>
