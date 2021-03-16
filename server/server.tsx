@@ -112,7 +112,7 @@ export class Server
                         hostname: attributes.hostname,
                         port: attributes.port,
                         certFile: path.join(attributes.cert, "fullchain.pem"),
-                        keyFile: path.join(attributes.cert, "privkey.pem",)
+                        keyFile: path.join(attributes.cert, "privkey.pem"),
                     };
                     this.httpServer = http.serveTLS(serveTLSOptions);
                     break;
