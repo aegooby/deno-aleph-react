@@ -160,7 +160,7 @@ export class Server
     {
         return this.protocol + "://" + this.hostname + ":" + this.port;
     }
-    private async file(request: http.ServerRequest): Promise<http.Response>
+    private async file(request: http.ServerRequest, status: http.Status): Promise<http.Response>
     {
         /* Open file and get file length */
         const filePath = request.url;
@@ -173,10 +173,10 @@ export class Server
         /* Set headers */
         const headers = new Headers();
 
-        // if (info.size > 16384)
-        // headers.set("transfer-encoding", "chunked");
-        // else
-        headers.set("content-length", info.size.toString());
+        if (info.size > 16384)
+            headers.set("transfer-encoding", "chunked");
+        else
+            headers.set("content-length", info.size.toString());
 
         const contentType = mediaTypes[path.extname(filePath)];
         if (contentType)
@@ -186,6 +186,7 @@ export class Server
 
         const response: http.Response =
         {
+            status: status,
             headers: headers,
             body: body,
         };
@@ -195,8 +196,7 @@ export class Server
     {
         try 
         {
-            const response = await this.file(request);
-            response.status = http.Status.OK;
+            const response = await this.file(request, http.Status.OK);
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
@@ -206,8 +206,7 @@ export class Server
         try
         {
             request.url = "static/404.html";
-            const response = await this.file(request);
-            response.status = http.Status.NotFound;
+            const response = await this.file(request, http.Status.NotFound);
             await request.respond(response);
         }
         catch (error) { Console.error(error); }
