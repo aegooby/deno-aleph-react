@@ -185,7 +185,7 @@ export class Server
     {
         const originalURL = request.url;
         Console.success("Received " + request.method + " request: " + originalURL);
-        Console.log(request.proto);
+        console.log((request.conn.localAddr as Deno.NetAddr).port);
 
         /* Invalidate cache on new queries */
         request.url = query.parseUrl(request.url).url;
