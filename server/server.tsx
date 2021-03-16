@@ -185,6 +185,7 @@ export class Server
     {
         const originalURL = request.url;
         Console.success("Received " + request.method + " request: " + originalURL);
+        Console.log(request.proto);
 
         /* Invalidate cache on new queries */
         request.url = query.parseUrl(request.url).url;
