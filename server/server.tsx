@@ -166,9 +166,8 @@ export class Server
         const response: http.Response =
         {
             headers: headers,
-            body: (new TextDecoder()).decode(array),
+            body: array,
         };
-        // request.done.then(function () { file.close(); });
         return response;
     }
     private async ok(request: http.ServerRequest): Promise<void>
