@@ -168,7 +168,7 @@ export class Server
         const info = await Deno.stat(filePath);
 
         /* Clean up file RID */
-        request.done.then(function () { body.close(); });
+        // request.done.then(function () { body.close(); });
 
         /* Set headers */
         const headers = new Headers();
