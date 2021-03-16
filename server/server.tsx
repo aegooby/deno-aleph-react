@@ -71,7 +71,9 @@ export interface ServerAttributes
 {
     protocol: Protocol;
     hostname: string;
-    port: number;
+    httpPort: number;
+
+    httpsPort?: number;
     cert?: string;
 
     resolvers: unknown;
@@ -83,7 +85,9 @@ export class Server
     private graphql: GraphQL;
 
     private protocol: Protocol;
+
     private httpServer: http.Server;
+    private httpsServer?: http.Server;
 
     private routes: Map<string, string> = new Map<string, string>();
 
@@ -98,7 +102,7 @@ export class Server
                     const serveOptions =
                     {
                         hostname: attributes.hostname,
-                        port: attributes.port,
+                        port: attributes.httpPort,
                     };
                     this.httpServer = http.serve(serveOptions);
                     break;
@@ -107,14 +111,20 @@ export class Server
                 {
                     if (!attributes.cert)
                         throw new Error("HTTPS certificate directory not specified");
+                    const serveOptions =
+                    {
+                        hostname: attributes.hostname,
+                        port: attributes.httpPort,
+                    };
+                    this.httpServer = http.serve(serveOptions);
                     const serveTLSOptions =
                     {
                         hostname: attributes.hostname,
-                        port: attributes.port,
+                        port: attributes.httpsPort!,
                         certFile: path.join(attributes.cert, "fullchain.pem"),
                         keyFile: path.join(attributes.cert, "privkey.pem"),
                     };
-                    this.httpServer = http.serveTLS(serveTLSOptions);
+                    this.httpsServer = http.serveTLS(serveTLSOptions);
                     break;
                 }
             default:
@@ -126,7 +136,9 @@ export class Server
     }
     public get port(): number
     {
-        const address = this.httpServer.listener.addr as Deno.NetAddr;
+        const address = this.httpsServer ?
+            this.httpsServer.listener.addr as Deno.NetAddr :
+            this.httpServer.listener.addr as Deno.NetAddr;
         return address.port;
     }
     public get hostname(): string
@@ -181,11 +193,10 @@ export class Server
         try { await request.respond(response); }
         catch (error) { Console.error(error); }
     }
-    private async route(request: http.ServerRequest): Promise<void>
+    private async respond(request: http.ServerRequest): Promise<void>
     {
         const originalURL = request.url;
         Console.success("Received " + request.method + " request: " + originalURL);
-        console.log((request.conn.localAddr as Deno.NetAddr).port);
 
         /* Invalidate cache on new queries */
         request.url = query.parseUrl(request.url).url;
@@ -206,18 +217,49 @@ export class Server
         }
         return await this.ok(request);
     }
+    private async redirect(request: http.ServerRequest): Promise<void>
+    {
+        const location =
+            (request.headers.get("referer") ?? "https://" + request.headers.get("host")) + request.url;
+        const headers = new Headers();
+        headers.set("location", location);
+
+        const response: http.Response =
+        {
+            status: 302,
+            headers: headers,
+            body: ""
+        };
+        await request.respond(response);
+    }
     public async serve(): Promise<void>
     {
         Console.log("Bundling client scripts...");
         await (new Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
+
         Console.log("Building GraphQL...");
         await this.graphql.build({ url: this.url });
+
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
-        for await (const request of this.httpServer)
-            await this.route(request);
+        async function httpRequest(server: Server)
+        {
+            for await (const request of server.httpServer)
+                server.httpServer ? await server.redirect(request) : await server.respond(request);
+        }
+        async function httpsRequest(server: Server)
+        {
+            for await (const request of server.httpsServer!)
+                await server.respond(request);
+        }
+        if (this.httpsServer)
+            await Promise.all([httpRequest(this), httpsRequest(this)]);
+        else
+            await httpRequest(this);
     }
     public close(): void
     {
         this.httpServer.close();
+        if (this.httpsServer)
+            this.httpsServer.close();
     }
 }

@@ -9,7 +9,7 @@ try
 {
     const clientAttributes =
     {
-        api: "https://localhost:8443/graphql"
+        api: "https://localhost/graphql"
     };
     const httpclient = new client.Client(clientAttributes);
     httpclient.hydrate(<App routes={{ "/": <Index /> }} fetch={httpclient.fetch} />);

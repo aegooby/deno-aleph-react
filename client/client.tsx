@@ -1,8 +1,6 @@
 
 import * as React from "https://esm.sh/react";
 import * as ReactDOM from "https://esm.sh/react-dom";
-import * as Relay from "https://esm.sh/react-relay";
-import * as RelayRuntime from "https://esm.sh/relay-runtime";
 
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
