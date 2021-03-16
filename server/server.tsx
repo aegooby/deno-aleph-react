@@ -104,8 +104,8 @@ export class Server
         {
             hostname: attributes.hostname,
             port: attributes.httpsPort!,
-            certFile: path.join(attributes.cert!, "fullchain.pem"),
-            keyFile: path.join(attributes.cert!, "privkey.pem"),
+            certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
+            keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
         };
         switch (this.protocol)
         {
