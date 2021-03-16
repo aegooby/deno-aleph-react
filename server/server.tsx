@@ -244,7 +244,7 @@ export class Server
         async function httpRequest(server: Server)
         {
             for await (const request of server.httpServer)
-                server.httpServer ? await server.redirect(request) : await server.respond(request);
+                server.httpsServer ? await server.redirect(request) : await server.respond(request);
         }
         async function httpsRequest(server: Server)
         {

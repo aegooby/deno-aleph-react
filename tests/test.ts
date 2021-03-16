@@ -14,7 +14,7 @@ try
                     {
                         protocol: "http" as httpsaurus.server.Protocol,
                         hostname: "localhost",
-                        port: 8443,
+                        httpPort: 8080,
 
                         resolvers: { request: function () { return "response"; } },
                         routes:
@@ -43,7 +43,9 @@ try
                     {
                         protocol: "https" as httpsaurus.server.Protocol,
                         hostname: "localhost",
-                        port: 8443,
+                        httpPort: 8080,
+
+                        httpsPort: 4430,
                         cert: "cert/localhost",
 
                         resolvers: { request: function () { return "response"; } },
@@ -73,7 +75,7 @@ try
                     {
                         protocol: "http" as httpsaurus.server.Protocol,
                         hostname: "localhost",
-                        port: 8443,
+                        httpPort: 8080,
 
                         resolvers: { request: function () { return "response"; } },
                         routes:
@@ -86,7 +88,7 @@ try
                     };
                     const server = new httpsaurus.server.Server(serverAttributes);
                     const complete = server.serve();
-                    const response = await fetch("http://localhost:8443/");
+                    const response = await fetch("http://localhost:8080/");
                     assert.assert(response.ok);
                     await response.text();
                     server.close();
