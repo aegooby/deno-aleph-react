@@ -10,8 +10,9 @@ interface State
     route: string;
 }
 
-export class Component extends React.Component<Props, State>
+export default class UIRouter extends React.Component<Props, State>
 {
+    public static Context = React.createContext(null as UIRouter | null);
     private routes: Map<string, React.ReactElement> = new Map<string, React.ReactElement>();
     constructor(props: Props)
     {
@@ -32,12 +33,11 @@ export class Component extends React.Component<Props, State>
         if (this.routes.has(this.state.route))
         {
             const element =
-                <Context.Provider value={this}>
+                <UIRouter.Context.Provider value={this}>
                     {this.routes.get(this.state.route) as React.ReactElement}
-                </Context.Provider>;
+                </UIRouter.Context.Provider>;
             return element;
         }
         else throw new Error("route not found");
     }
 }
-export const Context = React.createContext(null as Component | null);

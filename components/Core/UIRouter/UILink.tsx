@@ -9,7 +9,7 @@ interface Props
     element: React.ReactElement;
 }
 
-export default class Link extends React.Component<Props, unknown>
+export default class UILink extends React.Component<Props, unknown>
 {
     constructor(props: Props)
     {

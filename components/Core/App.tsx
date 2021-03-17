@@ -1,6 +1,6 @@
 
 import * as React from "https://esm.sh/react";
-import * as UIRouter from "./Router/UIRouter.tsx";
+import UIRouter from "./UIRouter/UIRouter.tsx";
 
 import { Console } from "../../client/console.tsx";
 
@@ -36,6 +36,6 @@ export default class App extends React.Component<Props, unknown>
     }
     render(): React.ReactElement
     {
-        return <UIRouter.Component routes={this.props.routes} />;
+        return <UIRouter routes={this.props.routes} />;
     }
 }
