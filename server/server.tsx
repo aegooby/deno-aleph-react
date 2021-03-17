@@ -248,9 +248,6 @@ export class Server
     }
     public async serve(): Promise<void>
     {
-        // Console.log("Bundling client scripts...");
-        // await (new Bundler()).bundle("client/bundle.tsx", ".httpsaurus");
-
         Console.log("Building GraphQL...");
         await this.graphql.build({ url: this.url });
 
