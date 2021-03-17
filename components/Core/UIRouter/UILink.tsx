@@ -1,7 +1,7 @@
 
 import * as React from "https://esm.sh/react";
 
-import * as UIRouter from "./UIRouter.tsx";
+import UIRouter from "./UIRouter.tsx";
 
 interface Props
 {
@@ -19,7 +19,7 @@ export default class UILink extends React.Component<Props, unknown>
     {
         const href = this.props.href;
         const element = this.props.element;
-        function consumer(router: UIRouter.Component | null): React.ReactElement
+        function consumer(router: UIRouter | null): React.ReactElement
         {
             function onClick(): void
             {
