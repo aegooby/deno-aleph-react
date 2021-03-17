@@ -25,7 +25,6 @@ export class Bundler
             jsxFragmentFactory: "React.Fragment",
             module: "esnext",
             noImplicitAny: true,
-            sourceMap: true,
             lib:
                 [
                     "deno.ns",
@@ -49,8 +48,6 @@ export class Bundler
             console.Console.warn(Deno.formatDiagnostics(emit.diagnostics));
         const encoder = new TextEncoder();
         const bundleSource = encoder.encode(emit.files["deno:///bundle.js"]);
-        const bundleSourceMap = encoder.encode(emit.files["deno:///bundle.js.map"]);
         Deno.writeFile(path.join(destDir, "bundle.js"), bundleSource);
-        Deno.writeFile(path.join(destDir, "bundle.js.map"), bundleSourceMap);
     }
 }

@@ -1,0 +1,23 @@
+{
+    "allowJs": true,
+    "checkJs": true,
+    "downlevelIteration": true,
+    "emitDeclarationOnly": false,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "importsNotUsedAsValues": "remove",
+    "jsx": "react",
+    "jsxFactory": "React.createElement",
+    "jsxFragmentFactory": "React.Fragment",
+    "module": "esnext",
+    "noImplicitAny": true,
+    "lib": [
+        "deno.ns",
+        "deno.unstable",
+        "dom"
+    ],
+    "strict": true,
+    "target": "esnext"
+}

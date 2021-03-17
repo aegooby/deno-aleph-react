@@ -20,6 +20,11 @@ cache:
 	[ -d .httpsaurus/cache ] || mkdir -p .httpsaurus/cache
 	deno cache --unstable **/*.tsx
 
+bundle: export DENO_DIR=.httpsaurus/cache
+bundle: 
+	[ -d .httpsaurus ] || mkdir -p .httpsaurus
+	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle.js
+
 start-dev: export DENO_DIR=.httpsaurus/cache
 start-dev:
 	[ -d .httpsaurus/cache ] || make cache

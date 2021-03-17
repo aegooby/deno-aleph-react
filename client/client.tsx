@@ -9,7 +9,7 @@ interface GlobalThis
 {
     document:
     {
-        querySelector: (_: string) => DocumentFragment;
+        querySelector: (selectors: string) => DocumentFragment;
     };
 }
 

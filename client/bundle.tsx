@@ -14,4 +14,4 @@ try
     const httpclient = new client.Client(clientAttributes);
     httpclient.hydrate(<App routes={{ "/": <Index /> }} fetch={httpclient.fetch} />);
 }
-catch (error) { client.Console.log(error); }
+catch (error) { client.Console.error(error); }
