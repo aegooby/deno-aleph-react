@@ -10,7 +10,9 @@ ENV DENO_INSTALL=/root/.deno
 ENV PATH="$DENO_INSTALL/bin:$PATH"
 ADD . .
 RUN make install-deno
-RUN make cache
 
 # Server
+RUN make cache
+RUN make bundle
+RUN deno upgrade --version 1.7.0
 CMD [ "make", "start-docker" ]
