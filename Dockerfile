@@ -9,10 +9,9 @@ RUN apt-get install -y curl unzip make ca-certificates certbot --no-install-reco
 ENV DENO_INSTALL=/root/.deno
 ENV PATH="$DENO_INSTALL/bin:$PATH"
 ADD . .
-RUN make install-deno
+RUN make install
 
 # Server
 RUN make cache
 RUN make bundle
-RUN deno upgrade --version 1.7.0
-CMD [ "make", "start-docker" ]
+CMD [ "make", "release" ]
