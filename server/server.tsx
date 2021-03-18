@@ -6,12 +6,11 @@ import * as colors from "https://deno.land/std/fmt/colors.ts";
 
 import * as query from "https://esm.sh/query-string";
 
-import { Bundler } from "./bundler.tsx";
-export { Bundler } from "./bundler.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
 import { GraphQL } from "./graphql.tsx";
+import { Page } from "./page.tsx";
 
 const mediaTypes: Record<string, string> =
 {
@@ -45,21 +44,6 @@ const mediaTypes: Record<string, string> =
 
     ".webm": "video/webm",
 };
-
-const textMediaTypes: string[] =
-    [
-        "application/javascript",
-        "application/json",
-
-        "text/css",
-        "text/html",
-        "text/html",
-        "text/jsx",
-        "text/markdown",
-        "text/plain",
-        "text/typescript",
-        "text/tsx",
-    ];
 
 const staticMediaTypes: string[] =
     [
@@ -97,15 +81,12 @@ export interface ServerAttributes
 
 export class Server
 {
-    private graphql: GraphQL;
-
     private protocol: Protocol;
 
     private httpServer: http.Server;
     private httpsServer?: http.Server;
 
     private routes: Map<string, string> = new Map<string, string>();
-
 
     constructor(attributes: ServerAttributes)
     {
@@ -136,7 +117,9 @@ export class Server
         }
         for (const key in attributes.routes)
             this.routes.set(key, attributes.routes[key]);
-        this.graphql = new GraphQL({ schema: "graphql/schema.gql", resolvers: attributes.resolvers });
+
+        GraphQL.schema.path = "graphql/schema.gql";
+        GraphQL.resolvers = attributes.resolvers;
     }
     public get port(): number
     {
@@ -156,55 +139,63 @@ export class Server
     {
         return this.protocol + "://" + this.hostname + ":" + this.port;
     }
-    private async file(request: http.ServerRequest, status: http.Status): Promise<http.Response>
+    private async static(request: http.ServerRequest): Promise<void>
     {
-        /* Open file and get file length */
-        const filePath = request.url;
-        const body = await Deno.open(filePath, { read: true });
-        const info = await Deno.stat(filePath);
+        try
+        {
+            /* Open file and get file length */
+            const filePath = request.url;
+            const body = await Deno.open(filePath, { read: true });
+            const info = await Deno.stat(filePath);
 
-        /* Clean up file RID */
-        request.done.then(function () { body.close(); });
+            /* Clean up file RID */
+            request.done.then(function () { body.close(); });
 
-        /* Set headers */
-        const headers = new Headers();
+            /* Set headers */
+            const headers = new Headers();
 
-        if (info.size > 0x4000)
-            headers.set("transfer-encoding", "chunked");
+            if (info.size > 0x4000)
+                headers.set("transfer-encoding", "chunked");
+            else
+                headers.set("content-length", info.size.toString());
+
+            const contentType = mediaTypes[path.extname(filePath)];
+            if (contentType)
+                headers.set("content-type", contentType);
+
+            /** @todo Add caching. */
+
+            const response: http.Response =
+            {
+                status: http.Status.OK,
+                headers: headers,
+                body: body,
+            };
+            request.respond(response);
+        }
+        catch (error) { await this.page(request, http.Status.InternalServerError); }
+    }
+    private async graphql(request: http.ServerRequest): Promise<void>
+    {
+        if (GraphQL.methods.includes(request.method))
+        {
+            try { request.respond(await GraphQL.resolve(request)); }
+            catch (error) { await this.page(request, http.Status.InternalServerError); }
+        }
         else
-            headers.set("content-length", info.size.toString());
-
-        const contentType = mediaTypes[path.extname(filePath)];
-        if (contentType)
-            headers.set("content-type", contentType);
-
-        /** @todo Add caching. */
-
+            await this.page(request, http.Status.MethodNotAllowed);
+    }
+    private async page(request: http.ServerRequest, status: http.Status): Promise<void>
+    {
+        const headers = new Headers();
+        headers.set("content-type", "text/html");
         const response: http.Response =
         {
             status: status,
             headers: headers,
-            body: body,
+            body: Page.render(status),
         };
-        return response;
-    }
-    private async ok(request: http.ServerRequest): Promise<void>
-    {
-        try 
-        {
-            const response = await this.file(request, http.Status.OK);
-            await request.respond(response);
-        }
-        catch (error) { Console.error(error); }
-    }
-    private async notFound(request: http.ServerRequest): Promise<void>
-    {
-        try
-        {
-            request.url = "static/404.html";
-            const response = await this.file(request, http.Status.NotFound);
-            await request.respond(response);
-        }
+        try { await request.respond(response); }
         catch (error) { Console.error(error); }
     }
     private async respond(request: http.ServerRequest): Promise<void>
@@ -215,21 +206,30 @@ export class Server
         /* Invalidate cache on new queries */
         request.url = query.parseUrl(request.url).url;
 
+        /* Handle GraphQL */
         if (request.url === "/graphql")
-            return await this.graphql.respond(request);
+            return await this.graphql(request);
 
         /* Checks if this URL should be rerouted (alias) */
         if (this.routes.has(request.url))
             request.url = this.routes.get(request.url) as string;
 
+        /* Check the special case index "/" URL */
+        if (request.url === "/")
+            return await this.page(request, http.Status.OK);
+
         /* Converts URL to filepath */
         request.url = path.join(".", request.url);
-        if (!await fs.exists(request.url))
+
+        /* File not found or is directory -> 404 */
+        if (!await fs.exists(request.url) || (await Deno.stat(request.url)).isDirectory)
         {
             Console.error("Route " + originalURL + " not found");
-            return await this.notFound(request);
+            return await this.page(request, http.Status.NotFound);
         }
-        return await this.ok(request);
+
+        /* File found -> serve static */
+        return await this.static(request);
     }
     private async redirect(request: http.ServerRequest): Promise<void>
     {
@@ -242,14 +242,13 @@ export class Server
         {
             status: http.Status.TemporaryRedirect,
             headers: headers,
-            body: ""
         };
         await request.respond(response);
     }
     public async serve(): Promise<void>
     {
         Console.log("Building GraphQL...");
-        await this.graphql.build({ url: this.url });
+        await GraphQL.build({ url: this.url });
 
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         async function httpRequest(server: Server)

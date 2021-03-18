@@ -19,27 +19,31 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    private schemaPath: string;
-    private schema: graphql.GraphQLSchema = new graphql.GraphQLSchema({});
-    private resolvers: unknown;
-    private playgroundHTML: string = "" as const;
-    constructor(attributes: GraphQLAttributes)
+    public static methods: string[] = ["POST", "GET", "HEAD"];
+    public static schema:
+        {
+            schema: graphql.GraphQLSchema;
+            path: string;
+        } = { schema: new graphql.GraphQLSchema({}), path: "" };
+    public static resolvers: unknown;
+    private static playgroundHTML: string;
+    private static async buildSchema()
     {
-        this.schemaPath = attributes.schema;
-        this.resolvers = attributes.resolvers;
+        const schema = await Deno.readTextFile(GraphQL.schema.path);
+        GraphQL.schema.schema = graphql.buildSchema(schema);
     }
-    private async buildSchema()
-    {
-        const schemaFile = await Deno.readTextFile(this.schemaPath);
-        this.schema = graphql.buildSchema(schemaFile);
-    }
-    private async query(request: http.ServerRequest): Promise<http.Response>
+    private static async query(request: http.ServerRequest): Promise<http.Response>
     {
         try
         {
             const decoder = new TextDecoder();
             const body: string = decoder.decode(await Deno.readAll(request.body));
-            const query: { query: string; operationName?: string; variables?: { [key: string]: unknown; }; } = { query: "" };
+            const query:
+                {
+                    query: string;
+                    operationName?: string;
+                    variables?: { [key: string]: unknown; };
+                } = { query: "" };
             switch (request.headers.get("content-type"))
             {
                 case "application/json":
@@ -60,16 +64,16 @@ export class GraphQL
             }
             const graphqlargs: graphql.GraphQLArgs =
             {
-                schema: this.schema,
+                schema: GraphQL.schema.schema,
                 source: query.query,
-                rootValue: this.resolvers,
+                rootValue: GraphQL.resolvers,
                 variableValues: query.variables,
                 operationName: query.operationName,
             };
             const result = await graphql.graphql(graphqlargs);
             const response: http.Response =
             {
-                status: 200,
+                status: http.Status.OK,
                 body: JSON.stringify(result),
             };
             return response;
@@ -84,44 +88,40 @@ export class GraphQL
             };
             const response: http.Response =
             {
-                status: 200,
+                status: http.Status.OK,
                 body: JSON.stringify(json),
             };
             return response;
         }
     }
-    private renderPlayground(url: string)
+    private static renderPlayground(url: string)
     {
         const playgroundOptions: playground.RenderPageOptions =
         {
             endpoint: url + "/graphql",
             subscriptionEndpoint: url,
         };
-        this.playgroundHTML = playground.renderPlaygroundPage(playgroundOptions);
+        GraphQL.playgroundHTML = playground.renderPlaygroundPage(playgroundOptions);
     }
-    public async build(attributes: GraphQLBuildAttributes)
+    public static async build(attributes: GraphQLBuildAttributes)
     {
-        await this.buildSchema();
-        this.renderPlayground(attributes.url);
+        await GraphQL.buildSchema();
+        GraphQL.renderPlayground(attributes.url);
     }
-    public async respond(request: http.ServerRequest): Promise<void>
+    public static async resolve(request: http.ServerRequest): Promise<http.Response>
     {
         if (request.url !== "/graphql")
             throw new Error("Invalid request URL for GraphQL");
-        try
+        switch (request.method)
         {
-            switch (request.method)
-            {
-                case "GET":
-                    await request.respond({ status: 200, body: this.playgroundHTML });
-                    break;
-                case "POST":
-                    await request.respond(await this.query(request));
-                    break;
-                default:
-                    throw new Error("Invalid HTTP method for GraphQL");
-            }
+            case "GET":
+                return { status: http.Status.OK, body: GraphQL.playgroundHTML };
+            case "POST":
+                return await GraphQL.query(request);
+            case "HEAD":
+                return { status: http.Status.OK };
+            default:
+                throw new Error("Invalid HTTP method for GraphQL");
         }
-        catch (error) { Console.error(error); }
     }
 }
