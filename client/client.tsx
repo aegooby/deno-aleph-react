@@ -20,8 +20,9 @@ interface ClientAttributes
 
 export class Client
 {
-    private document = (globalThis as typeof globalThis & GlobalThis).document;
-    private api: string;
+    /** @important Private class members not allowed client side */
+    public document = (globalThis as typeof globalThis & GlobalThis).document;
+    public api: string;
     constructor(attributes: ClientAttributes)
     {
         this.api = attributes.api;
