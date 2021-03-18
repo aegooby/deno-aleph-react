@@ -211,7 +211,7 @@ export class Server
             return await this.graphql(request);
 
         /* Checks if this URL should be rerouted (alias) */
-        if (this.routes.has(request.url))
+        if (request.url !== "/" && this.routes.has(request.url))
             request.url = this.routes.get(request.url) as string;
 
         /* Check the special case index "/" URL */

@@ -19,7 +19,6 @@ try
                         resolvers: { request: function () { return "response"; } },
                         routes:
                         {
-                            "/": "/static/index.html",
                             "/favicon.ico": "/static/favicon.ico",
                             "/404.html": "/static/404.html",
                             "/robots.txt": "/static/robots.txt",
@@ -51,7 +50,6 @@ try
                         resolvers: { request: function () { return "response"; } },
                         routes:
                         {
-                            "/": "/static/index.html",
                             "/favicon.ico": "/static/favicon.ico",
                             "/404.html": "/static/404.html",
                             "/robots.txt": "/static/robots.txt",
@@ -80,7 +78,6 @@ try
                         resolvers: { request: function () { return "response"; } },
                         routes:
                         {
-                            "/": "/static/index.html",
                             "/favicon.ico": "/static/favicon.ico",
                             "/404.html": "/static/404.html",
                             "/robots.txt": "/static/robots.txt",
