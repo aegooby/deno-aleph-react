@@ -199,9 +199,6 @@ export class Server
     }
     private async respond(request: http.ServerRequest): Promise<void>
     {
-        const originalURL = request.url;
-        Console.success("Received " + request.method + " request: " + originalURL);
-
         let response: http.Response | undefined = undefined;
 
         /* Invalidate cache on new queries */
