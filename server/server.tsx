@@ -139,7 +139,7 @@ export class Server
     {
         return this.protocol + "://" + this.hostname + ":" + this.port;
     }
-    private async static(request: http.ServerRequest): Promise<void>
+    private async static(request: http.ServerRequest): Promise<http.Response>
     {
         try
         {
@@ -171,21 +171,21 @@ export class Server
                 headers: headers,
                 body: body,
             };
-            request.respond(response);
+            return response;
         }
-        catch (error) { await this.page(request, http.Status.InternalServerError); }
+        catch (error) { return this.page(http.Status.InternalServerError); }
     }
-    private async graphql(request: http.ServerRequest): Promise<void>
+    private async graphql(request: http.ServerRequest): Promise<http.Response>
     {
         if (GraphQL.methods.includes(request.method))
         {
-            try { request.respond(await GraphQL.resolve(request)); }
-            catch (error) { await this.page(request, http.Status.InternalServerError); }
+            try { return await GraphQL.resolve(request); }
+            catch (error) { return this.page(http.Status.InternalServerError); }
         }
         else
-            await this.page(request, http.Status.MethodNotAllowed);
+            return this.page(http.Status.MethodNotAllowed);
     }
-    private async page(request: http.ServerRequest, status: http.Status): Promise<void>
+    private page(status: http.Status): http.Response
     {
         const headers = new Headers();
         headers.set("content-type", "text/html");
@@ -195,20 +195,21 @@ export class Server
             headers: headers,
             body: Page.render(status),
         };
-        try { await request.respond(response); }
-        catch (error) { Console.error(error); }
+        return response;
     }
     private async respond(request: http.ServerRequest): Promise<void>
     {
         const originalURL = request.url;
         Console.success("Received " + request.method + " request: " + originalURL);
 
+        let response: http.Response | undefined = undefined;
+
         /* Invalidate cache on new queries */
         request.url = query.parseUrl(request.url).url;
 
         /* Handle GraphQL */
         if (request.url === "/graphql")
-            return await this.graphql(request);
+            response ?? (response = await this.graphql(request));
 
         /* Checks if this URL should be rerouted (alias) */
         if (request.url !== "/" && this.routes.has(request.url))
@@ -216,20 +217,34 @@ export class Server
 
         /* Check the special case index "/" URL */
         if (request.url === "/")
-            return await this.page(request, http.Status.OK);
+            response ?? (response = this.page(http.Status.OK));
 
         /* Converts URL to filepath */
         request.url = path.join(".", request.url);
 
         /* File not found or is directory -> 404 */
         if (!await fs.exists(request.url) || (await Deno.stat(request.url)).isDirectory)
-        {
-            Console.error("Route " + originalURL + " not found");
-            return await this.page(request, http.Status.NotFound);
-        }
+            response ?? (response = this.page(http.Status.NotFound));
 
         /* File found -> serve static */
-        return await this.static(request);
+        response ?? (response = await this.static(request));
+
+        switch (request.method)
+        {
+            case "HEAD":
+                if (response.status === http.Status.OK)
+                    response.status = http.Status.NoContent;
+                response.body = undefined;
+                break;
+            case "GET": case "POST":
+                break;
+            default:
+                response = this.page(http.Status.MethodNotAllowed);
+                break;
+        }
+
+        try { await request.respond(response); }
+        catch (error) { Console.error(error); }
     }
     private async redirect(request: http.ServerRequest): Promise<void>
     {
@@ -243,7 +258,8 @@ export class Server
             status: http.Status.TemporaryRedirect,
             headers: headers,
         };
-        await request.respond(response);
+        try { await request.respond(response); }
+        catch (error) { Console.error(error); }
     }
     public async serve(): Promise<void>
     {

@@ -19,7 +19,7 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    public static methods: string[] = ["POST", "GET", "HEAD"];
+    public static methods: string[] = ["POST", "GET"];
     public static schema:
         {
             schema: graphql.GraphQLSchema;
@@ -118,8 +118,6 @@ export class GraphQL
                 return { status: http.Status.OK, body: GraphQL.playgroundHTML };
             case "POST":
                 return await GraphQL.query(request);
-            case "HEAD":
-                return { status: http.Status.OK };
             default:
                 throw new Error("Invalid HTTP method for GraphQL");
         }
