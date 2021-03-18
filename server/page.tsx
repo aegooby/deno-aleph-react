@@ -8,28 +8,38 @@ export class Page
 {
     public static render(status: http.Status): string
     {
-        const body: { stylesheet: React.ReactElement; element: React.ReactElement; } =
+        const html:
+            {
+                title: React.ReactElement;
+                stylesheet: React.ReactElement;
+                element: React.ReactElement;
+            } =
         {
+            title: <></>,
             stylesheet: <></>,
-            element: <></>
+            element: <></>,
         };
         switch (status)
         {
             case http.Status.OK:
-                body.stylesheet = <link rel="stylesheet" href="/static/index.css" />;
-                body.element = <script src="/.httpsaurus/bundle.js" defer></script>;
+                html.title = <title>Home</title>;
+                html.stylesheet = <link rel="stylesheet" href="/static/index.css" />;
+                html.element = <script src="/.httpsaurus/bundle.js" defer></script>;
                 break;
             case http.Status.NotFound:
-                body.stylesheet = <link rel="stylesheet" href="/static/error.css" />;
-                body.element = <h1>404 Not Found</h1>;
+                html.title = <title>404</title>;
+                html.stylesheet = <link rel="stylesheet" href="/static/error.css" />;
+                html.element = <h1>404 Not Found</h1>;
                 break;
             case http.Status.MethodNotAllowed:
-                body.stylesheet = <link rel="stylesheet" href="/static/error.css" />;
-                body.element = <h1>405 Method Not Allowed</h1>;
+                html.title = <title>Relax, chief</title>;
+                html.stylesheet = <link rel="stylesheet" href="/static/error.css" />;
+                html.element = <h1>405 Method Not Allowed</h1>;
                 break;
             case http.Status.InternalServerError:
-                body.stylesheet = <link rel="stylesheet" href="/static/error.css" />;
-                body.element = <h1>500 Internal Server Error</h1>;
+                html.title = <title>Oops</title>;
+                html.stylesheet = <link rel="stylesheet" href="/static/error.css" />;
+                html.element = <h1>500 Internal Server Error</h1>;
                 break;
             default:
                 break;
@@ -40,11 +50,12 @@ export class Page
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
-                    {body.stylesheet}
+                    {html.title}
+                    {html.stylesheet}
                 </head>
                 <body>
                     <div id="root">
-                        {body.element}
+                        {html.element}
                     </div>
                 </body>
             </html>;
