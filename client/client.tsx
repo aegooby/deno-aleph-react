@@ -20,9 +20,8 @@ interface ClientAttributes
 
 export class Client
 {
-    /** @important Private class members not allowed client side */
-    public document = (globalThis as typeof globalThis & GlobalThis).document;
-    public api: string;
+    private api: string;
+    public static document = (globalThis as typeof globalThis & GlobalThis).document;
     constructor(attributes: ClientAttributes)
     {
         this.api = attributes.api;
@@ -55,6 +54,6 @@ export class Client
     public hydrate(element: React.ReactElement): void
     {
         Console.log("Hydrating bundle");
-        ReactDOM.hydrate(element, this.document.querySelector("#root"));
+        ReactDOM.hydrate(element, Client.document.querySelector("#root"));
     }
 }

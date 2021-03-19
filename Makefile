@@ -15,7 +15,8 @@ clean:
 # Deno
 # ------------------------------------------------------------------------------
 install:
-	curl -fsSL https://deno.land/x/install/install.sh | sh
+	hash deno || curl -fsSL https://deno.land/x/install/install.sh | sh
+	hash yarn || npm install --global yarn
 
 upgrade:
 	deno upgrade
@@ -32,6 +33,8 @@ bundle: export DENO_DIR=.httpsaurus/cache
 bundle: upgrade cache
 	mkdir -p .httpsaurus
 	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle.js
+	yarn install
+	yarn run babel .httpsaurus/bundle.js --out-file .httpsaurus/bundle-stupid-safari.js --plugins=@babel/plugin-proposal-class-properties
 
 # ------------------------------------------------------------------------------
 # Run
