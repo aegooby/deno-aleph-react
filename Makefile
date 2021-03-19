@@ -43,12 +43,12 @@ bundle: upgrade cache
 # ------------------------------------------------------------------------------
 debug: export DENO_DIR=.httpsaurus/cache
 debug: cache bundle
-	deno run --allow-all --unstable --watch server/daemon.tsx --protocol https --hostname localhost --cert cert/localhost/
+	deno run --allow-all --unstable --watch server/daemon.tsx --protocol https --hostname localhost --domain localhost --cert cert/localhost/
 
 release: export DENO_DIR=.httpsaurus/cache
 release: cache bundle
 	deno upgrade --version 1.7.0
-	deno run --allow-all --unstable server/daemon.tsx --protocol https --hostname 0.0.0.0 --cert cert/0.0.0.0/
+	deno run --allow-all --unstable server/daemon.tsx --protocol https --hostname 0.0.0.0 --domain localhost --cert cert/0.0.0.0/
 
 test: export DENO_DIR=.httpsaurus/cache
 test: cache
