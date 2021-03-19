@@ -22,6 +22,9 @@ try
         httpsPort: 443,
         cert: args.cert,
 
+        domain: "localhost",
+
+        schema: "graphql/schema.gql",
         resolvers: { request: function () { return "response"; } },
         routes:
         {

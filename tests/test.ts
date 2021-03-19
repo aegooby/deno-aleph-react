@@ -16,6 +16,9 @@ try
                         hostname: "localhost",
                         httpPort: 8080,
 
+                        domain: "localhost",
+
+                        schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
                         routes:
                         {
@@ -47,6 +50,9 @@ try
                         httpsPort: 4430,
                         cert: "cert/localhost",
 
+                        domain: "localhost",
+
+                        schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
                         routes:
                         {
@@ -75,6 +81,9 @@ try
                         hostname: "localhost",
                         httpPort: 8080,
 
+                        domain: "localhost",
+
+                        schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
                         routes:
                         {

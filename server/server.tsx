@@ -75,6 +75,9 @@ export interface ServerAttributes
     httpsPort?: number;
     cert?: string;
 
+    domain: string;
+
+    schema: string;
     resolvers: unknown;
     routes: Record<string, string>;
 }
@@ -85,6 +88,8 @@ export class Server
 
     private httpServer: http.Server;
     private httpsServer?: http.Server;
+
+    private domain: string;
 
     private routes: Map<string, string> = new Map<string, string>();
 
@@ -118,7 +123,9 @@ export class Server
         for (const key in attributes.routes)
             this.routes.set(key, attributes.routes[key]);
 
-        GraphQL.schema.path = "graphql/schema.gql";
+        this.domain = this.protocol + "://" + attributes.domain;
+
+        GraphQL.schema.path = attributes.schema;
         GraphQL.resolvers = attributes.resolvers;
     }
     public get port(): number
@@ -261,7 +268,7 @@ export class Server
     public async serve(): Promise<void>
     {
         Console.log("Building GraphQL...");
-        await GraphQL.build({ url: this.url });
+        await GraphQL.build({ url: this.domain });
 
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         async function httpRequest(server: Server)
