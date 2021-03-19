@@ -4,23 +4,24 @@ import * as server from "./server.tsx";
 import * as yargs from "https://deno.land/x/yargs/deno.ts";
 
 const args = yargs.default(Deno.args)
-    .usage("usage: $0 server/daemon.tsx --protocol <protocol> --hostname <host> [--cert] [--help]")
+    .usage("usage: $0 server/daemon.tsx --hostname <host> [--domain <name>] [--tls <path>]")
     .hide("help")
     .hide("version")
     .hide("hostname")
-    .demandOption(["protocol", "hostname"])
+    .demandOption(["hostname"])
     .parse();
 
 try
 {
     const serverAttributes =
     {
-        protocol: args.protocol,
+        protocol: args.tls ? "https" as const : "http" as const,
+        domain: args.domain,
         hostname: args.hostname,
-        httpPort: 80,
+        httpPort: 8080,
 
-        httpsPort: 443,
-        cert: args.cert,
+        httpsPort: 8443,
+        cert: args.tls,
 
         schema: "graphql/schema.gql",
         resolvers: { request: function () { return "response"; } },

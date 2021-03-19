@@ -64,11 +64,12 @@ const staticMediaTypes: string[] =
         "video/webm",
     ];
 
-export type Protocol = "unknown" | "http" | "https";
+export type Protocol = "http" | "https";
 
 export interface ServerAttributes
 {
     protocol: Protocol;
+    domain?: string;
     hostname: string;
     httpPort: number;
 
@@ -83,6 +84,7 @@ export interface ServerAttributes
 export class Server
 {
     private protocol: Protocol;
+    private domain: string;
 
     private httpServer: http.Server;
     private httpsServer?: http.Server;
@@ -92,6 +94,7 @@ export class Server
     constructor(attributes: ServerAttributes)
     {
         this.protocol = attributes.protocol;
+
         const serveOptions =
         {
             hostname: attributes.hostname,
@@ -121,6 +124,11 @@ export class Server
 
         GraphQL.schema.path = attributes.schema;
         GraphQL.resolvers = attributes.resolvers;
+
+        if (attributes.domain)
+            this.domain = this.protocol + "://" + attributes.domain;
+        else
+            this.domain = this.protocol + "://" + this.hostname + ":" + this.port;
     }
     public get port(): number
     {
@@ -262,7 +270,7 @@ export class Server
     public async serve(): Promise<void>
     {
         Console.log("Building GraphQL...");
-        await GraphQL.build({ url: this.url });
+        await GraphQL.build({ url: this.domain });
 
         Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
         async function httpRequest(server: Server)

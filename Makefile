@@ -43,12 +43,12 @@ bundle: upgrade cache
 # ------------------------------------------------------------------------------
 debug: export DENO_DIR=.httpsaurus/cache
 debug: cache bundle
-	deno run --allow-all --unstable --watch server/daemon.tsx --protocol https --hostname localhost --cert cert/localhost/
+	deno run --allow-all --unstable --watch server/daemon.tsx --hostname localhost --tls cert/localhost/
 
 release: export DENO_DIR=.httpsaurus/cache
 release: cache bundle
 	deno upgrade --version 1.7.0
-	deno run --allow-all --unstable server/daemon.tsx --protocol https --hostname 0.0.0.0 --cert cert/0.0.0.0/
+	deno run --allow-all --unstable server/daemon.tsx --hostname 0.0.0.0 --tls cert/0.0.0.0/
 
 test: export DENO_DIR=.httpsaurus/cache
 test: cache
@@ -63,4 +63,4 @@ prune:
 
 docker: prune
 	docker build --tag httpsaurus/server .
-	docker run -itd --init -p 443:443 -p 80:80 httpsaurus/server:latest
+	docker run -itd --init -p 443:8443 -p 80:8080 httpsaurus/server:latest
