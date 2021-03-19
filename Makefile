@@ -32,9 +32,10 @@ cache: upgrade
 bundle: export DENO_DIR=.httpsaurus/cache
 bundle: upgrade cache
 	mkdir -p .httpsaurus
-	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle.js
+	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle-deno.js
 	yarn install
-	yarn run babel .httpsaurus/bundle.js --out-file .httpsaurus/bundle-stupid-safari.js --plugins=@babel/plugin-proposal-class-properties
+	yarn run babel .httpsaurus/bundle-deno.js --out-file .httpsaurus/bundle-babel.js
+	yarn run browserify .httpsaurus/bundle-babel.js -o .httpsaurus/bundle-stupid-safari.js
 
 # ------------------------------------------------------------------------------
 # Run

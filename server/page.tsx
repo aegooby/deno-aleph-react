@@ -24,7 +24,11 @@ export class Page
             case http.Status.OK:
                 html.title = <title>Home</title>;
                 html.stylesheet = <link rel="stylesheet" href="/static/index.css" />;
-                html.element = <script src="/.httpsaurus/bundle-stupid-safari.js" defer></script>;
+                html.element =
+                    <>
+                        <script src="https://requirejs.org/docs/release/2.3.6/comments/require.js" defer></script>
+                        <script src="/.httpsaurus/bundle-stupid-safari.js" defer></script>
+                    </>;
                 break;
             case http.Status.NotFound:
                 html.title = <title>404</title>;
