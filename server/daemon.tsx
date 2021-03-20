@@ -28,7 +28,6 @@ try
         routes:
         {
             "/favicon.ico": "/static/favicon.ico",
-            "/404.html": "/static/404.html",
             "/robots.txt": "/static/robots.txt",
         }
     };

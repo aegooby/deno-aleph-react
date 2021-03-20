@@ -4,13 +4,17 @@ import * as path from "https://deno.land/std/path/mod.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as colors from "https://deno.land/std/fmt/colors.ts";
 
+import * as React from "https://esm.sh/react";
+import * as ReactDOMServer from "https://esm.sh/react-dom/server";
+import * as ReactRouter from "https://esm.sh/react-router-dom";
 import * as query from "https://esm.sh/query-string";
 
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
 import { GraphQL } from "./graphql.tsx";
-import { Page } from "./page.tsx";
+
+import App from "../components/App.tsx";
 
 const mediaTypes: Record<string, string> =
 {
@@ -153,9 +157,9 @@ export class Server
         try
         {
             /* Open file and get file length */
-            const filePath = request.url;
-            const body = await Deno.open(filePath, { read: true });
-            const info = await Deno.stat(filePath);
+            const filepath = path.join(".", request.url);
+            const body = await Deno.open(filepath, { read: true });
+            const info = await Deno.stat(filepath);
 
             /* Clean up file RID */
             request.done.then(function () { body.close(); });
@@ -168,7 +172,7 @@ export class Server
             else
                 headers.set("content-length", info.size.toString());
 
-            const contentType = mediaTypes[path.extname(filePath)];
+            const contentType = mediaTypes[path.extname(filepath)];
             if (contentType)
                 headers.set("content-type", contentType);
 
@@ -182,27 +186,51 @@ export class Server
             };
             return response;
         }
-        catch (error) { return this.page(http.Status.InternalServerError); }
+        catch (error) { return this.page(request); }
     }
     private async graphql(request: http.ServerRequest): Promise<http.Response>
     {
         if (GraphQL.methods.includes(request.method))
         {
             try { return await GraphQL.resolve(request); }
-            catch (error) { return this.page(http.Status.InternalServerError); }
+            catch (error) { return this.page(request); }
         }
         else
-            return this.page(http.Status.MethodNotAllowed);
+            return this.page(request);
     }
-    private page(status: http.Status): http.Response
+    private page(request: http.ServerRequest): http.Response
     {
         const headers = new Headers();
         headers.set("content-type", "text/html");
+
+        const staticContext: Record<string, unknown> = {};
+
+        const page: React.ReactElement =
+            <html lang="en">
+                <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <meta httpEquiv="Content-Security-Policy" />
+                    <meta charSet="UTF-8" />
+                    <script src="/.httpsaurus/bundle-stupid-safari.js" defer></script>
+                    <title>httpsaurus</title>
+                    <link rel="stylesheet" href="/static/index.css" />
+                </head>
+                <body>
+                    <div id="root">
+                        <ReactRouter.StaticRouter location={request.url} context={staticContext}>
+                            <App fetch={() => new Promise(() => { })} />
+                        </ReactRouter.StaticRouter>
+                    </div>
+                </body>
+            </html>;
+
+        const body: string = "<!DOCTYPE html>" + ReactDOMServer.renderToString(page);
+
         const response: http.Response =
         {
-            status: status,
+            status: staticContext.statusCode as http.Status ?? http.Status.OK,
             headers: headers,
-            body: Page.render(status),
+            body: body,
         };
         return response;
     }
@@ -222,15 +250,15 @@ export class Server
             request.url = this.routes.get(request.url) as string;
 
         /* Check the special case index "/" URL */
-        if (request.url === "/")
-            response ?? (response = this.page(http.Status.OK));
+        // if (request.url === "/")
+        //     response ?? (response = this.page(request));
 
         /* Converts URL to filepath */
-        request.url = path.join(".", request.url);
+        const filepath = path.join(".", request.url);
 
-        /* File not found or is directory -> 404 */
-        if (!await fs.exists(request.url) || (await Deno.stat(request.url)).isDirectory)
-            response ?? (response = this.page(http.Status.NotFound));
+        /* File not found or is directory -> page */
+        if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
+            response ?? (response = this.page(request));
 
         /* File found -> serve static */
         response ?? (response = await this.static(request));
@@ -245,7 +273,7 @@ export class Server
             case "GET": case "POST":
                 break;
             default:
-                response = this.page(http.Status.MethodNotAllowed);
+                response = this.page(request);
                 break;
         }
 

@@ -1,13 +1,15 @@
 
 import * as React from "https://esm.sh/react";
-import UIRouter from "./UIRouter/UIRouter.tsx";
+import * as ReactRouter from "https://esm.sh/react-router-dom";
 
-import { Console } from "../../client/console.tsx";
+import { Console } from "../client/console.tsx";
+
+import Index from "./Pages/Index.tsx";
+import NotFound from "./Pages/NotFound.tsx";
 
 interface Props
 {
     fetch: (json: unknown) => Promise<Record<string, unknown>>;
-    routes: Record<string, React.ReactElement>;
 }
 
 export default class App extends React.Component<Props, unknown>
@@ -36,6 +38,13 @@ export default class App extends React.Component<Props, unknown>
     }
     render(): React.ReactElement
     {
-        return <UIRouter routes={this.props.routes} />;
+        const element =
+            <ReactRouter.Switch>
+                <ReactRouter.Route exact path="/">
+                    <Index />
+                </ReactRouter.Route>
+                <ReactRouter.Route render={function (props) { return <NotFound {...props} />; }} />
+            </ReactRouter.Switch>;
+        return element;
     }
 }
