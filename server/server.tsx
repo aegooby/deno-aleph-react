@@ -14,9 +14,6 @@ export { Console } from "./console.tsx";
 
 import { GraphQL } from "./graphql.tsx";
 
-// import App from "../components/App.tsx";
-const App = await import("../components/App.tsx");
-
 const mediaTypes: Record<string, string> =
 {
     ".gz": "application/gzip",
@@ -77,28 +74,33 @@ export interface ServerAttributes
     domain?: string;
     hostname: string;
     httpPort: number;
+    routes: Record<string, string>;
 
     httpsPort?: number;
     cert?: string;
 
+    App: React.ReactElement;
+
     schema: string;
     resolvers: unknown;
-    routes: Record<string, string>;
 }
 
 export class Server
 {
     private protocol: Protocol;
     private domain: string;
+    private routes: Map<string, string> = new Map<string, string>();
 
     private httpServer: http.Server;
     private httpsServer?: http.Server;
 
-    private routes: Map<string, string> = new Map<string, string>();
+    private App: React.ReactElement;
 
     constructor(attributes: ServerAttributes)
     {
         this.protocol = attributes.protocol;
+
+        this.App = attributes.App;
 
         const serveOptions =
         {
@@ -213,13 +215,13 @@ export class Server
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
                     <script src="/.httpsaurus/bundle-stupid-safari.js" defer></script>
-                    <title>httpsaurus</title>
+                    <title>title</title>
                     <link rel="stylesheet" href="/static/index.css" />
                 </head>
                 <body>
                     <div id="root">
                         <ReactRouter.StaticRouter location={request.url} context={staticContext}>
-                            <App.default fetch={() => new Promise(() => { })} />
+                            {this.App}
                         </ReactRouter.StaticRouter>
                     </div>
                 </body>
