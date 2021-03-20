@@ -14,7 +14,8 @@ export { Console } from "./console.tsx";
 
 import { GraphQL } from "./graphql.tsx";
 
-import App from "../components/App.tsx";
+// import App from "../components/App.tsx";
+const App = await import("../components/App.tsx");
 
 const mediaTypes: Record<string, string> =
 {
@@ -218,7 +219,7 @@ export class Server
                 <body>
                     <div id="root">
                         <ReactRouter.StaticRouter location={request.url} context={staticContext}>
-                            <App fetch={() => new Promise(() => { })} />
+                            <App.default fetch={() => new Promise(() => { })} />
                         </ReactRouter.StaticRouter>
                     </div>
                 </body>
