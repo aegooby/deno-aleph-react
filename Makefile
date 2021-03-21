@@ -33,17 +33,22 @@ cache: upgrade
 bundle: export DENO_DIR=.httpsaurus/cache
 bundle: upgrade cache
 	mkdir -p .httpsaurus
-	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle-deno.js
 	yarn install
+	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle-deno.js
 	yarn run babel .httpsaurus/bundle-deno.js --out-file .httpsaurus/bundle-babel.js
-	yarn run browserify .httpsaurus/bundle-babel.js -o .httpsaurus/bundle-stupid-safari.js
+	yarn run webpack
 
 # ------------------------------------------------------------------------------
 # Run
 # ------------------------------------------------------------------------------
 debug: export DENO_DIR=.httpsaurus/cache
 debug: cache bundle
-	deno run --allow-all --unstable --watch server/daemon.tsx --hostname localhost --tls cert/localhost/
+	(trap 'kill 0' SIGINT; \
+		deno bundle --watch --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle-deno.js & \
+		yarn run babel --watch .httpsaurus/bundle-deno.js --out-file .httpsaurus/bundle-babel.js & \
+		yarn run webpack --watch & \
+		deno run --watch --allow-all --unstable server/daemon.tsx --hostname localhost --tls cert/localhost/ \
+	)
 
 release: export DENO_DIR=.httpsaurus/cache
 release: cache bundle
