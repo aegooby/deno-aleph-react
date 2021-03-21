@@ -215,7 +215,6 @@ export class Server
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
                     <script src="/.httpsaurus/bundle-stupid-safari.js" defer></script>
-                    <title>title</title>
                     <link rel="stylesheet" href="/static/index.css" />
                 </head>
                 <body>
