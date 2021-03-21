@@ -2,4 +2,4 @@
 To run:
 
     make install
-    make start
+    make debug
