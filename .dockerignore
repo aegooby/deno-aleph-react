@@ -1,4 +1,5 @@
 
-.httpsaurus/
+.cache/
+.dist/
 *.log
 *.pem

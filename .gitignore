@@ -3,7 +3,8 @@
 .DS_Store
 
 # Server
-.httpsaurus
+.cache/
+.dist/
 remote.pem
 
 # Logs

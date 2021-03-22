@@ -11,10 +11,10 @@ const config: webpack.Configuration =
 {
     mode: "none",
     stats: "minimal",
-    entry: path.resolve(__dirname, ".httpsaurus/bundle-babel.js"),
+    entry: path.resolve(__dirname, ".dist/bundle-babel.js"),
     output:
     {
-        path: path.resolve(__dirname, ".httpsaurus"),
+        path: path.resolve(__dirname, ".dist/"),
         filename: "bundle-webpack.js",
     }
 };

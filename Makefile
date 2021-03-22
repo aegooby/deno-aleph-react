@@ -9,8 +9,7 @@ version:
 # Reset
 # ------------------------------------------------------------------------------
 clean:
-	rm -rf .httpsaurus/
-	rm -rf node_modules/
+	rm -rf .cache/ .dist/ node_modules/
 
 # ------------------------------------------------------------------------------
 # Deno
@@ -25,37 +24,37 @@ upgrade:
 # ------------------------------------------------------------------------------
 # Setup
 # ------------------------------------------------------------------------------
-cache: export DENO_DIR=.httpsaurus/cache
+cache: export DENO_DIR=.cache/
 cache: upgrade
-	mkdir -p .httpsaurus/cache
+	mkdir -p .cache/
 	deno cache --unstable **/*.tsx
 
-bundle: export DENO_DIR=.httpsaurus/cache
+bundle: export DENO_DIR=.cache/
 bundle: upgrade cache
-	mkdir -p .httpsaurus
+	mkdir -p .dist/
 	yarn install
-	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle-deno.js
-	yarn run babel .httpsaurus/bundle-deno.js --out-file .httpsaurus/bundle-babel.js
+	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .dist/bundle-deno.js
+	yarn run babel .dist/bundle-deno.js --out-file .dist/bundle-babel.js
 	yarn run webpack
 
 # ------------------------------------------------------------------------------
 # Run
 # ------------------------------------------------------------------------------
-debug: export DENO_DIR=.httpsaurus/cache
+debug: export DENO_DIR=.cache/
 debug: cache bundle
 	(trap 'kill 0' SIGINT; \
-		deno bundle --watch --config client/tsconfig.json --unstable client/bundle.tsx .httpsaurus/bundle-deno.js & \
-		yarn run babel --watch .httpsaurus/bundle-deno.js --out-file .httpsaurus/bundle-babel.js & \
+		deno bundle --watch --config client/tsconfig.json --unstable client/bundle.tsx .dist/bundle-deno.js & \
+		yarn run babel --watch .dist/bundle-deno.js --out-file .dist/bundle-babel.js & \
 		yarn run webpack --watch & \
 		deno run --watch --allow-all --unstable server/daemon.tsx --hostname localhost --tls cert/localhost/ \
 	)
 
-release: export DENO_DIR=.httpsaurus/cache
+release: export DENO_DIR=.cache/
 release: cache bundle
 	deno upgrade --version 1.7.0
 	deno run --allow-all --unstable server/daemon.tsx --hostname 0.0.0.0 --tls cert/0.0.0.0/
 
-test: export DENO_DIR=.httpsaurus/cache
+test: export DENO_DIR=.cache/
 test: cache
 	deno test --allow-all --unstable tests/
 
