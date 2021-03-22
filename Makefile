@@ -34,7 +34,7 @@ bundle: upgrade cache
 	mkdir -p .dist/
 	yarn install
 	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .dist/deno.bundle.js
-	yarn run babel .dist/deno.bundle.js --out-file .dist/babel.bundle.js
+	yarn run babel --minified .dist/deno.bundle.js --out-file .dist/babel.bundle.js
 	yarn run webpack
 
 # ------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ debug: export DENO_DIR=.cache/
 debug: cache bundle
 	(trap 'kill 0' SIGINT; \
 		deno bundle --watch --config client/tsconfig.json --unstable client/bundle.tsx .dist/deno.bundle.js & \
-		yarn run babel --watch .dist/deno.bundle.js --out-file .dist/babel.bundle.js & \
+		yarn run babel --watch --minified .dist/deno.bundle.js --out-file .dist/babel.bundle.js & \
 		yarn run webpack --watch & \
 		deno run --watch --allow-all --unstable server/daemon.tsx --hostname localhost --tls cert/localhost/ \
 	)
