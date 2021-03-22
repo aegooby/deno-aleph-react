@@ -11,11 +11,11 @@ const config: webpack.Configuration =
 {
     mode: "none",
     stats: "minimal",
-    entry: path.resolve(__dirname, ".dist/bundle-babel.js"),
+    entry: path.resolve(__dirname, ".dist/babel.bundle.js"),
     output:
     {
         path: path.resolve(__dirname, ".dist/"),
-        filename: "bundle-webpack.js",
+        filename: "webpack.bundle.js",
     }
 };
 

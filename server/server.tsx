@@ -214,7 +214,7 @@ export class Server
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
-                    <script src="/.dist/bundle-webpack.js" defer></script>
+                    <script src="/.dist/webpack.bundle.js" defer></script>
                     <link rel="stylesheet" href="/static/index.css" />
                 </head>
                 <body>
