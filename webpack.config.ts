@@ -11,11 +11,34 @@ const config: webpack.Configuration =
 {
     mode: "none",
     stats: "minimal",
-    entry: path.resolve(__dirname, ".dist/babel.bundle.js"),
+    entry: path.resolve(__dirname, ".dist/deno.bundle.js"),
     output:
     {
         path: path.resolve(__dirname, ".dist/"),
         filename: "webpack.bundle.js",
+    },
+    module:
+    {
+        rules:
+            [
+                {
+                    test: /\.m?js$/,
+                    exclude: /(node_modules|\.cache)/,
+                    use:
+                    {
+                        loader: "babel-loader",
+                        options:
+                        {
+                            presets: ["@babel/preset-env"],
+                            plugins:
+                                [
+                                    "@babel/plugin-proposal-class-properties",
+                                    "@babel/plugin-transform-runtime"
+                                ]
+                        }
+                    }
+                }
+            ]
     }
 };
 
