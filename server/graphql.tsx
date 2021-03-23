@@ -100,6 +100,22 @@ export class GraphQL
         {
             endpoint: url + "/graphql",
             subscriptionEndpoint: url,
+            settings:
+            {
+                "editor.cursorShape": "line",
+                "editor.fontSize": 18,
+                "editor.fontFamily": "'Menlo', monospace",
+                "editor.reuseHeaders": true,
+                "editor.theme": "dark",
+                "general.betaUpdates": true,
+                "request.credentials": "omit",
+                "request.globalHeaders": {},
+                "schema.polling.enable": true,
+                "schema.polling.endpointFilter": "*localhost",
+                "schema.polling.interval": 2000,
+                "tracing.hideTracingResponse": true,
+                "tracing.tracingSupported": true,
+            }
         };
         GraphQL.playgroundHTML = playground.renderPlaygroundPage(playgroundOptions);
     }
