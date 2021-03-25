@@ -34,7 +34,6 @@ bundle: export DENO_DIR=.cache/
 bundle: upgrade cache
 	mkdir -p .dist/
 	deno bundle --config client/tsconfig.json --unstable client/bundle.tsx .dist/deno.bundle.js
-	yarn run webpack
 
 # ------------------------------------------------------------------------------
 # Run
@@ -44,13 +43,14 @@ localhost: export GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql
 localhost: cache bundle
 	(trap 'kill 0' SIGINT; \
 		deno bundle --watch --config client/tsconfig.json --unstable client/bundle.tsx .dist/deno.bundle.js & \
-		yarn run webpack --watch & \
+		yarn run webpack --watch --env GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql & \
 		deno run --watch --allow-all --unstable server/daemon.tsx --hostname localhost --tls cert/localhost/ \
 	)
 
 remote: export DENO_DIR=.cache/
 remote: cache bundle
 	@echo "\033[0;1;31m[!] TLS will not work without a certified domain\033[0m "
+	yarn run webpack --env GRAPHQL_API_ENDPOINT=https://example.com/graphql
 	deno upgrade --version 1.7.0
 	deno run --allow-all --unstable server/daemon.tsx --hostname 0.0.0.0 --tls cert/0.0.0.0/
 

@@ -7,43 +7,46 @@ import "webpack-dev-server";
 
 declare const __dirname: string;
 
-const config: webpack.Configuration =
+export default function (env: Record<string, string>)
 {
-    mode: "none",
-    stats: "minimal",
-    entry: path.resolve(__dirname, ".dist/deno.bundle.js"),
-    output:
+    const config: webpack.Configuration =
     {
-        path: path.resolve(__dirname, ".dist/"),
-        filename: "webpack.bundle.js",
-    },
-    plugins:
-        [
-            new webpack.EnvironmentPlugin(["GRAPHQL_API_ENDPOINT"])
-        ],
-    module:
-    {
-        rules:
+        mode: "none",
+        stats: "minimal",
+        entry: path.resolve(__dirname, ".dist/deno.bundle.js"),
+        output:
+        {
+            path: path.resolve(__dirname, ".dist/"),
+            filename: "webpack.bundle.js",
+        },
+        plugins:
             [
-                {
-                    test: /\.m?js$/,
-                    exclude: /(node_modules|\.cache)/,
-                    use:
+                new webpack.EnvironmentPlugin({ GRAPHQL_API_ENDPOINT: env.GRAPHQL_API_ENDPOINT })
+            ],
+        module:
+        {
+            rules:
+                [
                     {
-                        loader: "babel-loader",
-                        options:
+                        test: /\.m?js$/,
+                        exclude: /(node_modules|\.cache)/,
+                        use:
                         {
-                            presets: ["@babel/preset-env"],
-                            plugins:
-                                [
-                                    "@babel/plugin-proposal-class-properties",
-                                    "@babel/plugin-transform-runtime"
-                                ]
+                            loader: "babel-loader",
+                            options:
+                            {
+                                presets: ["@babel/preset-env"],
+                                plugins:
+                                    [
+                                        "@babel/plugin-proposal-class-properties",
+                                        "@babel/plugin-transform-runtime"
+                                    ]
+                            }
                         }
                     }
-                }
-            ]
-    }
-};
+                ]
+        }
+    };
 
-export default config;
+    return config;
+}
