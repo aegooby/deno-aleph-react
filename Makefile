@@ -49,6 +49,7 @@ localhost: cache bundle
 
 remote: export DENO_DIR=.cache/
 remote: cache bundle
+	@echo "\033[0;1;31m[!] TLS will not work without a certified domain\033[0m "
 	deno upgrade --version 1.7.0
 	deno run --allow-all --unstable server/daemon.tsx --hostname 0.0.0.0 --tls cert/0.0.0.0/
 
