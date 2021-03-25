@@ -63,6 +63,6 @@ prune:
 	docker container prune --force
 	docker image prune --force
 
-docker: prune
+docker:
 	docker build --tag httpsaurus/server .
 	docker run -itd --init -p 443:8443 -p 80:8080 httpsaurus/server:latest make remote
