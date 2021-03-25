@@ -17,6 +17,10 @@ const config: webpack.Configuration =
         path: path.resolve(__dirname, ".dist/"),
         filename: "webpack.bundle.js",
     },
+    plugins:
+        [
+            new webpack.EnvironmentPlugin(["GRAPHQL_API_ENDPOINT"])
+        ],
     module:
     {
         rules:

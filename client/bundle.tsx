@@ -5,11 +5,18 @@ import * as client from "./client.tsx";
 
 import App from "../components/App.tsx";
 
+interface Process
+{
+    env: Record<string, string>;
+}
+
+declare const process: Process;
+
 try
 {
     const clientAttributes =
     {
-        api: Deno.env.get("GRAPHQL_API_ENDPOINT")!,
+        api: process.env.GRAPHQL_API_ENDPOINT,
     };
     const httpclient = new client.Client(clientAttributes);
     const element: React.ReactElement =
