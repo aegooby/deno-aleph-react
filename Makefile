@@ -40,6 +40,7 @@ bundle: upgrade cache
 # Run
 # ------------------------------------------------------------------------------
 localhost: export DENO_DIR=.cache/
+localhost: export GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql
 localhost: cache bundle
 	(trap 'kill 0' SIGINT; \
 		deno bundle --watch --config client/tsconfig.json --unstable client/bundle.tsx .dist/deno.bundle.js & \

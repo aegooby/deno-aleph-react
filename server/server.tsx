@@ -251,10 +251,6 @@ export class Server
         if (request.url !== "/" && this.routes.has(request.url))
             request.url = this.routes.get(request.url) as string;
 
-        /* Check the special case index "/" URL */
-        // if (request.url === "/")
-        //     response ?? (response = this.page(request));
-
         /* Converts URL to filepath */
         const filepath = path.join(".", request.url);
 

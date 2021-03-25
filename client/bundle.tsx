@@ -9,7 +9,7 @@ try
 {
     const clientAttributes =
     {
-        api: "https://localhost:8443/graphql"
+        api: Deno.env.get("GRAPHQL_API_ENDPOINT")!,
     };
     const httpclient = new client.Client(clientAttributes);
     const element: React.ReactElement =
