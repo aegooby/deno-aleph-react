@@ -30,7 +30,7 @@ try
         httpsPort: 8443,
         cert: args.tls,
 
-        App: <App fetch={() => new Promise(() => { })} />,
+        App: <App client={undefined} />,
 
         schema: "graphql/schema.gql",
         resolvers: { request: function () { return "response"; } },

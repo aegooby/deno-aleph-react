@@ -14,7 +14,7 @@ try
     const httpclient = new client.Client(clientAttributes);
     const element: React.ReactElement =
         <ReactRouter.BrowserRouter>
-            <App fetch={httpclient.fetch} />
+            <App client={httpclient} />
         </ReactRouter.BrowserRouter>;
     httpclient.hydrate(element);
 }

@@ -26,7 +26,7 @@ try
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        App: <App fetch={() => new Promise(() => { })} />,
+                        App: <App client={undefined} />,
 
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
@@ -59,7 +59,7 @@ try
                         httpsPort: 4430,
                         cert: "cert/localhost",
 
-                        App: <App fetch={() => new Promise(() => { })} />,
+                        App: <App client={undefined} />,
 
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
@@ -89,7 +89,7 @@ try
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        App: <App fetch={() => new Promise(() => { })} />,
+                        App: <App client={undefined} />,
 
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
