@@ -18,6 +18,13 @@ interface ClientAttributes
     api: string;
 }
 
+interface Process
+{
+    env: Record<string, string>;
+}
+
+export declare const process: Process;
+
 export class Client
 {
     private api: string;
