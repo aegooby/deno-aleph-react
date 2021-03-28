@@ -15,9 +15,10 @@ try
                 name: ": run for 5 seconds (HTTP)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes =
+                    const serverAttributes: httpsaurus.server.ServerAttributes =
                     {
                         protocol: "http" as httpsaurus.server.Protocol,
+                        domain: undefined,
                         hostname: "localhost",
                         httpPort: 8080,
                         routes:
@@ -25,6 +26,9 @@ try
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
+
+                        httpsPort: undefined,
+                        cert: undefined,
 
                         App: <App client={undefined} />,
 
@@ -45,9 +49,10 @@ try
                 name: ": run for 5 seconds (HTTPS)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes =
+                    const serverAttributes: httpsaurus.server.ServerAttributes =
                     {
                         protocol: "https" as httpsaurus.server.Protocol,
+                        domain: undefined,
                         hostname: "localhost",
                         httpPort: 8080,
                         routes:
@@ -78,9 +83,10 @@ try
                 name: ": fetch (HTTP)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes =
+                    const serverAttributes: httpsaurus.server.ServerAttributes =
                     {
                         protocol: "http" as httpsaurus.server.Protocol,
+                        domain: undefined,
                         hostname: "localhost",
                         httpPort: 8080,
                         routes:
@@ -88,6 +94,9 @@ try
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
+
+                        httpsPort: undefined,
+                        cert: undefined,
 
                         App: <App client={undefined} />,
 
