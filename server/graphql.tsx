@@ -13,7 +13,7 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    public static methods: ["POST", "GET"] = ["POST", "GET"];
+    public static methods: string[] = ["POST", "GET"];
     public static schema:
         {
             schema: graphql.GraphQLSchema;
