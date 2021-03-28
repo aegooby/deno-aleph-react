@@ -12,41 +12,27 @@ interface Props
     client: client.Client | undefined;
 }
 
-export default class App extends React.Component<Props, unknown>
+export default function App(props: Props)
 {
-    private mounted: boolean = false as const;
-    constructor(props: Props)
+    function effect()
     {
-        super(props);
-    }
-    async componentDidMount(): Promise<void>
-    {
-        try
+        async function __effect()
         {
-            this.mounted = true;
-            if (!this.props.client)
+            if (!props.client)
                 return;
-            const response = await this.props.client.fetch({ query: "query{ request }" });
-            if (!this.mounted)
-                return;
+            const response = await props.client.fetch({ query: "query{ request }" });
             const data = response.data;
             client.Console.log(JSON.stringify(data));
         }
-        catch (error) { client.Console.error(error); }
+        __effect();
     }
-    componentWillUnmount(): void
-    {
-        this.mounted = false;
-    }
-    render(): React.ReactElement
-    {
-        const element =
-            <ReactRouter.Switch>
-                <ReactRouter.Route exact path="/">
-                    <Index />
-                </ReactRouter.Route>
-                <ReactRouter.Route render={function (props) { return <NotFound {...props} />; }} />
-            </ReactRouter.Switch>;
-        return element;
-    }
+    React.useEffect(effect);
+    const element =
+        <ReactRouter.Switch>
+            <ReactRouter.Route exact path="/">
+                <Index />
+            </ReactRouter.Route>
+            <ReactRouter.Route render={function (props) { return <NotFound {...props} />; }} />
+        </ReactRouter.Switch>;
+    return element;
 }
