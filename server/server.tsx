@@ -71,13 +71,13 @@ export type Protocol = "http" | "https";
 export interface ServerAttributes
 {
     protocol: Protocol;
-    domain?: string;
+    domain: string | undefined;
     hostname: string;
     httpPort: number;
     routes: Record<string, string>;
 
-    httpsPort?: number;
-    cert?: string;
+    httpsPort: number | undefined;
+    cert: string | undefined;
 
     App: React.ReactElement;
 
@@ -92,7 +92,7 @@ export class Server
     private routes: Map<string, string> = new Map<string, string>();
 
     private httpServer: http.Server;
-    private httpsServer?: http.Server;
+    private httpsServer: http.Server | undefined;
 
     private App: React.ReactElement;
 

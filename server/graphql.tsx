@@ -6,12 +6,6 @@ import * as playground from "https://esm.sh/graphql-playground-html";
 
 import { Console } from "./console.tsx";
 
-interface GraphQLAttributes
-{
-    schema: string;
-    resolvers: unknown;
-}
-
 interface GraphQLBuildAttributes
 {
     url: string;
@@ -19,7 +13,7 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    public static methods: string[] = ["POST", "GET"];
+    public static methods: ["POST", "GET"] = ["POST", "GET"];
     public static schema:
         {
             schema: graphql.GraphQLSchema;
