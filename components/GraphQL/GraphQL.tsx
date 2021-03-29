@@ -12,7 +12,6 @@ export async function useGraphQL(data?: string | Record<string, unknown>)
 {
     const client = React.useContext(Context);
     if (!client) return undefined;
-    if (!data)
-        return client;
+    if (!data) return client;
     return await client.fetch(data);
 }
