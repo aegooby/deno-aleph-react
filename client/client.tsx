@@ -5,12 +5,9 @@ import * as ReactDOM from "https://esm.sh/react-dom";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 
-interface GlobalThis
+interface Document
 {
-    document:
-    {
-        querySelector: (selectors: string) => DocumentFragment;
-    };
+    querySelector: (selectors: string) => DocumentFragment;
 }
 
 interface ClientAttributes
@@ -24,35 +21,35 @@ interface Process
 }
 
 export declare const process: Process;
+export declare const document: Document;
 
 export class Client
 {
     private api: string;
-    public static document = (globalThis as typeof globalThis & GlobalThis).document;
     constructor(attributes: ClientAttributes)
     {
         this.api = attributes.api;
 
         this.fetch = this.fetch.bind(this);
     }
-    public async fetch(query: unknown): Promise<Record<string, unknown>>
+    public async fetch(data: unknown): Promise<Record<string, unknown>>
     {
         const fetchOptions: { method?: string; headers?: Record<string, string>; body?: string; } =
         {
             method: "POST",
         };
-        switch (typeof query)
+        switch (typeof data)
         {
             case "string":
                 {
                     fetchOptions.headers = { "content-type": "application/graphql" };
-                    fetchOptions.body = query;
+                    fetchOptions.body = data;
                     break;
                 }
             default:
                 {
                     fetchOptions.headers = { "content-type": "application/json" };
-                    fetchOptions.body = JSON.stringify(query);
+                    fetchOptions.body = JSON.stringify(data);
                     break;
                 }
         }
@@ -61,6 +58,6 @@ export class Client
     public hydrate(element: React.ReactElement): void
     {
         Console.log("Hydrating bundle");
-        ReactDOM.hydrate(element, Client.document.querySelector("#root"));
+        ReactDOM.hydrate(element, document.querySelector("#root"));
     }
 }
