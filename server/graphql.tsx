@@ -1,7 +1,7 @@
 
 import * as http from "https://deno.land/std/http/mod.ts";
 
-import * as graphql from "https://esm.sh/graphql";
+import * as graphql from "https://cdn.skypack.dev/graphql?dts";
 import * as playground from "https://esm.sh/graphql-playground-html";
 
 import { Console } from "./console.tsx";
