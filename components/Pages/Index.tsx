@@ -6,7 +6,7 @@ import { GraphQL } from "../App.tsx";
 
 export default function Index()
 {
-    const promise = GraphQL.useGraphQL({ query: "query { request }" });
+    const promise = GraphQL.useGraphQL({ query: `query { request }` });
     function effect()
     {
         async function __effect()

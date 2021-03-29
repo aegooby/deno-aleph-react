@@ -32,7 +32,7 @@ export class Client
 
         this.fetch = this.fetch.bind(this);
     }
-    public async fetch(data: unknown): Promise<Record<string, unknown>>
+    public async fetch(data: string | Record<string, unknown>): Promise<Record<string, unknown>>
     {
         const fetchOptions: { method?: string; headers?: Record<string, string>; body?: string; } =
         {
