@@ -189,19 +189,19 @@ export class Server
             };
             return response;
         }
-        catch (error) { return await this.page(request); }
+        catch (error) { return this.page(request); }
     }
     private async graphql(request: http.ServerRequest): Promise<http.Response>
     {
         if (GraphQL.methods.includes(request.method))
         {
             try { return await GraphQL.resolve(request); }
-            catch (error) { return await this.page(request); }
+            catch (error) { return this.page(request); }
         }
         else
-            return await this.page(request);
+            return this.page(request);
     }
-    private async page(request: http.ServerRequest): Promise<http.Response>
+    private page(request: http.ServerRequest): http.Response
     {
         Console.log(`Page request for URL: ${request.url}`);
         const headers = new Headers();
@@ -230,7 +230,17 @@ export class Server
         const body: string = `<!DOCTYPE html> ${ReactDOMServer.renderToString(page)}` as string;
 
         if (staticContext.url)
-            return await this.redirect(request);
+        {
+            const headers = new Headers();
+            headers.set("location", staticContext.url as string);
+
+            const response: http.Response =
+            {
+                status: http.Status.TemporaryRedirect,
+                headers: headers,
+            };
+            return response;
+        }
 
         const response: http.Response =
         {
@@ -260,7 +270,7 @@ export class Server
 
         /* File not found or is directory -> page */
         if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
-            response ?? (response = await this.page(request));
+            response ?? (response = this.page(request));
 
         /* File found -> serve static */
         response ?? (response = await this.static(request));
@@ -275,7 +285,7 @@ export class Server
             case "GET": case "POST":
                 break;
             default:
-                response = await this.page(request);
+                response = this.page(request);
                 break;
         }
 
