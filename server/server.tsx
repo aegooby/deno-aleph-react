@@ -133,9 +133,9 @@ export class Server
         GraphQL.resolvers = attributes.resolvers;
 
         if (attributes.domain)
-            this.domain = this.protocol + "://" + attributes.domain;
+            this.domain = `${this.protocol}://${attributes.domain}`;
         else
-            this.domain = this.protocol + "://" + this.hostname + ":" + this.port;
+            this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
     }
     public get port(): number
     {
@@ -153,7 +153,7 @@ export class Server
     }
     public get url(): string
     {
-        return this.protocol + "://" + this.hostname + ":" + this.port;
+        return `${this.protocol}://${this.hostname}:${this.port}`;
     }
     private async static(request: http.ServerRequest): Promise<http.Response>
     {
@@ -226,10 +226,11 @@ export class Server
                 </body>
             </html>;
 
-        const body: string = "<!DOCTYPE html>" + ReactDOMServer.renderToString(page);
+        const body: string = `<!DOCTYPE html> ${ReactDOMServer.renderToString(page)}` as string;
 
         if (staticContext.url)
         {
+            Console.log(`Redirecting with url: ${staticContext.url}`);
             request.url = staticContext.url as string;
             return this.page(request);
         }
@@ -287,7 +288,7 @@ export class Server
     private async redirect(request: http.ServerRequest): Promise<void>
     {
         const location =
-            (request.headers.get("referer") ?? "https://" + request.headers.get("host")) + request.url;
+            (request.headers.get("referer") ?? `https://${request.headers.get("host")}${request.url}`);
         const headers = new Headers();
         headers.set("location", location);
 
@@ -301,10 +302,10 @@ export class Server
     }
     public async serve(): Promise<void>
     {
-        Console.log("Building GraphQL...");
+        Console.log(`Building GraphQL...`);
         await GraphQL.build({ url: this.domain });
 
-        Console.log("Server is running on " + colors.underline(colors.magenta(this.url)));
+        Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
         async function httpRequest(server: Server)
         {
             for await (const request of server.httpServer)
