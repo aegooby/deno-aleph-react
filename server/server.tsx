@@ -228,7 +228,6 @@ export class Server
 
         const body: string = `<!DOCTYPE html> ${ReactDOMServer.renderToString(page)}` as string;
 
-        Console.log(staticContext);
         if (staticContext.url)
         {
             request.url = staticContext.url as string;
