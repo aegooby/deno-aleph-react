@@ -228,6 +228,12 @@ export class Server
 
         const body: string = "<!DOCTYPE html>" + ReactDOMServer.renderToString(page);
 
+        if (staticContext.url)
+        {
+            request.url = staticContext.url as string;
+            return this.page(request);
+        }
+
         const response: http.Response =
         {
             status: staticContext.statusCode as http.Status ?? http.Status.OK,
