@@ -288,7 +288,7 @@ export class Server
     private async redirect(request: http.ServerRequest): Promise<void>
     {
         const location =
-            (request.headers.get("referer") ?? `https://${request.headers.get("host")}${request.url}`);
+            request.headers.get("referer") ?? `https://${request.headers.get("host")}${request.url}`;
         const headers = new Headers();
         headers.set("location", location);
 

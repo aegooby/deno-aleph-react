@@ -2,7 +2,7 @@
 import * as React from "https://esm.sh/react";
 import * as ReactHelmet from "https://esm.sh/react-helmet";
 
-import { GraphQL } from "../App.tsx";
+import { GraphQL, Console } from "../App.tsx";
 
 export default function Index()
 {
@@ -12,7 +12,7 @@ export default function Index()
         async function __effect()
         {
             const data = await promise;
-            if (data) console.log(JSON.stringify(data));
+            if (data) Console.log(data);
         }
         __effect();
     }
