@@ -124,7 +124,7 @@ export class Server
                 this.httpsServer = http.serveTLS(serveTLSOptions);
                 break;
             default:
-                throw new Error("unknown server protocol (please choose HTTP or HTTPS)");
+                throw new Error(`unknown protocol ${this.protocol} (please choose HTTP or HTTPS)`);
         }
         for (const key in attributes.routes)
             this.routes.set(key, attributes.routes[key]);
