@@ -22,7 +22,6 @@ interface Process
 
 export declare const process: Process;
 export declare const document: Document;
-export const $: (selectors: string) => DocumentFragment = document.querySelector;
 
 export class Client
 {
@@ -59,6 +58,6 @@ export class Client
     public hydrate(element: React.ReactElement): void
     {
         Console.log("Hydrating bundle");
-        ReactDOM.hydrate(element, $("#root"));
+        ReactDOM.hydrate(element, document.querySelector("#root"));
     }
 }
