@@ -26,7 +26,6 @@ export declare const document: Document;
 export class Client
 {
     private api: string;
-    public console: Console = new Console();
     constructor(attributes: ClientAttributes)
     {
         this.api = attributes.api;

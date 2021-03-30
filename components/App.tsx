@@ -4,6 +4,7 @@ import * as ReactRouter from "https://esm.sh/react-router-dom";
 
 import * as GraphQL from "./GraphQL/GraphQL.tsx";
 export * as GraphQL from "./GraphQL/GraphQL.tsx";
+export { Console } from "../client/console.tsx";
 
 import Index from "./Pages/Index.tsx";
 import NotFound from "./Pages/NotFound.tsx";
