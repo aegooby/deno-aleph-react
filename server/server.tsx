@@ -203,7 +203,6 @@ export class Server
     }
     private page(request: http.ServerRequest): http.Response
     {
-        Console.log(`Page request for URL: ${request.url}`);
         const headers = new Headers();
         headers.set("content-type", "text/html");
 
