@@ -189,19 +189,19 @@ export class Server
             };
             return response;
         }
-        catch (error) { return this.page(request); }
+        catch (error) { return await this.page(request); }
     }
     private async graphql(request: http.ServerRequest): Promise<http.Response>
     {
         if (GraphQL.methods.includes(request.method))
         {
             try { return await GraphQL.resolve(request); }
-            catch (error) { return this.page(request); }
+            catch (error) { return await this.page(request); }
         }
         else
-            return this.page(request);
+            return await this.page(request);
     }
-    private page(request: http.ServerRequest): http.Response
+    private async page(request: http.ServerRequest): Promise<http.Response>
     {
         Console.log(`Page request for URL: ${request.url}`);
         const headers = new Headers();
@@ -230,10 +230,7 @@ export class Server
         const body: string = `<!DOCTYPE html> ${ReactDOMServer.renderToString(page)}` as string;
 
         if (staticContext.url)
-        {
-            request.url = staticContext.url as string;
-            return this.page(request);
-        }
+            return await this.redirect(request);
 
         const response: http.Response =
         {
@@ -263,7 +260,7 @@ export class Server
 
         /* File not found or is directory -> page */
         if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
-            response ?? (response = this.page(request));
+            response ?? (response = await this.page(request));
 
         /* File found -> serve static */
         response ?? (response = await this.static(request));
@@ -278,7 +275,7 @@ export class Server
             case "GET": case "POST":
                 break;
             default:
-                response = this.page(request);
+                response = await this.page(request);
                 break;
         }
 
@@ -288,7 +285,8 @@ export class Server
     private async redirect(request: http.ServerRequest): Promise<void>
     {
         const location =
-            request.headers.get("referer") ?? `https://${request.headers.get("host")}${request.url}`;
+            request.headers.get("referer") ??
+            `${this.protocol}://${request.headers.get("host")}${request.url}`;
         const headers = new Headers();
         headers.set("location", location);
 
