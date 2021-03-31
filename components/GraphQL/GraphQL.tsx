@@ -1,7 +1,7 @@
 
 import * as React from "https://esm.sh/react";
-import type { Client } from "../../client/client.tsx";
-export type { Client } from "../../client/client.tsx";
+import type { Client, Query } from "../../client/client.tsx";
+export type { Client, Query } from "../../client/client.tsx";
 
 export const Context = React.createContext(undefined as (Client | undefined));
 
@@ -15,7 +15,7 @@ export function useClient(): Client | undefined
     return client;
 }
 
-export async function useGraphQL(data: string | Record<string, unknown>): Promise<Record<string, unknown> | undefined>
+export async function useGraphQL(data: string | Query): Promise<Record<string, unknown> | undefined>
 {
     const client = useClient();
     if (!client) return undefined;

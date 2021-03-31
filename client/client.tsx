@@ -20,6 +20,13 @@ interface Process
     env: Record<string, string>;
 }
 
+export interface Query
+{
+    source: string;
+    operationName?: string | undefined;
+    variables?: Record<string, unknown> | undefined;
+}
+
 export declare const process: Process;
 export declare const document: Document;
 
@@ -32,7 +39,7 @@ export class Client
 
         this.fetch = this.fetch.bind(this);
     }
-    public async fetch(data: string | Record<string, unknown>): Promise<Record<string, unknown>>
+    public async fetch(data: string | Query): Promise<Record<string, unknown>>
     {
         const fetchOptions: { method?: string; headers?: Record<string, string>; body?: string; } =
         {
