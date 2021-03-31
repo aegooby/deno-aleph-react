@@ -44,6 +44,8 @@ export class GraphQL
                 case "application/json":
                     {
                         const json = JSON.parse(body);
+                        /** @todo Remove. */
+                        Console.log(json);
                         query.source = json.source;
                         query.operationName = json.operationName;
                         query.variables = json.variables;
