@@ -1,7 +1,6 @@
 
 import * as React from "https://esm.sh/react";
 import * as ReactHelmet from "https://esm.sh/react-helmet";
-
 import { GraphQL, Console } from "../App.tsx";
 
 export default function Index()

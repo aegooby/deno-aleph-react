@@ -4,7 +4,7 @@ import * as ReactDOM from "https://esm.sh/react-dom";
 
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
-import type { Query } from "../components/GraphQL/GraphQL.tsx";
+import type { GraphQL } from "../components/Core/Core.tsx";
 
 interface Document
 {
@@ -33,7 +33,7 @@ export class Client
 
         this.fetch = this.fetch.bind(this);
     }
-    public async fetch(data: string | Query): Promise<Record<string, unknown>>
+    public async fetch(data: string | GraphQL.Query): Promise<Record<string, unknown>>
     {
         const fetchOptions: { method?: string; headers?: Record<string, string>; body?: string; } =
         {

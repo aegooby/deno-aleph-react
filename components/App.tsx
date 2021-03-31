@@ -2,8 +2,8 @@
 import * as React from "https://esm.sh/react";
 import * as ReactRouter from "https://esm.sh/react-router-dom";
 
-import * as GraphQL from "./GraphQL/GraphQL.tsx";
-export * as GraphQL from "./GraphQL/GraphQL.tsx";
+import { GraphQL } from "./Core/Core.tsx";
+export { GraphQL } from "./Core/Core.tsx";
 export { Console } from "../client/console.tsx";
 
 import Index from "./Pages/Index.tsx";

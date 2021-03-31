@@ -5,7 +5,7 @@ import * as graphql from "https://esm.sh/graphql";
 import * as playground from "https://esm.sh/graphql-playground-html";
 
 import { Console } from "./console.tsx";
-import type { Query } from "../components/GraphQL/GraphQL.tsx";
+import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
 
 interface GraphQLBuildAttributes
 {
