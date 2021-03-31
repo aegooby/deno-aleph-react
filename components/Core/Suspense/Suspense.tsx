@@ -12,6 +12,6 @@ export default function Suspense(props: React.SuspenseProps)
     }
     catch
     {
-        return <>{props.children ?? props.fallback}</>;
+        return <React.Suspense fallback={props.fallback}>{props.children}</React.Suspense>;
     }
 }
