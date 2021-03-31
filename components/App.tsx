@@ -22,7 +22,7 @@ export default function App(props: Props)
                 <ReactRouter.Route exact path="/">
                     <Index />
                 </ReactRouter.Route>
-                <ReactRouter.Route render={function (props) { return <NotFound {...props} />; }} />
+                <ReactRouter.Route component={NotFound} />
             </ReactRouter.Switch>
         </GraphQL.Provider>;
     return element;

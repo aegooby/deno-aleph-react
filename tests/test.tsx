@@ -3,8 +3,6 @@ import * as httpsaurus from "../httpsaurus.ts";
 import * as assert from "https://deno.land/std/testing/asserts.ts";
 import * as delay from "https://deno.land/std/async/delay.ts";
 
-import * as React from "https://esm.sh/react";
-
 import App from "../components/App.tsx";
 
 try
@@ -30,7 +28,7 @@ try
                         httpsPort: undefined,
                         cert: undefined,
 
-                        App: <App client={undefined} />,
+                        App: App,
 
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
@@ -64,7 +62,7 @@ try
                         httpsPort: 4430,
                         cert: "cert/localhost",
 
-                        App: <App client={undefined} />,
+                        App: App,
 
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
@@ -98,7 +96,7 @@ try
                         httpsPort: undefined,
                         cert: undefined,
 
-                        App: <App client={undefined} />,
+                        App: App,
 
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },

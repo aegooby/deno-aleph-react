@@ -79,7 +79,7 @@ export interface ServerAttributes
     httpsPort: number | undefined;
     cert: string | undefined;
 
-    App: React.ReactElement;
+    App: React.FunctionComponent<{ client: undefined; }>;
 
     schema: string;
     resolvers: unknown;
@@ -94,7 +94,7 @@ export class Server
     private httpServer: http.Server;
     private httpsServer: http.Server | undefined;
 
-    private App: React.ReactElement;
+    private App: React.ComponentType<{ client: undefined; }>;
 
     constructor(attributes: ServerAttributes)
     {
@@ -220,7 +220,7 @@ export class Server
                 <body>
                     <div id="root">
                         <ReactRouter.StaticRouter location={request.url} context={staticContext}>
-                            {this.App}
+                            <this.App client={undefined} />
                         </ReactRouter.StaticRouter>
                     </div>
                 </body>

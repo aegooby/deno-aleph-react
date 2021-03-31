@@ -2,7 +2,6 @@
 import * as server from "./server.tsx";
 import App from "../components/App.tsx";
 
-import * as React from "https://esm.sh/react";
 import * as yargs from "https://deno.land/x/yargs/deno.ts";
 
 const args = yargs.default(Deno.args)
@@ -30,7 +29,7 @@ try
         httpsPort: 8443,
         cert: args.tls,
 
-        App: <App client={undefined} />,
+        App: App,
 
         schema: "graphql/schema.gql",
         resolvers: { request: function () { return "response"; } },
