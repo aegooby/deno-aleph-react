@@ -17,9 +17,9 @@ export class GraphQL
     public static methods: string[] = ["POST", "GET"];
     public static schema:
         {
-            schema: graphql.GraphQLSchema;
+            schema: graphql.GraphQLSchema | undefined;
             path: string;
-        } = { schema: new graphql.GraphQLSchema({}), path: "" };
+        } = { schema: undefined, path: "" };
     public static resolvers: unknown;
     private static playgroundHTML: string;
     private static async buildSchema()
@@ -54,7 +54,7 @@ export class GraphQL
             }
             const graphqlargs: graphql.GraphQLArgs =
             {
-                schema: GraphQL.schema.schema,
+                schema: GraphQL.schema.schema as graphql.GraphQLSchema,
                 source: query.query,
                 rootValue: GraphQL.resolvers,
                 variableValues: query.variables,
