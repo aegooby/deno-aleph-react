@@ -4,6 +4,7 @@ import * as ReactDOM from "https://esm.sh/react-dom";
 
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
+import type { Query } from "../components/GraphQL/GraphQL.tsx";
 
 interface Document
 {
@@ -18,13 +19,6 @@ interface ClientAttributes
 interface Process
 {
     env: Record<string, string>;
-}
-
-export interface Query
-{
-    source: string;
-    operationName?: string | undefined;
-    variables?: Record<string, unknown> | undefined;
 }
 
 export declare const process: Process;

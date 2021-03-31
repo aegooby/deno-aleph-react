@@ -5,13 +5,8 @@ import * as graphql from "https://esm.sh/graphql";
 import * as playground from "https://esm.sh/graphql-playground-html";
 
 import { Console } from "./console.tsx";
+import type { Query } from "../components/GraphQL/GraphQL.tsx";
 
-export interface Query
-{
-    source: string;
-    operationName?: string | undefined;
-    variables?: Record<string, unknown> | undefined;
-}
 interface GraphQLBuildAttributes
 {
     url: string;
@@ -38,22 +33,20 @@ export class GraphQL
         {
             const decoder = new TextDecoder();
             const body: string = decoder.decode(await Deno.readAll(request.body));
-            const query: Query = { source: "" };
+            const query: Query = { query: "" };
             switch (request.headers.get("content-type"))
             {
                 case "application/json":
                     {
                         const json = JSON.parse(body);
-                        /** @todo Remove. */
-                        Console.log(json);
-                        query.source = json.source;
+                        query.query = json.query;
                         query.operationName = json.operationName;
                         query.variables = json.variables;
                         break;
                     }
                 case "application/graphql":
                     {
-                        query.source = body;
+                        query.query = body;
                         break;
                     }
                 default:
@@ -62,7 +55,7 @@ export class GraphQL
             const graphqlargs: graphql.GraphQLArgs =
             {
                 schema: GraphQL.schema.schema,
-                source: query.source,
+                source: query.query,
                 rootValue: GraphQL.resolvers,
                 variableValues: query.variables,
                 operationName: query.operationName,

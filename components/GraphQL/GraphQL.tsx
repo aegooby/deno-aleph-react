@@ -1,7 +1,14 @@
 
 import * as React from "https://esm.sh/react";
-import type { Client, Query } from "../../client/client.tsx";
-export type { Client, Query } from "../../client/client.tsx";
+import type { Client } from "../../client/client.tsx";
+export type { Client } from "../../client/client.tsx";
+
+export interface Query
+{
+    query: string;
+    operationName?: string | undefined;
+    variables?: Record<string, unknown> | undefined;
+}
 
 export const Context = React.createContext(undefined as (Client | undefined));
 
