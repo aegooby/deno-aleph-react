@@ -45,7 +45,8 @@ export default function (env: Record<string, string>)
                         }
                     }
                 ]
-        }
+        },
+        experiments: { topLevelAwait: true }
     };
 
     return config;
