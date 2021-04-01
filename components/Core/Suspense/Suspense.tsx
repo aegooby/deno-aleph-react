@@ -1,9 +1,8 @@
 
 import * as React from "https://esm.sh/react";
+import { throwOnClient } from "../Core.tsx";
 
-function throwOnClient() { Deno; }
-
-export default function Suspense(props: React.SuspenseProps)
+export function Suspense(props: React.SuspenseProps)
 {
     try
     {
