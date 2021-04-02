@@ -75,7 +75,7 @@ export class Bundler
         {
             Console.log(`Bundle entrypoint: ${colors.cyan(entry)}`);
 
-            const result = await Deno.emit(this.entry, this.emitOptions);
+            const result = await Deno.emit(entry, this.emitOptions);
 
             this.diagnostics(result);
 
