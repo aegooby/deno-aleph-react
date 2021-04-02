@@ -9,10 +9,10 @@ import * as ReactDOMServer from "https://esm.sh/react-dom/server";
 import * as ReactRouter from "https://esm.sh/react-router-dom";
 import * as query from "https://esm.sh/query-string";
 
+import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
-
-import { GraphQL } from "./graphql.tsx";
+export { Bundler } from "./bundler.tsx";
 
 const mediaTypes: Record<string, string> =
 {
