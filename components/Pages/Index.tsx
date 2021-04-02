@@ -1,21 +1,9 @@
 
 import * as React from "https://esm.sh/react";
 import * as ReactHelmet from "https://esm.sh/react-helmet";
-import { GraphQL, Console } from "../Core/Core.tsx";
 
 export default function Index()
 {
-    const promise = GraphQL.useGraphQL({ query: `query { request }` });
-    function effect()
-    {
-        async function __effect()
-        {
-            const data = await promise;
-            if (data) Console.log(data);
-        }
-        __effect();
-    }
-    React.useEffect(effect);
     const element: React.ReactElement =
         <>
             <ReactHelmet.Helmet>
