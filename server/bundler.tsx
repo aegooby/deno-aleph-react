@@ -69,8 +69,28 @@ export class Bundler
         const stringFile = `"${outPath}"`;
         Console.success(`Emit: ${colors.magenta(stringFile)}`);
     }
-    public async bundle()
+    public async bundle(entry?: string)
     {
+        if (entry)
+        {
+            Console.log(`Bundle entrypoint: ${colors.cyan(entry)}`);
+
+            const result = await Deno.emit(this.entry, this.emitOptions);
+
+            this.diagnostics(result);
+
+            const text = result.files["deno:///bundle.js"];
+            const array = this.encoder.encode(text);
+            const outPath = path.join(this.directory, `${path.basename(entry)}.bundle.js`);
+            await fs.ensureDir(path.dirname(outPath));
+            await Deno.writeFile(outPath, array);
+
+            const stringFile = `"${outPath}"`;
+            Console.success(`Emit: ${colors.magenta(stringFile)}`);
+
+            return;
+        }
+
         const urlFile = `file://${path.resolve(this.entry)}`;
         Console.log(`Bundle entrypoint: ${colors.cyan(urlFile)}`);
 
