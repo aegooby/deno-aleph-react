@@ -12,7 +12,7 @@ export default function (env: Record<string, string>)
     const config: webpack.Configuration =
     {
         mode: "none",
-        stats: "minimal",
+        stats: "normal",
         entry: path.resolve(__dirname, ".dist/deno.bundle.js"),
         output:
         {

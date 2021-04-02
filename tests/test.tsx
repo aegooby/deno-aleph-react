@@ -1,5 +1,5 @@
 
-import * as httpsaurus from "../httpsaurus.ts";
+import * as server from "../server/server.tsx";
 import * as assert from "https://deno.land/std/testing/asserts.ts";
 import * as delay from "https://deno.land/std/async/delay.ts";
 
@@ -13,9 +13,9 @@ try
                 name: ": run for 5 seconds (HTTP)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes: httpsaurus.server.ServerAttributes =
+                    const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "http" as httpsaurus.server.Protocol,
+                        protocol: "http" as server.Protocol,
                         domain: undefined,
                         hostname: "localhost",
                         httpPort: 8080,
@@ -33,11 +33,11 @@ try
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
                     };
-                    const server = new httpsaurus.server.Server(serverAttributes);
+                    const httpserver = new server.Server(serverAttributes);
                     const time = delay.delay(5000);
-                    const serve = server.serve();
+                    const serve = httpserver.serve();
                     await time;
-                    server.close();
+                    httpserver.close();
                     await serve;
                 },
                 sanitizeOps: false,
@@ -47,9 +47,9 @@ try
                 name: ": run for 5 seconds (HTTPS)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes: httpsaurus.server.ServerAttributes =
+                    const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "https" as httpsaurus.server.Protocol,
+                        protocol: "https" as server.Protocol,
                         domain: undefined,
                         hostname: "localhost",
                         httpPort: 8080,
@@ -67,11 +67,11 @@ try
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
                     };
-                    const server = new httpsaurus.server.Server(serverAttributes);
+                    const httpserver = new server.Server(serverAttributes);
                     const time = delay.delay(5000);
-                    const serve = server.serve();
+                    const serve = httpserver.serve();
                     await time;
-                    server.close();
+                    httpserver.close();
                     await serve;
                 },
                 sanitizeOps: false,
@@ -81,9 +81,9 @@ try
                 name: ": fetch (HTTP)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes: httpsaurus.server.ServerAttributes =
+                    const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "http" as httpsaurus.server.Protocol,
+                        protocol: "http" as server.Protocol,
                         domain: undefined,
                         hostname: "localhost",
                         httpPort: 8080,
@@ -101,12 +101,12 @@ try
                         schema: "graphql/schema.gql",
                         resolvers: { request: function () { return "response"; } },
                     };
-                    const server = new httpsaurus.server.Server(serverAttributes);
-                    const complete = server.serve();
+                    const httpserver = new server.Server(serverAttributes);
+                    const complete = httpserver.serve();
                     const response = await fetch("http://localhost:8080/");
                     assert.assert(response.ok);
                     await response.text();
-                    server.close();
+                    httpserver.close();
                     await complete;
                 },
                 sanitizeOps: false,
@@ -118,6 +118,6 @@ try
 }
 catch (error)
 {
-    httpsaurus.server.Console.error(error.toString());
+    server.Console.error(error.toString());
     Deno.exit(1);
 }

@@ -3,8 +3,9 @@ import * as yargs from "https://deno.land/x/yargs/deno.ts";
 import { Arguments } from 'https://deno.land/x/yargs/deno-types.ts';
 import * as colors from "https://deno.land/std/fmt/colors.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
+import * as path from "https://deno.land/std/path/mod.ts";
 
-import { Bundler } from "./server/bundler.tsx";
+import { Console, Bundler } from "./server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
 
@@ -29,16 +30,19 @@ const tsconfig: Deno.CompilerOptions =
     target: "esnext"
 };
 
+const thisFile = path.basename(path.fromFileUrl(Deno.mainModule));
+const command = `deno --unstable run --allow-all ${thisFile}`;
+
 yargs.default(Deno.args)
     .help(false)
     .command("*", "", {}, function (_: Arguments)
     {
-        console.log("usage: scripts.ts <command> [options]");
+        Console.log(`usage: ${command} <command> [options]`);
         Deno.exit(1);
     })
     .command("version", "", {}, function (_: Arguments)
     {
-        console.log(`${colors.bold("https")}${colors.reset("aurus")} v1.1.2`);
+        Console.log(`${colors.bold("https")}${colors.reset("aurus")} v1.1.2`);
     })
     .command("clean", "", {}, async function (args: Arguments)
     {
@@ -108,7 +112,7 @@ yargs.default(Deno.args)
     {
         if (!args.graphql)
         {
-            console.error("usage: scripts.ts bundle --graphql <endpoint>");
+            console.error(`usage: ${command} bundle --graphql <endpoint>`);
             Deno.exit(1);
         }
 
@@ -171,7 +175,7 @@ yargs.default(Deno.args)
         async function onChange()
         {
             restarting = true;
-            console.log(colors.italic("Encoutered file changes, restarting!"));
+            Console.log(colors.italic("Encoutered file changes, restarting!"));
             serverProcess.close();
             await bundle();
             serverProcess = Deno.run(serverRunOptions);
@@ -225,8 +229,7 @@ yargs.default(Deno.args)
             cmd:
                 [
                     "docker", "run", "-it", "--init", "-p", "443:8443", "-p", "80:8080",
-                    "httpsaurus/server:latest", "deno", "--unstable", "run", "--allow-all",
-                    "scripts.ts", "remote"
+                    "httpsaurus/server:latest", "deno", ...command.split(" "), "remote"
                 ]
         };
 
@@ -240,7 +243,7 @@ yargs.default(Deno.args)
     })
     .command("help", "", {}, function (_: Arguments)
     {
-        console.log("usage: scripts.ts <command> [options]");
+        Console.log(`usage: ${command} <command> [options]`);
         Deno.exit();
     })
     .parse();
