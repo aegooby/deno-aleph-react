@@ -9,27 +9,6 @@ import { Console, Bundler } from "./server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
 
-const tsconfig: Deno.CompilerOptions =
-{
-    allowJs: true,
-    checkJs: true,
-    downlevelIteration: true,
-    emitDeclarationOnly: false,
-    emitDecoratorMetadata: true,
-    esModuleInterop: true,
-    experimentalDecorators: true,
-    importHelpers: true,
-    importsNotUsedAsValues: "remove",
-    jsx: "react",
-    jsxFactory: "React.createElement",
-    jsxFragmentFactory: "React.Fragment",
-    module: "esnext",
-    noImplicitAny: true,
-    lib: ["deno.ns", "deno.unstable", "dom"],
-    strict: true,
-    target: "esnext"
-};
-
 const thisFile = path.basename(path.fromFileUrl(Deno.mainModule));
 const command = `deno --unstable run --allow-all ${thisFile}`;
 
@@ -116,7 +95,7 @@ yargs.default(Deno.args)
             Deno.exit(1);
         }
 
-        const bundler = new Bundler({ dist: ".dist", watch: false });
+        const bundler = new Bundler({ dist: ".dist", watch: false, env: { DENO_DIR: ".cache/" } });
         try { await bundler.bundle("client/bundle.tsx"); }
         catch (error) 
         {
@@ -139,7 +118,7 @@ yargs.default(Deno.args)
     })
     .command("localhost", "", {}, async function (_: Arguments)
     {
-        const bundler = new Bundler({ dist: ".dist", watch: true });
+        const bundler = new Bundler({ dist: ".dist", watch: true, env: { DENO_DIR: ".cache/" } });
         const webpackRunOptions: Deno.RunOptions =
         {
             cmd:

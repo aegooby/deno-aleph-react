@@ -9,16 +9,19 @@ interface BundlerAttributes
 {
     dist: string;
     watch: boolean;
+    env: Record<string, string>;
 }
 
 export class Bundler
 {
     private dist: string;
     private watch: boolean;
+    private env: Record<string, string>;
     constructor(attributes: BundlerAttributes)
     {
         this.dist = attributes.dist;
         this.watch = attributes.watch;
+        this.env = attributes.env;
     }
     private async import(string: string)
     {
@@ -43,7 +46,8 @@ export class Bundler
                 [
                     "deno", "bundle", "--unstable", ...watch, "--config",
                     "client/tsconfig.json", entry, output
-                ]
+                ],
+            env: this.env
         };
         const process = Deno.run(runOptions);
         const status = await process.status();
