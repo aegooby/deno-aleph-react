@@ -116,9 +116,13 @@ yargs.default(Deno.args)
             Deno.exit(1);
         }
 
-        const bundler = new Bundler({ entry: "client/bundle.tsx", directory: ".dist", tsconfig: tsconfig });
-        try { await bundler.bundle(); }
-        catch (error) { Deno.exit(1); }
+        const bundler = new Bundler({ dist: ".dist", watch: false });
+        try { await bundler.bundle("client/bundle.tsx"); }
+        catch (error) 
+        {
+            Console.error(error);
+            Deno.exit(1);
+        }
 
         const runOptions: Deno.RunOptions =
         {
@@ -135,57 +139,34 @@ yargs.default(Deno.args)
     })
     .command("localhost", "", {}, async function (_: Arguments)
     {
-        const bundler = new Bundler({ entry: "client/bundle.tsx", directory: ".dist", tsconfig: tsconfig });
-        async function bundle()
+        const bundler = new Bundler({ dist: ".dist", watch: true });
+        const webpackRunOptions: Deno.RunOptions =
         {
-            try { await bundler.bundle(); }
-            catch (error) { Deno.exit(1); }
-
-            const webpackRunOptions: Deno.RunOptions =
-            {
-                cmd:
-                    [
-                        "yarn", "run", "webpack",
-                        "--env", "GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql"
-                    ]
-            };
-
-            const webpackProcess = Deno.run(webpackRunOptions);
-            const status = await webpackProcess.status();
-            webpackProcess.close();
-            if (!status.success)
-                Deno.exit(status.code);
-        }
-
-        await bundle();
-
+            cmd:
+                [
+                    "yarn", "run", "webpack", "--watch", "--env",
+                    "GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql"
+                ]
+        };
         const serverRunOptions: Deno.RunOptions =
         {
             cmd:
                 [
-                    "deno", "--unstable", "run", "--allow-all", "server/daemon.tsx",
-                    "--hostname", "localhost", "--tls", "cert/localhost/"
+                    "deno", "run", "--unstable", "--watch", "--allow-all",
+                    "server/daemon.tsx", "--hostname", "localhost", "--tls",
+                    "cert/localhost/"
                 ],
             env: { DENO_DIR: ".cache/" }
         };
-        let serverProcess = Deno.run(serverRunOptions);
-        /** @todo Find a better way to do this. */
-        let restarting = false;
 
-        async function onChange()
-        {
-            restarting = true;
-            Console.log(colors.italic("Encoutered file changes, restarting!"));
-            serverProcess.close();
-            await bundle();
-            serverProcess = Deno.run(serverRunOptions);
-            restarting = false;
-        }
+        const bundle = bundler.bundle("client/bundle.tsx");
+        const webpackProcess = Deno.run(webpackRunOptions);
+        const serverProcess = Deno.run(serverRunOptions);
 
-        for await (const _ of Deno.watchFs("components/", { recursive: true }))
-            if (!restarting) onChange();
+        await Promise.all([bundle, webpackProcess.status(), serverProcess.status()]);
 
-        Deno.exit();
+        webpackProcess.close();
+        serverProcess.close();
     })
     .command("remote", "", {}, function (_: Arguments)
     {
