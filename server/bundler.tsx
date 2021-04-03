@@ -71,7 +71,18 @@ export class Bundler
     }
     public async bundle(entry: string)
     {
-        const output = path.join(this.dist, "deno.bundle.js");
-        await this.__bundle(entry, output);
+        try
+        {
+            const url = new URL(entry);
+            if (url.protocol === "file:")
+                throw new Error();
+            const output = path.join(this.dist, `${path.basename(url.pathname)}.prebuilt.bundle.js`);
+            await this.__bundle(entry, output);
+        }
+        catch
+        {
+            const output = path.join(this.dist, "deno.bundle.js");
+            await this.__bundle(entry, output);
+        }
     }
 }
