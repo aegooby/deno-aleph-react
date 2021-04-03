@@ -48,7 +48,8 @@ yargs.default(Deno.args)
         if (hashStatus.success)
             Deno.exit(hashStatus.code);
 
-        const npmProcess = Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
+        const npmProcess =
+            Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
         const npmStatus = await npmProcess.status();
         npmProcess.close();
         Deno.exit(npmStatus.code);
@@ -95,7 +96,8 @@ yargs.default(Deno.args)
             Deno.exit(1);
         }
 
-        const bundler = new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
+        const bundler =
+            new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
         try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
         catch (error) 
         {
@@ -118,7 +120,8 @@ yargs.default(Deno.args)
     })
     .command("localhost", "", {}, async function (_: Arguments)
     {
-        const bundler = new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
+        const bundler =
+            new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
         const webpackRunOptions: Deno.RunOptions =
         {
             cmd:
@@ -138,7 +141,8 @@ yargs.default(Deno.args)
             env: { DENO_DIR: ".cache/" }
         };
 
-        const bundle = bundler.bundle({ entry: "client/bundle.tsx", watch: true });
+        const bundle =
+            bundler.bundle({ entry: "client/bundle.tsx", watch: true });
         const webpackProcess = Deno.run(webpackRunOptions);
         const serverProcess = Deno.run(serverRunOptions);
 
@@ -154,7 +158,8 @@ yargs.default(Deno.args)
     })
     .command("test", "", {}, async function (_: Arguments)
     {
-        const process = Deno.run({ cmd: ["deno", "--unstable", "test", "--allow-all", "tests/"] });
+        const process =
+            Deno.run({ cmd: ["deno", "--unstable", "test", "--allow-all", "tests/"] });
         const status = await process.status();
         process.close();
         Deno.exit(status.code);
@@ -163,13 +168,15 @@ yargs.default(Deno.args)
     {
         if (args.prune)
         {
-            const containerProcess = Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
+            const containerProcess =
+                Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
             const containerStatus = await containerProcess.status();
             containerProcess.close();
             if (!containerStatus.success)
                 Deno.exit(containerStatus.code);
 
-            const imageProcess = Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
+            const imageProcess =
+                Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
             const imageStatus = await imageProcess.status();
             imageProcess.close();
             if (!imageStatus.success)
@@ -188,8 +195,9 @@ yargs.default(Deno.args)
         {
             cmd:
                 [
-                    "docker", "run", "-it", "--init", "-p", "443:8443", "-p", "80:8080",
-                    "httpsaurus/server:latest", "deno", ...command.split(" "), "remote"
+                    "docker", "run", "-it", "--init", "-p", "443:8443", "-p",
+                    "80:8080", "httpsaurus/server:latest", "deno",
+                    ...command.split(" "), "remote"
                 ]
         };
 
