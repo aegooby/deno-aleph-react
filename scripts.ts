@@ -95,8 +95,8 @@ yargs.default(Deno.args)
             Deno.exit(1);
         }
 
-        const bundler = new Bundler({ dist: ".dist", watch: false, env: { DENO_DIR: ".cache/" } });
-        try { await bundler.bundle("client/bundle.tsx"); }
+        const bundler = new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
+        try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
         catch (error) 
         {
             Console.error(error);
@@ -118,7 +118,7 @@ yargs.default(Deno.args)
     })
     .command("localhost", "", {}, async function (_: Arguments)
     {
-        const bundler = new Bundler({ dist: ".dist", watch: true, env: { DENO_DIR: ".cache/" } });
+        const bundler = new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
         const webpackRunOptions: Deno.RunOptions =
         {
             cmd:
@@ -138,7 +138,7 @@ yargs.default(Deno.args)
             env: { DENO_DIR: ".cache/" }
         };
 
-        const bundle = bundler.bundle("client/bundle.tsx");
+        const bundle = bundler.bundle({ entry: "client/bundle.tsx", watch: true });
         const webpackProcess = Deno.run(webpackRunOptions);
         const serverProcess = Deno.run(serverRunOptions);
 

@@ -1,50 +1,50 @@
 
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
-import * as colors from "https://deno.land/std/fmt/colors.ts";
-
-import { Console } from "./console.tsx";
 
 interface BundlerAttributes
 {
     dist: string;
-    watch: boolean;
     env: Record<string, string>;
+}
+interface BundleAttributes
+{
+    entry: string;
+    watch: boolean;
 }
 
 export class Bundler
 {
-    private dist: string;
-    private watch: boolean;
-    private env: Record<string, string>;
+    private dist: string = "" as const;
+    private env: Record<string, string> = {};
+    private imports: Set<string> = new Set<string>();
     constructor(attributes: BundlerAttributes)
     {
         this.dist = attributes.dist;
-        this.watch = attributes.watch;
         this.env = attributes.env;
     }
-    private async import(string: string)
+    private async import(string: string, watch: boolean)
     {
         if (string.endsWith(".prebuilt"))
             return;
 
         const entry = `${string}.tsx`;
         const output = path.join(this.dist, `${string}.bundle.js`);
-        await this.__bundle(entry, output);
+        await this.__bundle(entry, output, watch);
     }
-    private async __bundle(entry: string, output: string)
+    private async __bundle(entry: string, output: string, watch: boolean)
     {
         if (!entry.length)
             throw new Error("Cannot bundle with empty entry path");
 
         /* Bundle the main file */
         await fs.ensureDir(path.dirname(output));
-        const watch: string[] = this.watch ? ["--watch"] : [];
+        const watchFlag: string[] = watch ? ["--watch"] : [];
         const runOptions =
         {
             cmd:
                 [
-                    "deno", "bundle", "--unstable", ...watch, "--config",
+                    "deno", "bundle", "--unstable", ...watchFlag, "--config",
                     "client/tsconfig.json", entry, output
                 ],
             env: this.env
@@ -65,24 +65,26 @@ export class Bundler
             for (const match of matches)
             {
                 const bundlePath = match.split("\"")[1].split(".bundle.js")[0];
-                this.import(bundlePath);
+                this.imports.add(bundlePath);
+                if (!this.imports.has(bundlePath))
+                    this.import(bundlePath, watch);
             }
         }
     }
-    public async bundle(entry: string)
+    public async bundle(attributes: BundleAttributes)
     {
         try
         {
-            const url = new URL(entry);
+            const url = new URL(attributes.entry);
             if (url.protocol === "file:")
                 throw new Error();
             const output = path.join(this.dist, `${path.basename(url.pathname)}.prebuilt.bundle.js`);
-            await this.__bundle(entry, output);
+            await this.__bundle(attributes.entry, output, attributes.watch);
         }
         catch
         {
             const output = path.join(this.dist, "deno.bundle.js");
-            await this.__bundle(entry, output);
+            await this.__bundle(attributes.entry, output, attributes.watch);
         }
     }
 }
