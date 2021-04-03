@@ -196,8 +196,8 @@ yargs.default(Deno.args)
             cmd:
                 [
                     "docker", "run", "-it", "--init", "-p", "443:8443", "-p",
-                    "80:8080", "httpsaurus/server:latest", "deno",
-                    ...command.split(" "), "remote"
+                    "80:8080", "httpsaurus/server:latest", ...command.split(" "),
+                    "remote"
                 ]
         };
 
