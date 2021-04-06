@@ -5,9 +5,8 @@ import * as colors from "https://deno.land/std/fmt/colors.ts";
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 
-import { Console, Bundler } from "./server/server.tsx";
-
 Deno.env.set("DENO_DIR", ".cache/");
+const { Console, Bundler } = await import("./server/server.tsx");
 
 const thisFile = path.basename(path.fromFileUrl(Deno.mainModule));
 const command = `deno --unstable run --allow-all ${thisFile}`;

@@ -45,7 +45,7 @@ export class Bundler
             cmd:
                 [
                     "deno", "bundle", "--unstable", ...watchFlag, "--config",
-                    "client/tsconfig.json", entry, output
+                    "tsconfig.json", entry, output
                 ],
             env: this.env
         };
