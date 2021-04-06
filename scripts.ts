@@ -125,7 +125,7 @@ yargs.default(Deno.args)
         {
             cmd:
                 [
-                    "yarn", "run", "webpack", "--watch", "--env",
+                    "yarn", "run", "webpack", "--env",
                     "GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql"
                 ]
         };
@@ -133,21 +133,21 @@ yargs.default(Deno.args)
         {
             cmd:
                 [
-                    "deno", "run", "--unstable", "--watch", "--allow-all",
+                    "deno", "run", "--unstable", "--allow-all",
                     "server/daemon.tsx", "--hostname", "localhost", "--tls",
                     "cert/localhost/"
                 ],
             env: { DENO_DIR: ".cache/" }
         };
 
-        const bundle =
-            bundler.bundle({ entry: "client/bundle.tsx", watch: true });
+        await bundler.bundle({ entry: "client/bundle.tsx", watch: false });
+
         const webpackProcess = Deno.run(webpackRunOptions);
-        const serverProcess = Deno.run(serverRunOptions);
-
-        await Promise.all([bundle, webpackProcess.status(), serverProcess.status()]);
-
+        await webpackProcess.status();
         webpackProcess.close();
+
+        const serverProcess = Deno.run(serverRunOptions);
+        await serverProcess.status();
         serverProcess.close();
     })
     .command("remote", "", {}, function (_: Arguments)

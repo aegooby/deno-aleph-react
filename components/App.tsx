@@ -2,10 +2,10 @@
 import * as React from "https://esm.sh/react";
 import * as ReactRouter from "https://esm.sh/react-router-dom";
 
-import { GraphQL } from "./Core/Core.tsx";
+import { GraphQL, Suspense } from "./Core/Core.tsx";
 
 import Index from "./Pages/Index.tsx";
-import NotFound from "./Pages/NotFound.tsx";
+const NotFound = React.lazy(() => import(`root:///components/Pages/NotFound.tsx`));
 
 interface Props
 {
@@ -16,12 +16,14 @@ export default function App(props: Props)
 {
     const element =
         <GraphQL.Provider value={props.client}>
-            <ReactRouter.Switch>
-                <ReactRouter.Route exact path="/">
-                    <Index />
-                </ReactRouter.Route>
-                <ReactRouter.Route component={NotFound} />
-            </ReactRouter.Switch>
+            <Suspense fallback={<Index />}>
+                <ReactRouter.Switch>
+                    <ReactRouter.Route exact path="/">
+                        <Index />
+                    </ReactRouter.Route>
+                    <ReactRouter.Route component={NotFound} />
+                </ReactRouter.Switch>
+            </Suspense>
         </GraphQL.Provider>;
     return element;
 }

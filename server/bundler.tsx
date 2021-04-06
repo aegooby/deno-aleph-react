@@ -2,6 +2,8 @@
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 
+import { Console } from "./console.tsx";
+
 interface BundlerAttributes
 {
     dist: string;
@@ -10,6 +12,7 @@ interface BundlerAttributes
 interface BundleAttributes
 {
     entry: string;
+    /** @todo Watch mode is buggy. */
     watch: boolean;
 }
 
@@ -17,20 +20,36 @@ export class Bundler
 {
     private dist: string = "" as const;
     private env: Record<string, string> = {};
-    private imports: Set<string> = new Set<string>();
+    private imports: Map<URL, string> = new Map<URL, string>();
     constructor(attributes: BundlerAttributes)
     {
         this.dist = attributes.dist;
         this.env = attributes.env;
     }
-    private async import(string: string, watch: boolean)
+    private import(url: URL, watch: boolean): [string, Promise<void>]
     {
-        if (string.endsWith(".prebuilt"))
-            return;
+        switch (url.protocol)
+        {
+            case "root:": case "project:": case "relative:":
+                {
+                    const entry = path.join(".", url.pathname);
+                    const ext = path.extname(url.pathname);
+                    const filename = `${url.pathname.split(ext)[0]}.bundle.js`;
+                    const output = path.join(this.dist, filename);
 
-        const entry = `${string}.tsx`;
-        const output = path.join(this.dist, `${string}.bundle.js`);
-        await this.__bundle(entry, output, watch);
+                    return [`.${path.sep}${filename}`, this.__bundle(entry, output, watch)];
+                }
+            case "http:": case "https:":
+                {
+                    const entry = url.href;
+                    const filename = `${path.basename(url.pathname)}.bundle.js`;
+                    const output = path.join(this.dist, filename);
+
+                    return [`.${path.sep}${filename}`, this.__bundle(entry, output, watch)];
+                }
+            default:
+                throw new Error("Unknown URL protocol in dynamic import()");
+        }
     }
     private async __bundle(entry: string, output: string, watch: boolean)
     {
@@ -53,38 +72,44 @@ export class Bundler
         const status = await process.status();
         process.close();
         if (!status.success)
+        {
+            Console.error("Bundling subprocess failed");
             Deno.exit(status.code);
+        }
 
         /* Look for dynamic import() */
         const text = await Deno.readTextFile(output);
         const regex =
-            /import\s*?\((?:(?:".*\.bundle\.js")|(?:'.*\.bundle\.js')|(?:`.*\.bundle\.js`))\)/g;
-        const matchArrays = text.matchAll(regex);
-        for (const matches of matchArrays)
+            /import\s*?\((?:(?:"(.*)")|(?:'(.*)')|(?:`(.*)`))\)/g;
+
+        const that = this as Bundler;
+        const promises: Promise<void>[] = [];
+        const textReplaced = text.replaceAll(regex, function (_, dquote, squote, bquote, _1, _2, _3) 
         {
-            for (const match of matches)
+            const importPath = dquote ?? squote ?? bquote;
+            try
             {
-                const bundlePath = match.split("\"")[1].split(".bundle.js")[0];
-                this.imports.add(bundlePath);
-                if (!this.imports.has(bundlePath))
-                    this.import(bundlePath, watch);
+                const url = new URL(importPath);
+                if (!that.imports.has(url))
+                {
+                    const [filename, promise] = that.import(url, watch);
+                    that.imports.set(url, filename);
+                    promises.push(promise);
+                }
+                return `import("${that.imports.get(url)!}")`;
             }
-        }
+            catch (error) 
+            {
+                Console.error(error);
+                throw error;
+            }
+        });
+        await Deno.writeTextFile(output, textReplaced);
+        await Promise.all(promises);
     }
     public async bundle(attributes: BundleAttributes)
     {
-        try
-        {
-            const url = new URL(attributes.entry);
-            if (url.protocol === "file:")
-                throw new Error();
-            const output = path.join(this.dist, `${path.basename(url.pathname)}.prebuilt.bundle.js`);
-            await this.__bundle(attributes.entry, output, attributes.watch);
-        }
-        catch
-        {
-            const output = path.join(this.dist, "deno.bundle.js");
-            await this.__bundle(attributes.entry, output, attributes.watch);
-        }
+        const output = path.join(this.dist, "deno.bundle.js");
+        await this.__bundle(attributes.entry, output, attributes.watch);
     }
 }
