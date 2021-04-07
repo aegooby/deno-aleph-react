@@ -48,7 +48,7 @@ export class Bundler
                     return [path.toFileUrl(path.resolve(output)).href, this.__bundle(entry, output, watch)];
                 }
             default:
-                throw new Error("Unknown URL protocol in dynamic import()");
+                throw new Error(`Unknown URL protocol in import(${url.href})`);
         }
     }
     private async __bundle(entry: string, output: string, watch: boolean)
