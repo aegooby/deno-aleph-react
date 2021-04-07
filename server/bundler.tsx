@@ -30,14 +30,14 @@ export class Bundler
     {
         switch (url.protocol)
         {
-            case "root:": case "project:": case "relative:":
+            case "file:":
                 {
                     const entry = path.join(".", url.pathname);
                     const ext = path.extname(url.pathname);
                     const filename = `${url.pathname.split(ext)[0]}.bundle.js`;
                     const output = path.join(this.dist, filename);
 
-                    return [`.${path.sep}${filename}`, this.__bundle(entry, output, watch)];
+                    return [path.toFileUrl(path.resolve(output)).href, this.__bundle(entry, output, watch)];
                 }
             case "http:": case "https:":
                 {
@@ -45,7 +45,7 @@ export class Bundler
                     const filename = `${path.basename(url.pathname)}.bundle.js`;
                     const output = path.join(this.dist, filename);
 
-                    return [`.${path.sep}${filename}`, this.__bundle(entry, output, watch)];
+                    return [path.toFileUrl(path.resolve(output)).href, this.__bundle(entry, output, watch)];
                 }
             default:
                 throw new Error("Unknown URL protocol in dynamic import()");

@@ -5,7 +5,7 @@ import * as ReactRouter from "https://esm.sh/react-router-dom";
 import { GraphQL, Suspense } from "./Core/Core.tsx";
 
 import Index from "./Pages/Index.tsx";
-const NotFound = React.lazy(() => import(`root:///components/Pages/NotFound.tsx`));
+const NotFound = React.lazy(() => import(`file://__DIST__/components/Pages/NotFound.tsx`));
 
 interface Props
 {
