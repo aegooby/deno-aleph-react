@@ -1,6 +1,6 @@
 
-import * as React from "https://esm.sh/react";
-import * as ReactDOM from "https://esm.sh/react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";

@@ -1,6 +1,6 @@
 
-import * as React from "https://esm.sh/react";
-import * as ReactHelmet from "https://esm.sh/react-helmet";
+import * as React from "react";
+import * as ReactHelmet from "react-helmet";
 
 import { GraphQL, Console } from "../Core/Core.tsx";
 

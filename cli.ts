@@ -68,7 +68,7 @@ yargs.default(Deno.args)
 
         const denoRunOptions: Deno.RunOptions =
         {
-            cmd: ["deno", "--unstable", "cache", ...files],
+            cmd: ["deno", "--unstable", "cache", "--import-map", "import-map.json", ...files],
             env: { DENO_DIR: ".cache/" }
         };
         const yarnRunOptions: Deno.RunOptions = { cmd: ["yarn", "install"] };
@@ -95,8 +95,13 @@ yargs.default(Deno.args)
             Deno.exit(1);
         }
 
-        const bundler =
-            new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
+        const bundlerAttributes =
+        {
+            dist: ".dist",
+            importMap: "import-map.json",
+            env: { DENO_DIR: ".cache/" }
+        };
+        const bundler = new Bundler(bundlerAttributes);
         try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
         catch (error) 
         {
@@ -119,8 +124,13 @@ yargs.default(Deno.args)
     })
     .command("localhost", "", {}, async function (_: Arguments)
     {
-        const bundler =
-            new Bundler({ dist: ".dist", env: { DENO_DIR: ".cache/" } });
+        const bundlerAttributes =
+        {
+            dist: ".dist",
+            importMap: "import-map.json",
+            env: { DENO_DIR: ".cache/" }
+        };
+        const bundler = new Bundler(bundlerAttributes);
         const webpackRunOptions: Deno.RunOptions =
         {
             cmd:
@@ -134,8 +144,8 @@ yargs.default(Deno.args)
             cmd:
                 [
                     "deno", "run", "--unstable", "--allow-all",
-                    "server/daemon.tsx", "--hostname", "localhost", "--tls",
-                    "cert/localhost/"
+                    "--import-map", "import-map.json", "server/daemon.tsx",
+                    "--hostname", "localhost", "--tls", "cert/localhost/"
                 ],
             env: { DENO_DIR: ".cache/" }
         };
@@ -158,7 +168,7 @@ yargs.default(Deno.args)
     .command("test", "", {}, async function (_: Arguments)
     {
         const process =
-            Deno.run({ cmd: ["deno", "--unstable", "test", "--allow-all", "tests/"] });
+            Deno.run({ cmd: ["deno", "--unstable", "test", "--allow-all", "--import-map", "import-map.json", "tests/"] });
         const status = await process.status();
         process.close();
         Deno.exit(status.code);

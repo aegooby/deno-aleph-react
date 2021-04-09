@@ -1,8 +1,8 @@
 
-import * as http from "https://deno.land/std/http/mod.ts";
+import * as http from "http";
 
-import * as graphql from "https://esm.sh/graphql";
-import * as playground from "https://esm.sh/graphql-playground-html";
+import * as graphql from "graphql";
+import * as playground from "graphql-playground";
 
 import { Console } from "./console.tsx";
 import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";

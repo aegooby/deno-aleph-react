@@ -1,5 +1,5 @@
 
-import * as colors from "https://deno.land/std/fmt/colors.ts";
+import * as colors from "colors";
 
 export class Console
 {

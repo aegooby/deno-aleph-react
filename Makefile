@@ -33,7 +33,7 @@ cache: upgrade
 bundle: export DENO_DIR=.cache/
 bundle: upgrade cache
 	mkdir -p .dist/
-	deno --unstable bundle --config client/tsconfig.json client/bundle.tsx .dist/deno.bundle.js
+	deno --unstable bundle --config tsconfig.json client/bundle.tsx .dist/deno.bundle.js
 
 # ------------------------------------------------------------------------------
 # Run
@@ -41,7 +41,7 @@ bundle: upgrade cache
 localhost: export DENO_DIR=.cache/
 localhost: cache bundle
 	(trap 'kill 0' SIGINT; \
-		deno bundle --unstable --watch --config client/tsconfig.json client/bundle.tsx .dist/deno.bundle.js & \
+		deno bundle --unstable --watch --config tsconfig.json client/bundle.tsx .dist/deno.bundle.js & \
 		yarn run webpack --watch --env GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql & \
 		deno run --unstable --watch --allow-all server/daemon.tsx --hostname localhost --tls cert/localhost/ \
 	)

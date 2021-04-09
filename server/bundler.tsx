@@ -7,6 +7,7 @@ import { Console } from "./console.tsx";
 interface BundlerAttributes
 {
     dist: string;
+    importMap?: string | undefined;
     env: Record<string, string>;
 }
 interface BundleAttributes
@@ -19,11 +20,13 @@ interface BundleAttributes
 export class Bundler
 {
     private dist: string = "" as const;
+    private importMap: string | undefined = undefined;
     private env: Record<string, string> = {};
     private imports: Map<URL, string> = new Map<URL, string>();
     constructor(attributes: BundlerAttributes)
     {
         this.dist = attributes.dist;
+        this.importMap = attributes.importMap;
         this.env = attributes.env;
     }
     private import(url: URL, watch: boolean): [string, Promise<void>]
@@ -59,12 +62,13 @@ export class Bundler
         /* Bundle the main file */
         await fs.ensureDir(path.dirname(output));
         const watchFlag: string[] = watch ? ["--watch"] : [];
+        const importMapFlag: string[] = this.importMap ? ["--import-map", this.importMap] : [];
         const runOptions =
         {
             cmd:
                 [
-                    "deno", "bundle", "--unstable", ...watchFlag, "--config",
-                    "tsconfig.json", entry, output
+                    "deno", "bundle", "--unstable", ...watchFlag, ...importMapFlag,
+                    "--config", "tsconfig.json", entry, output
                 ],
             env: this.env
         };

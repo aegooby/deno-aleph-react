@@ -1,13 +1,13 @@
 
-import * as http from "https://deno.land/std/http/mod.ts";
-import * as path from "https://deno.land/std/path/mod.ts";
-import * as fs from "https://deno.land/std/fs/mod.ts";
-import * as colors from "https://deno.land/std/fmt/colors.ts";
+import * as http from "http";
+import * as path from "path";
+import * as fs from "fs";
+import * as colors from "colors";
 
-import * as React from "https://esm.sh/react";
-import * as ReactDOMServer from "https://esm.sh/react-dom/server";
-import * as ReactRouter from "https://esm.sh/react-router-dom";
-import * as query from "https://esm.sh/query-string";
+import * as React from "react";
+import * as ReactDOMServer from "react-dom/server";
+import * as ReactRouter from "react-router";
+import * as query from "query-string";
 
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";

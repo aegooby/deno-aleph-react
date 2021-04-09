@@ -1,0 +1,21 @@
+{
+    "imports": {
+        "graphql": "https://esm.sh/graphql",
+        "graphql-playground": "https://esm.sh/graphql-playground-html",
+        "query-string": "https://esm.sh/query-string",
+        "react": "https://esm.sh/react",
+        "react-dom": "https://esm.sh/react-dom",
+        "react-dom/server": "https://esm.sh/react-dom/server",
+        "react-router": "https://cdn.skypack.dev/react-router-dom",
+        "react-helmet": "https://esm.sh/react-helmet",
+        "react-responsive": "https://esm.sh/react-responsive",
+        "http": "https://deno.land/std/http/mod.ts",
+        "path": "https://deno.land/std/path/mod.ts",
+        "fs": "https://deno.land/std/fs/mod.ts",
+        "colors": "https://deno.land/std/fmt/colors.ts",
+        "delay": "https://deno.land/std/async/delay.ts",
+        "asserts": "https://deno.land/std/testing/asserts.ts",
+        "yargs": "https://deno.land/x/yargs/deno.ts",
+        "dotenv": "https://deno.land/x/dotenv/mod.ts"
+    }
+}
