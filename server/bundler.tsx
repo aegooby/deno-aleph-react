@@ -77,8 +77,7 @@ export class Bundler
         process.close();
         if (!status.success)
         {
-            Console.error("Bundling subprocess failed");
-            Deno.exit(status.code);
+            throw new Error(`Bundling subprocess failed with code ${status.code}`);
         }
 
         /* Look for dynamic import() */
