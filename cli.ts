@@ -225,7 +225,7 @@ yargs.default(Deno.args)
         console.error(`${colors.bold(colors.red("error"))}: TLS will not work without a certified domain`);
         Deno.exit(1);
     })
-    .command("test", "", {},)
+    .command("test", "", {}, test)
     .command("docker", "", {}, docker)
     .command("help", "", {}, function (_: Arguments)
     {
