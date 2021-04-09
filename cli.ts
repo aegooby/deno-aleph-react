@@ -9,7 +9,7 @@ Deno.env.set("DENO_DIR", ".cache/");
 const { Console, Bundler } = await import("./server/server.tsx");
 
 const thisFile = path.basename(path.fromFileUrl(Deno.mainModule));
-const command = `deno --unstable run --allow-all ${thisFile}`;
+const command = `deno run --unstable --import-map import-map.json --allow-all ${thisFile}`;
 
 async function clean(args: Arguments)
 {

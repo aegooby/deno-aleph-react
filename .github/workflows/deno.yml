@@ -32,4 +32,4 @@ jobs:
       - name: Cache Dependencies
         run: deno run --unstable --allow-all --import-map import-map.json cli.ts cache
       - name: Test Server
-        run: deno run --unstable --allow-all import-map.json cli.ts test
+        run: deno run --unstable --allow-all --import-map import-map.json cli.ts test
