@@ -30,14 +30,7 @@ async function clean(args: Arguments)
 }
 async function install(_: Arguments)
 {
-    const hashProcess = Deno.run({ cmd: ["hash", "yarn"] });
-    const hashStatus = await hashProcess.status();
-    hashProcess.close();
-    if (hashStatus.success)
-        return hashStatus.code;
-
-    const npmProcess =
-        Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
+    const npmProcess = Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
     const npmStatus = await npmProcess.status();
     npmProcess.close();
     return npmStatus.code;
@@ -51,7 +44,8 @@ async function upgrade(_: Arguments)
 }
 async function cache(_: Arguments)
 {
-    await install(_);
+    if (await install(_))
+        throw new Error("Installation failed");
 
     const files: string[] = [];
     for await (const file of fs.expandGlob("**/*.tsx"))
@@ -85,7 +79,8 @@ async function bundle(args: Arguments)
         return;
     }
 
-    await cache(args);
+    if (await cache(args))
+        throw new Error("Caching failed");
 
     const bundlerAttributes =
     {
@@ -112,7 +107,8 @@ async function bundle(args: Arguments)
 }
 async function localhost(_: Arguments)
 {
-    await cache(_);
+    if (await cache(_))
+        throw new Error("Caching failed");
 
     const bundlerAttributes =
     {
