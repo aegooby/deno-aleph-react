@@ -186,7 +186,7 @@ async function docker(args: Arguments)
     {
         cmd:
             [
-                "docker", "run", "-it", "--init", "-p", "443:8443", "-p",
+                "docker", "run", "-itd", "--init", "-p", "443:8443", "-p",
                 "80:8080", "httpsaurus/server:latest", ...command.split(" "),
                 "remote", ...devFlag
             ]
