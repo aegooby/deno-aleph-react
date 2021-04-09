@@ -57,7 +57,7 @@ async function cache(_: Arguments)
 
     const denoRunOptions: Deno.RunOptions =
     {
-        cmd: ["deno", "--unstable", "cache", "--import-map", "import-map.json", ...files],
+        cmd: ["deno", "cache", "--unstable", "--import-map", "import-map.json", ...files],
         env: { DENO_DIR: ".cache/" }
     };
     const yarnRunOptions: Deno.RunOptions = { cmd: ["yarn", "install"] };
@@ -152,7 +152,7 @@ async function localhost(_: Arguments)
 async function test(_: Arguments)
 {
     const process =
-        Deno.run({ cmd: ["deno", "--unstable", "test", "--allow-all", "--import-map", "import-map.json", "tests/"] });
+        Deno.run({ cmd: ["deno", "test", "--unstable", "--allow-all", "--import-map", "import-map.json", "tests/"] });
     const status = await process.status();
     process.close();
     Deno.exit(status.code);
