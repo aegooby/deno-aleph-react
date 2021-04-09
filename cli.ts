@@ -184,13 +184,15 @@ async function docker(args: Arguments)
     if (!buildStatus.success)
         Deno.exit(buildStatus.code);
 
+    const devFlag: string[] = args.dev ? ["--dev"] : [];
+
     const runRunOptions: Deno.RunOptions =
     {
         cmd:
             [
                 "docker", "run", "-it", "--init", "-p", "443:8443", "-p",
                 "80:8080", "httpsaurus/server:latest", ...command.split(" "),
-                "remote"
+                "remote", ...devFlag
             ]
     };
 
