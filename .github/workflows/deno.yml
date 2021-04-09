@@ -30,6 +30,6 @@ jobs:
         with:
           deno-version: ${{ matrix.deno }}
       - name: Cache Dependencies
-        run: deno --unstable run --allow-all cli.ts cache
+        run: deno --unstable run --allow-all --import-map import-map.json cli.ts cache
       - name: Test Server
-        run: deno --unstable run --allow-all cli.ts test
+        run: deno --unstable run --allow-all import-map.json cli.ts test
