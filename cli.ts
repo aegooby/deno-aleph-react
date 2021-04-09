@@ -104,6 +104,8 @@ async function bundle(args: Arguments)
 }
 async function localhost(_: Arguments)
 {
+    if (await install(_))
+        throw new Error("Installation failed");
     if (await cache(_))
         throw new Error("Caching failed");
 
