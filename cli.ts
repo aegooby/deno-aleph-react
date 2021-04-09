@@ -44,9 +44,6 @@ async function upgrade(_: Arguments)
 }
 async function cache(_: Arguments)
 {
-    if (await install(_))
-        throw new Error("Installation failed");
-
     const files: string[] = [];
     for await (const file of fs.expandGlob("**/*.tsx"))
         files.push(file.path);
