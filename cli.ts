@@ -145,6 +145,66 @@ async function localhost(_: Arguments)
     await serverProcess.status();
     serverProcess.close();
 }
+async function remote(args: Arguments)
+{
+    if (await install(args))
+        throw new Error("Installation failed");
+    if (await cache(args))
+        throw new Error("Caching failed");
+
+    const bundlerAttributes =
+    {
+        dist: ".dist",
+        importMap: "import-map.json",
+        env: { DENO_DIR: ".cache/" }
+    };
+    const bundler = new Bundler(bundlerAttributes);
+    try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
+    catch (error) { throw error; }
+
+    const webpackRunOptions: Deno.RunOptions =
+    {
+        cmd:
+            [
+                "yarn", "run", "webpack", "--env",
+                "GRAPHQL_API_ENDPOINT=https://localhost/graphql"
+            ],
+    };
+    const upgradeRunOptions: Deno.RunOptions =
+    {
+        cmd: ["deno", "--unstable", "upgrade", "--version", "1.7.0"],
+        env: { DENO_DIR: ".cache/" }
+    };
+    const serverRunOptions: Deno.RunOptions =
+    {
+        cmd:
+            [
+                "deno", "run", "--unstable", "--allow-all",
+                "--import-map", "import-map.json",
+                "server/daemon.tsx", "--hostname", "0.0.0.0",
+                "--tls", "cert/0.0.0.0"
+            ],
+        env: { DENO_DIR: ".cache/" }
+    };
+
+    const webpackProcess = Deno.run(webpackRunOptions);
+    const webpackStatus = await webpackProcess.status();
+    webpackProcess.close();
+    if (!webpackStatus.success)
+        return webpackStatus.code;
+
+    const upgradeProcess = Deno.run(upgradeRunOptions);
+    const upgradeStatus = await upgradeProcess.status();
+    upgradeProcess.close();
+    if (!upgradeStatus.success)
+        return upgradeStatus.code;
+
+    const serverProcess = Deno.run(serverRunOptions);
+    const serverStatus = await serverProcess.status();
+    serverProcess.close();
+    if (!serverStatus.success)
+        return serverStatus.code;
+}
 async function test(_: Arguments)
 {
     const process =
@@ -155,6 +215,12 @@ async function test(_: Arguments)
 }
 async function docker(args: Arguments)
 {
+    if (!args.target)
+    {
+        Console.error(`usage: ${command} docker --target <value>`);
+        return;
+    }
+
     if (args.prune)
     {
         const containerProcess =
@@ -173,30 +239,12 @@ async function docker(args: Arguments)
     }
 
     const buildRunOptions: Deno.RunOptions =
-        { cmd: ["docker", "build", "--tag", "httpsaurus/server", "."] };
+        { cmd: ["docker", "build", "--target", args.target, "--tag", "httpsaurus/server", "."] };
     const buildProcess = Deno.run(buildRunOptions);
     const buildStatus = await buildProcess.status();
     buildProcess.close();
     if (!buildStatus.success)
         return buildStatus.code;
-
-    const devFlag: string[] = args.dev ? ["--dev"] : [];
-
-    const runRunOptions: Deno.RunOptions =
-    {
-        cmd:
-            [
-                "docker", "run", "-itd", "--init", "-p", "443:8443", "-p",
-                "80:8080", "httpsaurus/server:latest", ...command.split(" "),
-                "remote", ...devFlag
-            ]
-    };
-
-    const runProcess = Deno.run(runRunOptions);
-    const runStatus = await runProcess.status();
-    runProcess.close();
-    if (!runStatus.success)
-        return runStatus.code;
 }
 
 yargs.default(Deno.args)
@@ -215,10 +263,7 @@ yargs.default(Deno.args)
     .command("cache", "", {}, cache)
     .command("bundle", "", {}, bundle)
     .command("localhost", "", {}, localhost)
-    .command("remote", "", {}, function (_: Arguments)
-    {
-        Console.error("TLS will not work without a certified domain");
-    })
+    .command("remote", "", {}, remote)
     .command("test", "", {}, test)
     .command("docker", "", {}, docker)
     .command("help", "", {}, function (_: Arguments)
