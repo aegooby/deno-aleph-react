@@ -9,27 +9,27 @@
 name: build
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+    test:
+        runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        deno: ["v1.7.5", "v1.8.0"]
+        strategy:
+            matrix:
+                deno: ["v1.7.5", "v1.8.0"]
 
-    steps:
-      - name: Setup
-        uses: actions/checkout@v2
-      - name: Install Deno
-        uses: denolib/setup-deno@v2.3.0
-        with:
-          deno-version: ${{ matrix.deno }}
-      - name: Cache Dependencies
-        run: deno run --unstable --allow-all --import-map import-map.json cli.ts cache
-      - name: Test Server
-        run: deno run --unstable --allow-all --import-map import-map.json cli.ts test
+        steps:
+            - name: Setup
+              uses: actions/checkout@v2
+            - name: Install Deno
+              uses: denolib/setup-deno@v2.3.0
+              with:
+                  deno-version: ${{ matrix.deno }}
+            - name: Cache Dependencies
+              run: deno run --unstable --allow-all --import-map import-map.json cli.ts cache
+            - name: Test Server
+              run: deno run --unstable --allow-all --import-map import-map.json cli.ts test
