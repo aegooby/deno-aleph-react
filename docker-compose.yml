@@ -7,4 +7,3 @@ services:
             - "443:8443"
         volumes:
             - /etc/letsencrypt:/etc/letsencrypt
-volumes:
