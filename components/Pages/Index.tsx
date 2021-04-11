@@ -3,10 +3,11 @@ import * as React from "react";
 import * as ReactHelmet from "react-helmet";
 
 import { GraphQL, Console } from "../Core/Core.tsx";
+import { tag as graphql } from "../../graphql/graphql.tsx";
 
 export default function Index()
 {
-    const promise = GraphQL.useGraphQL({ query: `query { request }` });
+    const promise = GraphQL.useGraphQL({ query: graphql`query { request }` });
     function effect()
     {
         async function __effect()

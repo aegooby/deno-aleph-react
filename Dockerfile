@@ -12,7 +12,7 @@ ADD . /root/httpsaurus
 WORKDIR /root/httpsaurus
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh
 
-CMD [ "deno", "run", "--unstable", "--import-map", "import-map.json", "--allow-all", "cli.ts", "remote", "--dev" ]
+CMD [ "deno", "run", "--unstable", "--import-map", "import-map.json", "--allow-all", "cli.ts", "remote", "--target", "dev" ]
 
 FROM ubuntu:latest AS live
 
@@ -27,4 +27,4 @@ ADD . /root/httpsaurus
 WORKDIR /root/httpsaurus
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh
 
-CMD [ "deno", "run", "--unstable", "--import-map", "import-map.json", "--allow-all", "cli.ts", "remote" ]
+CMD [ "deno", "run", "--unstable", "--import-map", "import-map.json", "--allow-all", "cli.ts", "remote", "--target", "live" ]
