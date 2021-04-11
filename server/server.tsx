@@ -1,8 +1,8 @@
 
-import * as http from "http";
-import * as path from "path";
-import * as fs from "fs";
-import * as colors from "colors";
+import * as http from "std/http";
+import * as path from "std/path";
+import * as fs from "std/fs";
+import * as colors from "std/colors";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
