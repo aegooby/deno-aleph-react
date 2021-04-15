@@ -199,11 +199,13 @@ async function remote(args: Arguments)
     if (!upgradeStatus.success)
         return upgradeStatus.code;
 
-    const serverProcess = Deno.run(serverRunOptions);
-    const serverStatus = await serverProcess.status();
-    serverProcess.close();
-    if (!serverStatus.success)
-        return serverStatus.code;
+    /* Run server continuously to catch crashes. */
+    while (true)
+    {
+        const serverProcess = Deno.run(serverRunOptions);
+        await serverProcess.status();
+        serverProcess.close();
+    }
 }
 async function test(_: Arguments)
 {
