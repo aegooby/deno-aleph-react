@@ -1,5 +1,5 @@
 
-import * as colors from "std/colors";
+import * as colors from "@std/colors";
 
 export class Console
 {

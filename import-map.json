@@ -9,12 +9,12 @@
         "react-router": "https://cdn.skypack.dev/react-router-dom",
         "react-helmet": "https://esm.sh/react-helmet",
         "react-responsive": "https://esm.sh/react-responsive",
-        "std/http": "https://deno.land/std/http/mod.ts",
-        "std/path": "https://deno.land/std/path/mod.ts",
-        "std/fs": "https://deno.land/std/fs/mod.ts",
-        "std/colors": "https://deno.land/std/fmt/colors.ts",
-        "std/delay": "https://deno.land/std/async/delay.ts",
-        "std/asserts": "https://deno.land/std/testing/asserts.ts",
+        "@std/http": "https://deno.land/std/http/mod.ts",
+        "@std/path": "https://deno.land/std/path/mod.ts",
+        "@std/fs": "https://deno.land/std/fs/mod.ts",
+        "@std/colors": "https://deno.land/std/fmt/colors.ts",
+        "@std/delay": "https://deno.land/std/async/delay.ts",
+        "@std/asserts": "https://deno.land/std/testing/asserts.ts",
         "yargs": "https://deno.land/x/yargs/deno.ts",
         "dotenv": "https://deno.land/x/dotenv/mod.ts"
     }

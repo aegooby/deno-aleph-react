@@ -1,7 +1,7 @@
 
 import * as server from "../server/server.tsx";
-import * as assert from "std/asserts";
-import * as delay from "std/delay";
+import * as assert from "@std/asserts";
+import * as delay from "@std/delay";
 
 import App from "../components/App.tsx";
 

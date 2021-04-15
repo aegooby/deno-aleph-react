@@ -1,5 +1,5 @@
 
-import * as http from "std/http";
+import * as http from "@std/http";
 
 import * as graphql from "graphql";
 import * as playground from "graphql-playground";
