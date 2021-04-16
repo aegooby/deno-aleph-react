@@ -1,5 +1,6 @@
 
 import * as http from "@std/http";
+import * as io from "@std/io";
 
 import * as graphql from "graphql";
 import * as playground from "graphql-playground";
@@ -32,7 +33,7 @@ export class GraphQL
         try
         {
             const decoder = new TextDecoder();
-            const body: string = decoder.decode(await Deno.readAll(request.body));
+            const body: string = decoder.decode(await io.readAll(request.body));
             const query: Query = { query: "" };
             switch (request.headers.get("content-type"))
             {

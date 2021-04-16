@@ -47,25 +47,6 @@ const mediaTypes: Record<string, string> =
     ".webm": "video/webm",
 };
 
-const staticMediaTypes: string[] =
-    [
-        "audio/ogg",
-        "audio/wav",
-
-        "image/apng",
-        "image/avif",
-        "image/gif",
-        "image/jpeg",
-        "image/jpeg",
-        "image/png",
-        "image/svg+xml",
-        "image/webp",
-
-        "text/css",
-
-        "video/webm",
-    ];
-
 export type Protocol = "http" | "https";
 
 export interface ServerAttributes
@@ -189,14 +170,14 @@ export class Server
             };
             return response;
         }
-        catch (error) { return this.page(request); }
+        catch { return this.page(request); }
     }
     private async graphql(request: http.ServerRequest): Promise<http.Response>
     {
         if (GraphQL.methods.includes(request.method))
         {
             try { return await GraphQL.resolve(request); }
-            catch (error) { return this.page(request); }
+            catch { return this.page(request); }
         }
         else
             return this.page(request);
