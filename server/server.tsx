@@ -1,64 +1,28 @@
 
-import { Status as HttpStatus, STATUS_TEXT as HttpStatusText } from "@std/http";
 import * as path from "@std/path";
 import * as fs from "@std/fs";
 import * as colors from "@std/colors";
+import * as asserts from "@std/asserts";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import * as ReactRouter from "react-router";
-import * as query from "query-string";
+import * as Oak from "oak";
 
-import * as http from "./http.tsx";
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 export { Bundler } from "./bundler.tsx";
 
-const mediaTypes: Record<string, string> =
-{
-    ".gz": "application/gzip",
-    ".js": "application/javascript",
-    ".json": "application/json",
-    ".map": "application/json",
-    ".mjs": "application/javascript",
-    ".wasm": "application/wasm",
-
-    ".ogg": "audio/ogg",
-    ".wav": "audio/wav",
-
-    ".apng": "image/apng",
-    ".avif": "image/avif",
-    ".gif": "image/gif",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".svg": "image/svg+xml",
-    ".webp": "image/webp",
-
-    ".css": "text/css",
-    ".html": "text/html",
-    ".htm": "text/html",
-    ".jsx": "text/jsx",
-    ".md": "text/markdown",
-    ".txt": "text/plain",
-    ".ts": "text/typescript",
-    ".tsx": "text/tsx",
-
-    ".webm": "video/webm",
-};
-
-export type Protocol = "http" | "https";
-
 export interface ServerAttributes
 {
-    protocol: Protocol;
+    secure: boolean;
     domain: string | undefined;
     hostname: string;
-    httpPort: number;
+    port: number;
     routes: Record<string, string>;
 
-    httpsPort: number | undefined;
+    portTls: number | undefined;
     cert: string | undefined;
 
     App: React.FunctionComponent<{ client: undefined; }>;
@@ -67,54 +31,66 @@ export interface ServerAttributes
     resolvers: unknown;
 }
 
+interface OakServer
+{
+    router: Oak.Router;
+    application: Oak.Application;
+}
+
 export class Server
 {
-    private protocol: Protocol;
+    private secure: boolean;
     private domain: string;
     private routes: Map<string, string> = new Map<string, string>();
 
-    private httpListener: Deno.Listener<Deno.NetAddr>;
-    private httpsListener: Deno.Listener<Deno.NetAddr> | undefined;
+    private oak: OakServer;
+
+    private __listener: Deno.Listener;
+    private __listenerTls: Deno.Listener | undefined;
 
     private App: React.ComponentType<{ client: undefined; }>;
 
-    private httpConnections: Map<number, Deno.HttpConn> = new Map<number, Deno.HttpConn>();
-    private httpsConnections: Map<number, Deno.HttpConn> = new Map<number, Deno.HttpConn>();
-
     constructor(attributes: ServerAttributes)
     {
-        this.protocol = attributes.protocol;
+        this.secure = attributes.secure;
 
         this.App = attributes.App;
+
+        for (const key in attributes.routes)
+        {
+            const url = new URL(`key://${key}`);
+            switch (url.pathname)
+            {
+                case "/graphql":
+                    throw new Error("Cannot reroute /graphql URL");
+                default:
+                    this.routes.set(key, attributes.routes[key]);
+                    break;
+            }
+        }
 
         const listenOptions: Deno.ListenOptions =
         {
             hostname: attributes.hostname,
-            port: attributes.httpPort,
+            port: attributes.port as number
         };
-        const listenTlsOptions: Deno.ListenTlsOptions =
+        this.__listener = Deno.listen(listenOptions);
+
+        if (this.secure)
         {
-            hostname: attributes.hostname,
-            port: attributes.httpsPort!,
-            certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
-            keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
-            transport: "tcp",
-            alpnProtocols: ["http/1.1", "h2"]
-        };
-        switch (this.protocol)
-        {
-            case "http":
-                this.httpListener = Deno.listen(listenOptions);
-                break;
-            case "https":
-                this.httpListener = Deno.listen(listenOptions);
-                this.httpsListener = Deno.listenTls(listenTlsOptions);
-                break;
-            default:
-                throw new Error(`unknown protocol ${this.protocol} (please choose HTTP or HTTPS)`);
+            const listenTlsOptions: Deno.ListenTlsOptions =
+            {
+                hostname: attributes.hostname,
+                port: attributes.portTls as number,
+                certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
+                keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
+                alpnProtocols: ["http/1.1", "h2"],
+                transport: "tcp"
+            };
+            this.__listenerTls = Deno.listenTls(listenTlsOptions);
         }
-        for (const key in attributes.routes)
-            this.routes.set(key, attributes.routes[key]);
+
+        this.oak = { router: new Oak.Router(), application: new Oak.Application() };
 
         GraphQL.schema.path = attributes.schema;
         GraphQL.resolvers = attributes.resolvers;
@@ -123,17 +99,38 @@ export class Server
             this.domain = `${this.protocol}://${attributes.domain}`;
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
+
+        this.graphqlQuery = this.graphqlQuery.bind(this);
+        this.graphqlPlayground = this.graphqlPlayground.bind(this);
+
+        this.content = this.content.bind(this);
+        this.static = this.static.bind(this);
+        this.react = this.react.bind(this);
+
+        this.accept = this.accept.bind(this);
+        this.acceptTls = this.acceptTls.bind(this);
+    }
+    private get listener(): Deno.Listener
+    {
+        return this.__listener;
+    }
+    private get listenerTls(): Deno.Listener
+    {
+        asserts.assert(this.secure);
+        return this.__listenerTls!;
+    }
+    public get protocol(): "http" | "https"
+    {
+        return this.secure ? "https" : "http";
     }
     public get port(): number
     {
-        const address = this.httpsListener ?
-            this.httpsListener.addr as Deno.NetAddr :
-            this.httpListener.addr as Deno.NetAddr;
-        return address.port;
+        const addr = this.secure ? this.listenerTls.addr : this.listener.addr;
+        return (addr as Deno.NetAddr).port;
     }
     public get hostname(): string
     {
-        const address = this.httpListener.addr as Deno.NetAddr;
+        const address = this.listener.addr as Deno.NetAddr;
         if ((["::1", "127.0.0.1"]).includes(address.hostname))
             return "localhost";
         return address.hostname;
@@ -142,56 +139,59 @@ export class Server
     {
         return `${this.protocol}://${this.hostname}:${this.port}`;
     }
-    private async static(request: http.ServerRequest): Promise<http.Response>
+    public get urlSimple(): string
     {
-        try
+        return `${this.protocol}://${this.hostname}`;
+    }
+    private async graphqlQuery(context: Oak.Context): Promise<void>
+    {
+        await GraphQL.query(context);
+    }
+    private async graphqlPlayground(context: Oak.Context): Promise<void>
+    {
+        await GraphQL.playground(context);
+    }
+    private async content(context: Oak.Context): Promise<void>
+    {
+        /* Redirect HTTP to HTTPS if it's available. */
+        if (!context.request.secure && this.secure)
         {
-            /* Open file and get file length */
-            const filepath = path.join(".", request.url);
-            const body = await Deno.open(filepath, { read: true });
-            const info = await Deno.stat(filepath);
-
-            /* Clean up file RID */
-            request.done.then(function () { body.close(); });
-
-            /* Set headers */
-            const headers = new Headers();
-
-            if (info.size > 0x4000)
-                headers.set("transfer-encoding", "chunked");
+            const urlRequest = context.request.url;
+            /* If the server is directly exposed to user-facing ports, then */
+            /* send the user to `portTls`.                                  */
+            if (urlRequest.port !== "80")
+                context.response.redirect(`${this.url}${urlRequest.pathname}`);
+            /* If the server is getting its ports redirected, then send the */
+            /* user to 443 (default HTTPS port).                            */
             else
-                headers.set("content-length", info.size.toString());
-
-            const contentType = mediaTypes[path.extname(filepath)];
-            if (contentType)
-                headers.set("content-type", contentType);
-
-            /** @todo Add caching. */
-
-            const response: http.ResponseAttributes =
-            {
-                status: http.Status.OK,
-                headers: headers,
-                body: ,
-            };
-            return response;
+                context.response.redirect(`${this.urlSimple}${urlRequest.pathname}`);
+            return;
         }
-        catch { return this.page(request); }
-    }
-    private async graphql(request: http.Request): Promise<http.Response>
-    {
-        if (GraphQL.methods.includes(request.method))
+
+        /* Convert URL to filepath. */
+        const filepath = path.join(".", context.request.url.pathname);
+
+        /* File not found or is directory -> not static. */
+        if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
         {
-            try { return await GraphQL.resolve(request); }
-            catch { return this.page(request); }
+            await this.react(context);
+            return;
         }
-        else
-            return this.page(request);
+
+        await this.static(context);
     }
-    private page(request: http.Request): http.Response
+    private async static(context: Oak.Context): Promise<void>
     {
-        const headers = new Headers();
-        headers.set("content-type", "text/html");
+        const sendOptions: Oak.SendOptions =
+        {
+            root: Deno.cwd(),
+            hidden: true
+        };
+        await Oak.send(context, context.request.url.pathname, sendOptions);
+    }
+    private async react(context: Oak.Context): Promise<void>
+    {
+        context.response.type = "text/html";
 
         const staticContext: Record<string, unknown> = {};
 
@@ -206,77 +206,70 @@ export class Server
                 </head>
                 <body>
                     <div id="root">
-                        <ReactRouter.StaticRouter location={request.url} context={staticContext}>
+                        <ReactRouter.StaticRouter location={context.request.url} context={staticContext}>
                             <this.App client={undefined} />
                         </ReactRouter.StaticRouter>
                     </div>
                 </body>
             </html>;
 
-        const body: string = `<!DOCTYPE html> ${ReactDOMServer.renderToString(page)}` as string;
+        const body = `<!DOCTYPE html> ${await ReactDOMServer.renderToString(page)}`;
 
         if (staticContext.url)
-            return this.redirect(request, staticContext.url as string);
+            context.response.redirect(staticContext.url as string);
 
-        const attributes: http.ResponseAttributes =
-        {
-            status: staticContext.statusCode as http.Status ?? http.Status.OK,
-            headers: headers,
-            body: body,
-            statusText: undefined,
-        };
-        return http.Response.$(attributes);
+        context.response.status = staticContext.statusCode as Oak.Status ?? Oak.Status.OK;
+        context.response.body = body;
     }
-    private async respond(request: http.Request): Promise<http.Response>
+    private async accept(): Promise<void>
     {
-
-        let response: http.Response | undefined = undefined;
-
-        /* Invalidate cache on new queries */
-        request.url = query.parseUrl(request.url).url;
-
-        /* Handle GraphQL */
-        if (request.url === "/graphql")
-            response ?? (response = await this.graphql(request));
-
-        /* Checks if this URL should be rerouted (alias) */
-        if (request.url !== "/" && this.routes.has(request.url))
-            request.url = this.routes.get(request.url) as string;
-
-        /* Converts URL to filepath */
-        const filepath = path.join(".", request.url);
-
-        /* File not found or is directory -> page */
-        if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
-            response ?? (response = this.page(request));
-
-        /* File found -> serve static */
-        response ?? (response = await this.static(request));
-
-        switch (request.method)
+        for await (const connection of this.listener)
         {
-            case "HEAD":
-                if (response.status === HttpStatus.OK)
-                    response.status = HttpStatus.NoContent;
-                break;
-            case "GET": case "POST":
-                break;
-            default:
-                response = this.page(request);
-                break;
+            try 
+            {
+                const events = Deno.serveHttp(connection);
+                for await (const event of events)
+                {
+                    Console.log(event.request.url);
+                    try 
+                    {
+                        const netconnection = connection as Deno.Conn<Deno.NetAddr>;
+                        const response =
+                            await this.oak.application.handle(event.request, netconnection, false);
+                        if (response)
+                            event.respondWith(response);
+                    }
+                    catch { /* */ }
+                    Console.log(event.request.url);
+                }
+            }
+            catch { /* */ }
         }
-
-        return response;
     }
-    private redirect(request: http.Request, url?: string | undefined): http.Response
+    private async acceptTls(): Promise<void>
     {
-        const location =
-            request.headers.get("referer") ??
-            `${this.protocol}://${request.headers.get("host")}${request.url}`;
-
-        const response =
-            Response.redirect(url ?? location, HttpStatus.TemporaryRedirect);
-        return http.Response.$(response);
+        if (!this.secure)
+            return;
+        for await (const connection of this.listenerTls)
+        {
+            try 
+            {
+                const events = Deno.serveHttp(connection);
+                for await (const event of events)
+                {
+                    try 
+                    {
+                        const netconnection = connection as Deno.Conn<Deno.NetAddr>;
+                        const response =
+                            await this.oak.application.handle(event.request, netconnection, true);
+                        if (response)
+                            event.respondWith(response);
+                    }
+                    catch { /* */ }
+                }
+            }
+            catch { /* */ }
+        }
     }
     public async serve(): Promise<void>
     {
@@ -284,69 +277,22 @@ export class Server
         await GraphQL.build({ url: this.domain });
 
         Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
-        async function httpRequest(server: Server)
-        {
-            for await (const connection of server.httpListener)
-            {
-                const httpConnection: Deno.HttpConn = Deno.serveHttp(connection);
-                server.httpConnections.set(httpConnection.rid, httpConnection);
-                for await (const event of httpConnection)
-                {
-                    const request = http.Request.$(event.request);
-                    switch (server.protocol)
-                    {
-                        case "http":
-                            event.respondWith(await server.respond(event.request));
-                            break;
-                        case "https":
-                            event.respondWith(server.redirect(request).native);
-                            break;
-                    }
-                }
-                server.httpConnections.delete(httpConnection.rid);
-                try { httpConnection.close(); }
-                catch { /* */ }
-            }
-        }
-        async function httpsRequest(server: Server)
-        {
-            for await (const connection of server.httpsListener!)
-            {
-                const httpsConnection: Deno.HttpConn = Deno.serveHttp(connection);
-                server.httpsConnections.set(httpsConnection.rid, httpsConnection);
-                for await (const event of httpsConnection)
-                {
-                    const request = http.Request.$(event.request);
-                    event.respondWith(await server.respond(request));
-                }
-                server.httpsConnections.delete(httpsConnection.rid);
-                try { httpsConnection.close(); }
-                catch { /* */ }
-            }
-        }
-        if (this.httpsListener)
-            await Promise.all([httpRequest(this), httpsRequest(this)]);
-        else
-            await httpRequest(this);
+
+        for (const [from, to] of this.routes)
+            this.oak.router.redirect(from, to, Oak.Status.TemporaryRedirect);
+        this.oak.router.post("/graphql", this.graphqlQuery);
+        this.oak.router.get("/graphql", this.graphqlPlayground);
+        this.oak.router.use(Oak.etag.factory());
+
+        this.oak.application.use(this.oak.router.routes());
+        this.oak.application.use(this.content);
+
+        await Promise.all([this.accept(), this.acceptTls()]);
     }
     public close(): void
     {
-        for (const [_, httpConnection] of Object.entries(this.httpConnections))
-        {
-            try { httpConnection.close(); }
-            catch { /* */ }
-        }
-        this.httpConnections.clear();
-
-        for (const [_, httpsConnection] of Object.entries(this.httpsConnections))
-        {
-            try { httpsConnection.close(); }
-            catch { /* */ }
-        }
-        this.httpsConnections.clear();
-
-        this.httpListener.close();
-        if (this.httpsListener)
-            this.httpsListener.close();
+        this.listener.close();
+        if (this.secure)
+            this.listenerTls.close();
     }
 }

@@ -2,7 +2,6 @@
     "imports": {
         "graphql": "https://esm.sh/graphql",
         "graphql-playground": "https://esm.sh/graphql-playground-html",
-        "query-string": "https://esm.sh/query-string",
         "react": "https://esm.sh/react",
         "react-dom": "https://esm.sh/react-dom",
         "react-dom/server": "https://esm.sh/react-dom/server",
@@ -17,6 +16,7 @@
         "@std/colors": "https://deno.land/std/fmt/colors.ts",
         "@std/async": "https://deno.land/std/async/mod.ts",
         "@std/asserts": "https://deno.land/std/testing/asserts.ts",
+        "oak": "https://deno.land/x/oak/mod.ts",
         "yargs": "https://deno.land/x/yargs/deno.ts",
         "dotenv": "https://deno.land/x/dotenv/mod.ts"
     }

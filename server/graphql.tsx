@@ -1,7 +1,5 @@
 
-import * as http from "@std/http";
-import * as io from "@std/io";
-
+import * as Oak from "oak";
 import * as graphql from "graphql";
 import * as playground from "graphql-playground";
 
@@ -15,39 +13,37 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    public static methods: string[] = ["POST", "GET"];
     public static schema:
         {
             schema: graphql.GraphQLSchema | undefined;
             path: string;
         } = { schema: undefined, path: "" };
     public static resolvers: unknown;
-    private static playgroundHTML: string;
+    private static playgroundHTML: Promise<string>;
     private static async buildSchema()
     {
         const schema = await Deno.readTextFile(GraphQL.schema.path);
         GraphQL.schema.schema = graphql.buildSchema(schema);
     }
-    private static async query(request: http.ServerRequest): Promise<http.Response>
+    public static async query(context: Oak.Context): Promise<void>
     {
         try
         {
-            const decoder = new TextDecoder();
-            const body: string = decoder.decode(await io.readAll(request.body));
             const query: Query = { query: "" };
-            switch (request.headers.get("content-type"))
+            switch (context.request.headers.get("content-type"))
             {
                 case "application/json":
                     {
-                        const json = JSON.parse(body);
-                        query.query = json.query;
-                        query.operationName = json.operationName;
-                        query.variables = json.variables;
+                        const jsonRequest = await context.request.body({ type: "json" }).value;
+                        query.query = jsonRequest.query;
+                        query.operationName = jsonRequest.operationName;
+                        query.variables = jsonRequest.variables;
                         break;
                     }
                 case "application/graphql":
                     {
-                        query.query = body;
+                        const textRequest = await context.request.body({ type: "text" }).value;
+                        query.query = textRequest;
                         break;
                     }
                 default:
@@ -62,27 +58,20 @@ export class GraphQL
                 operationName: query.operationName,
             };
             const result = await graphql.graphql(graphqlargs);
-            const response: http.Response =
-            {
-                status: http.Status.OK,
-                body: JSON.stringify(result),
-            };
-            return response;
+
+            context.response.status = Oak.Status.OK;
+            context.response.body = JSON.stringify(result);
         }
         catch (error)
         {
             Console.warn("Encountered GraphQL error");
-            const json =
+            const jsonError =
             {
                 data: null,
                 errors: [{ message: error.message ? error.message : error }],
             };
-            const response: http.Response =
-            {
-                status: http.Status.OK,
-                body: JSON.stringify(json),
-            };
-            return response;
+            context.response.status = Oak.Status.OK;
+            context.response.body = JSON.stringify(jsonError);
         }
     }
     private static renderPlayground(url: string)
@@ -108,25 +97,20 @@ export class GraphQL
                 "tracing.tracingSupported": true,
             }
         };
-        GraphQL.playgroundHTML = playground.renderPlaygroundPage(playgroundOptions);
+        async function _()
+        {
+            return await playground.renderPlaygroundPage(playgroundOptions);
+        }
+        GraphQL.playgroundHTML = _();
     }
     public static async build(attributes: GraphQLBuildAttributes)
     {
         await GraphQL.buildSchema();
         GraphQL.renderPlayground(attributes.url);
     }
-    public static async resolve(request: http.ServerRequest): Promise<http.Response>
+    public static async playground(context: Oak.Context): Promise<void>
     {
-        if (request.url !== "/graphql")
-            throw new Error("Invalid request URL for GraphQL");
-        switch (request.method)
-        {
-            case "GET":
-                return { status: http.Status.OK, body: GraphQL.playgroundHTML };
-            case "POST":
-                return await GraphQL.query(request);
-            default:
-                throw new Error("Invalid HTTP method for GraphQL");
-        }
+        context.response.status = Oak.Status.OK;
+        context.response.body = await GraphQL.playgroundHTML;
     }
 }

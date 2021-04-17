@@ -15,17 +15,17 @@ try
                 {
                     const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "http" as server.Protocol,
+                        secure: false,
                         domain: undefined,
                         hostname: "localhost",
-                        httpPort: 8080,
+                        port: 8080,
                         routes:
                         {
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        httpsPort: undefined,
+                        portTls: undefined,
                         cert: undefined,
 
                         App: App,
@@ -49,17 +49,17 @@ try
                 {
                     const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "https" as server.Protocol,
+                        secure: true,
                         domain: undefined,
                         hostname: "localhost",
-                        httpPort: 8080,
+                        port: 8080,
                         routes:
                         {
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        httpsPort: 4430,
+                        portTls: 4430,
                         cert: "cert/localhost",
 
                         App: App,
@@ -83,17 +83,17 @@ try
                 {
                     const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "http" as server.Protocol,
+                        secure: false,
                         domain: undefined,
                         hostname: "localhost",
-                        httpPort: 8080,
+                        port: 8080,
                         routes:
                         {
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        httpsPort: undefined,
+                        portTls: undefined,
                         cert: undefined,
 
                         App: App,
