@@ -1,5 +1,5 @@
 
-import * as http from "@std/http";
+import { Status as HttpStatus, STATUS_TEXT as HttpStatusText } from "@std/http";
 import * as path from "@std/path";
 import * as fs from "@std/fs";
 import * as colors from "@std/colors";
@@ -9,6 +9,7 @@ import * as ReactDOMServer from "react-dom/server";
 import * as ReactRouter from "react-router";
 import * as query from "query-string";
 
+import * as http from "./http.tsx";
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
@@ -72,10 +73,13 @@ export class Server
     private domain: string;
     private routes: Map<string, string> = new Map<string, string>();
 
-    private httpServer: http.Server;
-    private httpsServer: http.Server | undefined;
+    private httpListener: Deno.Listener<Deno.NetAddr>;
+    private httpsListener: Deno.Listener<Deno.NetAddr> | undefined;
 
     private App: React.ComponentType<{ client: undefined; }>;
+
+    private httpConnections: Map<number, Deno.HttpConn> = new Map<number, Deno.HttpConn>();
+    private httpsConnections: Map<number, Deno.HttpConn> = new Map<number, Deno.HttpConn>();
 
     constructor(attributes: ServerAttributes)
     {
@@ -83,26 +87,28 @@ export class Server
 
         this.App = attributes.App;
 
-        const serveOptions =
+        const listenOptions: Deno.ListenOptions =
         {
             hostname: attributes.hostname,
             port: attributes.httpPort,
         };
-        const serveTLSOptions =
+        const listenTlsOptions: Deno.ListenTlsOptions =
         {
             hostname: attributes.hostname,
             port: attributes.httpsPort!,
             certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
             keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
+            transport: "tcp",
+            alpnProtocols: ["http/1.1", "h2"]
         };
         switch (this.protocol)
         {
             case "http":
-                this.httpServer = http.serve(serveOptions);
+                this.httpListener = Deno.listen(listenOptions);
                 break;
             case "https":
-                this.httpServer = http.serve(serveOptions);
-                this.httpsServer = http.serveTLS(serveTLSOptions);
+                this.httpListener = Deno.listen(listenOptions);
+                this.httpsListener = Deno.listenTls(listenTlsOptions);
                 break;
             default:
                 throw new Error(`unknown protocol ${this.protocol} (please choose HTTP or HTTPS)`);
@@ -120,14 +126,14 @@ export class Server
     }
     public get port(): number
     {
-        const address = this.httpsServer ?
-            this.httpsServer.listener.addr as Deno.NetAddr :
-            this.httpServer.listener.addr as Deno.NetAddr;
+        const address = this.httpsListener ?
+            this.httpsListener.addr as Deno.NetAddr :
+            this.httpListener.addr as Deno.NetAddr;
         return address.port;
     }
     public get hostname(): string
     {
-        const address = this.httpServer.listener.addr as Deno.NetAddr;
+        const address = this.httpListener.addr as Deno.NetAddr;
         if ((["::1", "127.0.0.1"]).includes(address.hostname))
             return "localhost";
         return address.hostname;
@@ -162,17 +168,17 @@ export class Server
 
             /** @todo Add caching. */
 
-            const response: http.Response =
+            const response: http.ResponseAttributes =
             {
                 status: http.Status.OK,
                 headers: headers,
-                body: body,
+                body: ,
             };
             return response;
         }
         catch { return this.page(request); }
     }
-    private async graphql(request: http.ServerRequest): Promise<http.Response>
+    private async graphql(request: http.Request): Promise<http.Response>
     {
         if (GraphQL.methods.includes(request.method))
         {
@@ -182,7 +188,7 @@ export class Server
         else
             return this.page(request);
     }
-    private page(request: http.ServerRequest): http.Response
+    private page(request: http.Request): http.Response
     {
         const headers = new Headers();
         headers.set("content-type", "text/html");
@@ -210,28 +216,20 @@ export class Server
         const body: string = `<!DOCTYPE html> ${ReactDOMServer.renderToString(page)}` as string;
 
         if (staticContext.url)
-        {
-            const headers = new Headers();
-            headers.set("location", staticContext.url as string);
+            return this.redirect(request, staticContext.url as string);
 
-            const response: http.Response =
-            {
-                status: http.Status.TemporaryRedirect,
-                headers: headers,
-            };
-            return response;
-        }
-
-        const response: http.Response =
+        const attributes: http.ResponseAttributes =
         {
             status: staticContext.statusCode as http.Status ?? http.Status.OK,
             headers: headers,
             body: body,
+            statusText: undefined,
         };
-        return response;
+        return http.Response.$(attributes);
     }
-    private async respond(request: http.ServerRequest): Promise<void>
+    private async respond(request: http.Request): Promise<http.Response>
     {
+
         let response: http.Response | undefined = undefined;
 
         /* Invalidate cache on new queries */
@@ -258,9 +256,8 @@ export class Server
         switch (request.method)
         {
             case "HEAD":
-                if (response.status === http.Status.OK)
-                    response.status = http.Status.NoContent;
-                response.body = undefined;
+                if (response.status === HttpStatus.OK)
+                    response.status = HttpStatus.NoContent;
                 break;
             case "GET": case "POST":
                 break;
@@ -269,24 +266,17 @@ export class Server
                 break;
         }
 
-        try { await request.respond(response); }
-        catch (error) { Console.error(error); }
+        return response;
     }
-    private async redirect(request: http.ServerRequest): Promise<void>
+    private redirect(request: http.Request, url?: string | undefined): http.Response
     {
         const location =
             request.headers.get("referer") ??
             `${this.protocol}://${request.headers.get("host")}${request.url}`;
-        const headers = new Headers();
-        headers.set("location", location);
 
-        const response: http.Response =
-        {
-            status: http.Status.TemporaryRedirect,
-            headers: headers,
-        };
-        try { await request.respond(response); }
-        catch (error) { Console.error(error); }
+        const response =
+            Response.redirect(url ?? location, HttpStatus.TemporaryRedirect);
+        return http.Response.$(response);
     }
     public async serve(): Promise<void>
     {
@@ -296,23 +286,67 @@ export class Server
         Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
         async function httpRequest(server: Server)
         {
-            for await (const request of server.httpServer)
-                server.httpsServer ? await server.redirect(request) : await server.respond(request);
+            for await (const connection of server.httpListener)
+            {
+                const httpConnection: Deno.HttpConn = Deno.serveHttp(connection);
+                server.httpConnections.set(httpConnection.rid, httpConnection);
+                for await (const event of httpConnection)
+                {
+                    const request = http.Request.$(event.request);
+                    switch (server.protocol)
+                    {
+                        case "http":
+                            event.respondWith(await server.respond(event.request));
+                            break;
+                        case "https":
+                            event.respondWith(server.redirect(request).native);
+                            break;
+                    }
+                }
+                server.httpConnections.delete(httpConnection.rid);
+                try { httpConnection.close(); }
+                catch { /* */ }
+            }
         }
         async function httpsRequest(server: Server)
         {
-            for await (const request of server.httpsServer!)
-                await server.respond(request);
+            for await (const connection of server.httpsListener!)
+            {
+                const httpsConnection: Deno.HttpConn = Deno.serveHttp(connection);
+                server.httpsConnections.set(httpsConnection.rid, httpsConnection);
+                for await (const event of httpsConnection)
+                {
+                    const request = http.Request.$(event.request);
+                    event.respondWith(await server.respond(request));
+                }
+                server.httpsConnections.delete(httpsConnection.rid);
+                try { httpsConnection.close(); }
+                catch { /* */ }
+            }
         }
-        if (this.httpsServer)
+        if (this.httpsListener)
             await Promise.all([httpRequest(this), httpsRequest(this)]);
         else
             await httpRequest(this);
     }
     public close(): void
     {
-        this.httpServer.close();
-        if (this.httpsServer)
-            this.httpsServer.close();
+        for (const [_, httpConnection] of Object.entries(this.httpConnections))
+        {
+            try { httpConnection.close(); }
+            catch { /* */ }
+        }
+        this.httpConnections.clear();
+
+        for (const [_, httpsConnection] of Object.entries(this.httpsConnections))
+        {
+            try { httpsConnection.close(); }
+            catch { /* */ }
+        }
+        this.httpsConnections.clear();
+
+        this.httpListener.close();
+        if (this.httpsListener)
+            this.httpsListener.close();
     }
 }

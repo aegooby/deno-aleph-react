@@ -1,7 +1,7 @@
 
 import * as server from "../server/server.tsx";
 import * as assert from "@std/asserts";
-import * as delay from "@std/delay";
+import * as async from "@std/async";
 
 import App from "../components/App.tsx";
 
@@ -34,7 +34,7 @@ try
                         resolvers: { request: function () { return "response"; } },
                     };
                     const httpserver = new server.Server(serverAttributes);
-                    const time = delay.delay(5000);
+                    const time = async.delay(5000);
                     const serve = httpserver.serve();
                     await time;
                     httpserver.close();
@@ -68,7 +68,7 @@ try
                         resolvers: { request: function () { return "response"; } },
                     };
                     const httpserver = new server.Server(serverAttributes);
-                    const time = delay.delay(5000);
+                    const time = async.delay(5000);
                     const serve = httpserver.serve();
                     await time;
                     httpserver.close();
