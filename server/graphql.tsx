@@ -97,11 +97,8 @@ export class GraphQL
                 "tracing.tracingSupported": true,
             }
         };
-        async function _()
-        {
-            return await playground.renderPlaygroundPage(playgroundOptions);
-        }
-        GraphQL.playgroundHTML = _();
+        GraphQL.playgroundHTML =
+            Promise.resolve(playground.renderPlaygroundPage(playgroundOptions));
     }
     public static async build(attributes: GraphQLBuildAttributes)
     {

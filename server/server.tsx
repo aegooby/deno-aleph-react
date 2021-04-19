@@ -2,7 +2,6 @@
 import * as path from "@std/path";
 import * as fs from "@std/fs";
 import * as colors from "@std/colors";
-import * as asserts from "@std/asserts";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
@@ -34,7 +33,7 @@ export interface ServerAttributes
 interface OakServer
 {
     router: Oak.Router;
-    application: Oak.Application;
+    app: Oak.Application;
 }
 
 export class Server
@@ -90,7 +89,7 @@ export class Server
             this.__listenerTls = Deno.listenTls(listenTlsOptions);
         }
 
-        this.oak = { router: new Oak.Router(), application: new Oak.Application() };
+        this.oak = { router: new Oak.Router(), app: new Oak.Application() };
 
         GraphQL.schema.path = attributes.schema;
         GraphQL.resolvers = attributes.resolvers;
@@ -107,8 +106,12 @@ export class Server
         this.static = this.static.bind(this);
         this.react = this.react.bind(this);
 
+        this.listen = this.listen.bind(this);
         this.accept = this.accept.bind(this);
         this.acceptTls = this.acceptTls.bind(this);
+
+        this.serve = this.serve.bind(this);
+        this.close = this.close.bind(this);
     }
     private get listener(): Deno.Listener
     {
@@ -116,7 +119,8 @@ export class Server
     }
     private get listenerTls(): Deno.Listener
     {
-        asserts.assert(this.secure);
+        if (!this.secure)
+            throw new Error("Attempt to access TLS listener without TLS enabled");
         return this.__listenerTls!;
     }
     public get protocol(): "http" | "https"
@@ -221,55 +225,36 @@ export class Server
         context.response.status = staticContext.statusCode as Oak.Status ?? Oak.Status.OK;
         context.response.body = body;
     }
+    private async listen(connection: Deno.Conn<Deno.NetAddr>, secure: boolean): Promise<void>
+    {
+        try 
+        {
+            const httpConnection = Deno.serveHttp(connection);
+            for await (const event of httpConnection)
+            {
+                try 
+                {
+                    const response =
+                        await this.oak.app.handle(event.request, connection, secure);
+                    if (response)
+                        await event.respondWith(response);
+                }
+                catch { /* */ }
+            }
+        }
+        catch { /* */ }
+    }
     private async accept(): Promise<void>
     {
         for await (const connection of this.listener)
-        {
-            try 
-            {
-                const events = Deno.serveHttp(connection);
-                for await (const event of events)
-                {
-                    Console.log(event.request.url);
-                    try 
-                    {
-                        const netconnection = connection as Deno.Conn<Deno.NetAddr>;
-                        const response =
-                            await this.oak.application.handle(event.request, netconnection, false);
-                        if (response)
-                            event.respondWith(response);
-                    }
-                    catch { /* */ }
-                    Console.log(event.request.url);
-                }
-            }
-            catch { /* */ }
-        }
+            this.listen(connection as Deno.Conn<Deno.NetAddr>, false);
     }
     private async acceptTls(): Promise<void>
     {
         if (!this.secure)
             return;
         for await (const connection of this.listenerTls)
-        {
-            try 
-            {
-                const events = Deno.serveHttp(connection);
-                for await (const event of events)
-                {
-                    try 
-                    {
-                        const netconnection = connection as Deno.Conn<Deno.NetAddr>;
-                        const response =
-                            await this.oak.application.handle(event.request, netconnection, true);
-                        if (response)
-                            event.respondWith(response);
-                    }
-                    catch { /* */ }
-                }
-            }
-            catch { /* */ }
-        }
+            this.listen(connection as Deno.Conn<Deno.NetAddr>, true);
     }
     public async serve(): Promise<void>
     {
@@ -284,8 +269,8 @@ export class Server
         this.oak.router.get("/graphql", this.graphqlPlayground);
         this.oak.router.use(Oak.etag.factory());
 
-        this.oak.application.use(this.oak.router.routes());
-        this.oak.application.use(this.content);
+        this.oak.app.use(this.oak.router.routes());
+        this.oak.app.use(this.content);
 
         await Promise.all([this.accept(), this.acceptTls()]);
     }

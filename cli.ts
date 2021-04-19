@@ -121,7 +121,7 @@ async function localhost(_: Arguments)
         cmd:
             [
                 "yarn", "run", "webpack", "--env",
-                "GRAPHQL_API_ENDPOINT=http://localhost:8080/graphql"
+                "GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql"
             ]
     };
     const serverRunOptions: Deno.RunOptions =

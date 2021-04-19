@@ -16,8 +16,7 @@ try
 {
     const serverAttributes: server.ServerAttributes =
     {
-        // secure: !!args.tls,
-        secure: false,
+        secure: !!args.tls,
         domain: args.domain,
         routes:
         {
