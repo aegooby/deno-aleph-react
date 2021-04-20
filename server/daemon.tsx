@@ -2,7 +2,7 @@
 import * as server from "./server.tsx";
 import App from "../components/App.tsx";
 
-import * as yargs from "yargs";
+import * as yargs from "@yargs/yargs";
 
 const args = yargs.default(Deno.args)
     .usage("usage: $0 server/daemon.tsx --hostname <host> [--domain <name>] [--tls <path>]")

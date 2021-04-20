@@ -1,9 +1,9 @@
 
-import * as yargs from "https://deno.land/x/yargs/deno.ts";
-import { Arguments } from 'https://deno.land/x/yargs/deno-types.ts';
-import * as colors from "https://deno.land/std/fmt/colors.ts";
-import * as fs from "https://deno.land/std/fs/mod.ts";
-import * as path from "https://deno.land/std/path/mod.ts";
+import * as yargs from "@yargs/yargs";
+import { Arguments } from "@yargs/types";
+import * as colors from "@std/colors";
+import * as fs from "@std/fs";
+import * as path from "@std/path";
 
 Deno.env.set("DENO_DIR", ".cache/");
 const { Console, Bundler } = await import("./server/server.tsx");
