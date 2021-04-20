@@ -47,6 +47,8 @@ export class Server
     private __listener: Deno.Listener;
     private __listenerTls: Deno.Listener | undefined;
 
+    private graphql: GraphQL;
+
     private App: React.ComponentType<{ client: undefined; }>;
 
     constructor(attributes: ServerAttributes)
@@ -91,16 +93,12 @@ export class Server
 
         this.oak = { router: new Oak.Router(), app: new Oak.Application() };
 
-        GraphQL.schema.path = attributes.schema;
-        GraphQL.resolvers = attributes.resolvers;
+        this.graphql = new GraphQL(attributes);
 
         if (attributes.domain)
             this.domain = `${this.protocol}://${attributes.domain}`;
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
-
-        this.graphqlQuery = this.graphqlQuery.bind(this);
-        this.graphqlPlayground = this.graphqlPlayground.bind(this);
 
         this.content = this.content.bind(this);
         this.static = this.static.bind(this);
@@ -146,14 +144,6 @@ export class Server
     public get urlSimple(): string
     {
         return `${this.protocol}://${this.hostname}`;
-    }
-    private async graphqlQuery(context: Oak.Context): Promise<void>
-    {
-        await GraphQL.query(context);
-    }
-    private async graphqlPlayground(context: Oak.Context): Promise<void>
-    {
-        await GraphQL.playground(context);
     }
     private async content(context: Oak.Context): Promise<void>
     {
@@ -242,7 +232,11 @@ export class Server
                 catch { /* */ }
             }
         }
-        catch { /* */ }
+        catch (error) 
+        {
+            if (!(error instanceof Deno.errors.Http))
+                throw error;
+        }
     }
     private async accept(): Promise<void>
     {
@@ -259,20 +253,21 @@ export class Server
     public async serve(): Promise<void>
     {
         Console.log(`Building GraphQL...`);
-        await GraphQL.build({ url: this.domain });
+        await this.graphql.build({ url: this.domain });
 
         Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
 
         for (const [from, to] of this.routes)
             this.oak.router.redirect(from, to, Oak.Status.TemporaryRedirect);
-        this.oak.router.post("/graphql", this.graphqlQuery);
-        this.oak.router.get("/graphql", this.graphqlPlayground);
+        this.oak.router.post("/graphql", this.graphql.query);
+        this.oak.router.get("/graphql", this.graphql.playground);
         this.oak.router.use(Oak.etag.factory());
 
         this.oak.app.use(this.oak.router.routes());
         this.oak.app.use(this.content);
 
         await Promise.all([this.accept(), this.acceptTls()]);
+        Console.log("serve(): done");
     }
     public close(): void
     {

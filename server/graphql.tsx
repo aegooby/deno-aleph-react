@@ -1,4 +1,6 @@
 
+import * as async from "@std/async";
+
 import * as Oak from "oak";
 import * as graphql from "graphql";
 import * as playground from "graphql-playground";
@@ -6,6 +8,11 @@ import * as playground from "graphql-playground";
 import { Console } from "./console.tsx";
 import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
 
+interface GraphQLAttributes
+{
+    schema: string;
+    resolvers: unknown;
+}
 interface GraphQLBuildAttributes
 {
     url: string;
@@ -13,19 +20,60 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    public static schema:
+    private schema:
         {
             schema: graphql.GraphQLSchema | undefined;
             path: string;
         } = { schema: undefined, path: "" };
-    public static resolvers: unknown;
-    private static playgroundHTML: Promise<string>;
-    private static async buildSchema()
+    private resolvers: unknown;
+    private playgroundHTML: async.Deferred<string> = async.deferred();
+    constructor(attributes: GraphQLAttributes)
     {
-        const schema = await Deno.readTextFile(GraphQL.schema.path);
-        GraphQL.schema.schema = graphql.buildSchema(schema);
+        this.schema.path = attributes.schema;
+        this.resolvers = attributes.resolvers;
+
+        this.buildSchema = this.buildSchema.bind(this);
+        this.query = this.query.bind(this);
+        this.renderPlayground = this.renderPlayground.bind(this);
+        this.build = this.build.bind(this);
+        this.playground = this.playground.bind(this);
     }
-    public static async query(context: Oak.Context): Promise<void>
+    private async buildSchema(): Promise<void>
+    {
+        const schema = await Deno.readTextFile(this.schema.path);
+        this.schema.schema = graphql.buildSchema(schema);
+    }
+    private renderPlayground(url: string): void
+    {
+        const playgroundOptions: playground.RenderPageOptions =
+        {
+            endpoint: url + "/graphql",
+            subscriptionEndpoint: url,
+            settings:
+            {
+                "editor.cursorShape": "line",
+                "editor.fontSize": 18,
+                "editor.fontFamily": "'Menlo', monospace",
+                "editor.reuseHeaders": true,
+                "editor.theme": "dark",
+                "general.betaUpdates": true,
+                "request.credentials": "omit",
+                "request.globalHeaders": {},
+                "schema.polling.enable": true,
+                "schema.polling.endpointFilter": "*localhost",
+                "schema.polling.interval": 2000,
+                "tracing.hideTracingResponse": true,
+                "tracing.tracingSupported": true,
+            }
+        };
+        this.playgroundHTML.resolve(playground.renderPlaygroundPage(playgroundOptions));
+    }
+    public async build(attributes: GraphQLBuildAttributes)
+    {
+        await this.buildSchema();
+        this.renderPlayground(attributes.url);
+    }
+    public async query(context: Oak.Context): Promise<void>
     {
         try
         {
@@ -51,9 +99,9 @@ export class GraphQL
             }
             const graphqlargs: graphql.GraphQLArgs =
             {
-                schema: GraphQL.schema.schema as graphql.GraphQLSchema,
+                schema: this.schema.schema as graphql.GraphQLSchema,
                 source: query.query,
-                rootValue: GraphQL.resolvers,
+                rootValue: this.resolvers,
                 variableValues: query.variables,
                 operationName: query.operationName,
             };
@@ -64,7 +112,8 @@ export class GraphQL
         }
         catch (error)
         {
-            Console.warn("Encountered GraphQL error");
+            if (!(error instanceof Deno.errors.Http))
+                Console.warn(error);
             const jsonError =
             {
                 data: null,
@@ -74,40 +123,9 @@ export class GraphQL
             context.response.body = JSON.stringify(jsonError);
         }
     }
-    private static renderPlayground(url: string)
-    {
-        const playgroundOptions: playground.RenderPageOptions =
-        {
-            endpoint: url + "/graphql",
-            subscriptionEndpoint: url,
-            settings:
-            {
-                "editor.cursorShape": "line",
-                "editor.fontSize": 18,
-                "editor.fontFamily": "'Menlo', monospace",
-                "editor.reuseHeaders": true,
-                "editor.theme": "dark",
-                "general.betaUpdates": true,
-                "request.credentials": "omit",
-                "request.globalHeaders": {},
-                "schema.polling.enable": true,
-                "schema.polling.endpointFilter": "*localhost",
-                "schema.polling.interval": 2000,
-                "tracing.hideTracingResponse": true,
-                "tracing.tracingSupported": true,
-            }
-        };
-        GraphQL.playgroundHTML =
-            Promise.resolve(playground.renderPlaygroundPage(playgroundOptions));
-    }
-    public static async build(attributes: GraphQLBuildAttributes)
-    {
-        await GraphQL.buildSchema();
-        GraphQL.renderPlayground(attributes.url);
-    }
-    public static async playground(context: Oak.Context): Promise<void>
+    public async playground(context: Oak.Context): Promise<void>
     {
         context.response.status = Oak.Status.OK;
-        context.response.body = await GraphQL.playgroundHTML;
+        context.response.body = await this.playgroundHTML;
     }
 }
