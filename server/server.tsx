@@ -5,6 +5,7 @@ import * as colors from "@std/colors";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
+// deno-lint-ignore no-unused-vars
 import * as ReactRouter from "react-router";
 import * as Oak from "oak";
 

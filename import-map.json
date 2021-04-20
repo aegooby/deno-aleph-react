@@ -5,7 +5,7 @@
         "react": "https://esm.sh/react",
         "react-dom": "https://esm.sh/react-dom",
         "react-dom/server": "https://esm.sh/react-dom/server",
-        "react-router": "https://cdn.skypack.dev/react-router-dom",
+        "react-router": "https://esm.sh/react-router-dom",
         "react-helmet": "https://esm.sh/react-helmet",
         "react-responsive": "https://esm.sh/react-responsive",
         "@std/http": "https://deno.land/std/http/mod.ts",
