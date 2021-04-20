@@ -37,7 +37,7 @@ function all(_: Arguments)
 }
 function version(_: Arguments)
 {
-    Console.log(`${colors.bold("https")}${colors.reset("aurus")} v1.1.2`);
+    Console.log(`${colors.bold("https")}${colors.reset("aurus")} v2.0.5`);
 }
 async function clean(args: Arguments)
 {
@@ -275,7 +275,6 @@ async function docker(args: Arguments)
     if (!buildStatus.success)
         return buildStatus.code;
 }
-
 function help(_: Arguments)
 {
     Console.log(`usage: ${command} <command> [options]`);
