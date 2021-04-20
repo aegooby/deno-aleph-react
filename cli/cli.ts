@@ -3,14 +3,41 @@ import * as yargs from "@yargs/yargs";
 import { Arguments } from "@yargs/types";
 import * as colors from "@std/colors";
 import * as fs from "@std/fs";
-import * as path from "@std/path";
+
 import { Console, Bundler } from "../server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
+function createCommand(): [string[], string]
+{
+    const targetIndex = Deno.args.indexOf("--target");
+    const targetValueIndex = targetIndex + 1;
+    const defaultCommand = "deno run --unstable --import-map import-map.json --allow-all cli/cli.ts";
+    if (targetIndex < 0 || targetValueIndex >= Deno.args.length)
+        return [Deno.args, defaultCommand];
+    const target = Deno.args[targetValueIndex];
+    const args = Deno.args.slice(targetValueIndex + 1);
+    switch (target)
+    {
+        case "windows":
+            return [args, "build/windows.exe"];
+        case "macos":
+            return [args, "build/macos"];
+        case "linux":
+            return [args, "build/linux"];
+        default:
+            return [args, defaultCommand];
+    }
+}
+const [args, command] = createCommand();
 
-const thisFile = path.basename(path.fromFileUrl(Deno.mainModule));
-const command = `deno run --unstable --import-map import-map.json --allow-all ${thisFile}`;
-
+function all(_: Arguments)
+{
+    Console.error(`usage: ${command} <command> [options]`);
+}
+function version(_: Arguments)
+{
+    Console.log(`${colors.bold("https")}${colors.reset("aurus")} v1.1.2`);
+}
 async function clean(args: Arguments)
 {
     if (!args.cache && !args.dist && !args.node)
@@ -170,11 +197,6 @@ async function remote(args: Arguments)
                 "GRAPHQL_API_ENDPOINT=https://localhost/graphql"
             ],
     };
-    const upgradeRunOptions: Deno.RunOptions =
-    {
-        cmd: ["deno", "--unstable", "upgrade", "--version", "1.7.0"],
-        env: { DENO_DIR: ".cache/" }
-    };
     const serverRunOptions: Deno.RunOptions =
     {
         cmd:
@@ -193,12 +215,6 @@ async function remote(args: Arguments)
     if (!webpackStatus.success)
         return webpackStatus.code;
 
-    const upgradeProcess = Deno.run(upgradeRunOptions);
-    const upgradeStatus = await upgradeProcess.status();
-    upgradeProcess.close();
-    if (!upgradeStatus.success)
-        return upgradeStatus.code;
-
     /* Run server continuously to catch crashes. */
     while (true)
     {
@@ -209,11 +225,35 @@ async function remote(args: Arguments)
 }
 async function test(_: Arguments)
 {
-    const process =
-        Deno.run({ cmd: ["deno", "test", "--unstable", "--allow-all", "--import-map", "import-map.json", "tests/"] });
+    const runOptions: Deno.RunOptions =
+    {
+        cmd:
+            [
+                "deno", "test", "--unstable", "--allow-all",
+                "--import-map", "import-map.json", "tests/"
+            ],
+        env: { DENO_DIR: ".cache/" }
+    };
+    const process = Deno.run(runOptions);
     const status = await process.status();
     process.close();
     return status.code;
+}
+async function prune(_: Arguments)
+{
+    const containerProcess =
+        Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
+    const containerStatus = await containerProcess.status();
+    containerProcess.close();
+    if (!containerStatus.success)
+        return containerStatus.code;
+
+    const imageProcess =
+        Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
+    const imageStatus = await imageProcess.status();
+    imageProcess.close();
+    if (!imageStatus.success)
+        return imageStatus.code;
 }
 async function docker(args: Arguments)
 {
@@ -224,21 +264,7 @@ async function docker(args: Arguments)
     }
 
     if (args.prune)
-    {
-        const containerProcess =
-            Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
-        const containerStatus = await containerProcess.status();
-        containerProcess.close();
-        if (!containerStatus.success)
-            return containerStatus.code;
-
-        const imageProcess =
-            Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
-        const imageStatus = await imageProcess.status();
-        imageProcess.close();
-        if (!imageStatus.success)
-            return imageStatus.code;
-    }
+        await prune(args);
 
     const buildRunOptions: Deno.RunOptions =
         { cmd: ["docker", "build", "--target", args.target, "--tag", "httpsaurus/server", "."] };
@@ -249,16 +275,15 @@ async function docker(args: Arguments)
         return buildStatus.code;
 }
 
-yargs.default(Deno.args)
+function help(_: Arguments)
+{
+    Console.log(`usage: ${command} <command> [options]`);
+}
+
+yargs.default(args)
     .help(false)
-    .command("*", "", {}, function (_: Arguments)
-    {
-        Console.error(`usage: ${command} <command> [options]`);
-    })
-    .command("version", "", {}, function (_: Arguments)
-    {
-        Console.log(`${colors.bold("https")}${colors.reset("aurus")} v1.1.2`);
-    })
+    .command("*", "", {}, all)
+    .command("version", "", {}, version)
     .command("clean", "", {}, clean)
     .command("install", "", {}, install)
     .command("upgrade", "", {}, upgrade)
@@ -267,9 +292,7 @@ yargs.default(Deno.args)
     .command("localhost", "", {}, localhost)
     .command("remote", "", {}, remote)
     .command("test", "", {}, test)
+    .command("prune", "", {}, prune)
     .command("docker", "", {}, docker)
-    .command("help", "", {}, function (_: Arguments)
-    {
-        Console.log(`usage: ${command} <command> [options]`);
-    })
+    .command("help", "", {}, help)
     .parse();
