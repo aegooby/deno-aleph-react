@@ -152,14 +152,8 @@ export class Server
         if (!context.request.secure && this.secure)
         {
             const urlRequest = context.request.url;
-            /* If the server is directly exposed to user-facing ports, then */
-            /* send the user to `portTls`.                                  */
-            if (urlRequest.port !== "80")
-                context.response.redirect(`${this.url}${urlRequest.pathname}`);
-            /* If the server is getting its ports redirected, then send the */
-            /* user to 443 (default HTTPS port).                            */
-            else
-                context.response.redirect(`${this.urlSimple}${urlRequest.pathname}`);
+            const host = context.request.headers.get("host");
+            context.response.redirect(`https://${host}${urlRequest.pathname}`);
             return;
         }
 
