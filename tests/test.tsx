@@ -1,7 +1,7 @@
 
 import * as server from "../server/server.tsx";
 import * as assert from "@std/asserts";
-import * as delay from "@std/delay";
+import * as async from "@std/async";
 
 import App from "../components/App.tsx";
 
@@ -15,17 +15,17 @@ try
                 {
                     const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "http" as server.Protocol,
+                        secure: false,
                         domain: undefined,
                         hostname: "localhost",
-                        httpPort: 8080,
+                        port: 8080,
                         routes:
                         {
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        httpsPort: undefined,
+                        portTls: undefined,
                         cert: undefined,
 
                         App: App,
@@ -34,7 +34,7 @@ try
                         resolvers: { request: function () { return "response"; } },
                     };
                     const httpserver = new server.Server(serverAttributes);
-                    const time = delay.delay(5000);
+                    const time = async.delay(5000);
                     const serve = httpserver.serve();
                     await time;
                     httpserver.close();
@@ -49,17 +49,17 @@ try
                 {
                     const serverAttributes: server.ServerAttributes =
                     {
-                        protocol: "https" as server.Protocol,
+                        secure: true,
                         domain: undefined,
                         hostname: "localhost",
-                        httpPort: 8080,
+                        port: 8080,
                         routes:
                         {
                             "/favicon.ico": "/static/favicon.ico",
                             "/robots.txt": "/static/robots.txt",
                         },
 
-                        httpsPort: 4430,
+                        portTls: 8443,
                         cert: "cert/localhost",
 
                         App: App,
@@ -68,46 +68,11 @@ try
                         resolvers: { request: function () { return "response"; } },
                     };
                     const httpserver = new server.Server(serverAttributes);
-                    const time = delay.delay(5000);
+                    const time = async.delay(5000);
                     const serve = httpserver.serve();
                     await time;
                     httpserver.close();
                     await serve;
-                },
-                sanitizeOps: false,
-                sanitizeResources: false,
-            },
-            {
-                name: ": fetch (HTTP)",
-                async fn(): Promise<void>
-                {
-                    const serverAttributes: server.ServerAttributes =
-                    {
-                        protocol: "http" as server.Protocol,
-                        domain: undefined,
-                        hostname: "localhost",
-                        httpPort: 8080,
-                        routes:
-                        {
-                            "/favicon.ico": "/static/favicon.ico",
-                            "/robots.txt": "/static/robots.txt",
-                        },
-
-                        httpsPort: undefined,
-                        cert: undefined,
-
-                        App: App,
-
-                        schema: "graphql/schema.gql",
-                        resolvers: { request: function () { return "response"; } },
-                    };
-                    const httpserver = new server.Server(serverAttributes);
-                    const complete = httpserver.serve();
-                    const response = await fetch("http://localhost:8080/");
-                    assert.assert(response.ok);
-                    await response.text();
-                    httpserver.close();
-                    await complete;
                 },
                 sanitizeOps: false,
                 sanitizeResources: false,

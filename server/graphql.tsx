@@ -1,13 +1,18 @@
 
-import * as http from "@std/http";
-import * as io from "@std/io";
+import * as async from "@std/async";
 
+import * as Oak from "oak";
 import * as graphql from "graphql";
 import * as playground from "graphql-playground";
 
 import { Console } from "./console.tsx";
 import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
 
+interface GraphQLAttributes
+{
+    schema: string;
+    resolvers: unknown;
+}
 interface GraphQLBuildAttributes
 {
     url: string;
@@ -15,77 +20,30 @@ interface GraphQLBuildAttributes
 
 export class GraphQL
 {
-    public static methods: string[] = ["POST", "GET"];
-    public static schema:
+    private schema:
         {
             schema: graphql.GraphQLSchema | undefined;
             path: string;
         } = { schema: undefined, path: "" };
-    public static resolvers: unknown;
-    private static playgroundHTML: string;
-    private static async buildSchema()
+    private resolvers: unknown;
+    private playgroundHTML: async.Deferred<string> = async.deferred();
+    constructor(attributes: GraphQLAttributes)
     {
-        const schema = await Deno.readTextFile(GraphQL.schema.path);
-        GraphQL.schema.schema = graphql.buildSchema(schema);
+        this.schema.path = attributes.schema;
+        this.resolvers = attributes.resolvers;
+
+        this.buildSchema = this.buildSchema.bind(this);
+        this.query = this.query.bind(this);
+        this.renderPlayground = this.renderPlayground.bind(this);
+        this.build = this.build.bind(this);
+        this.playground = this.playground.bind(this);
     }
-    private static async query(request: http.ServerRequest): Promise<http.Response>
+    private async buildSchema(): Promise<void>
     {
-        try
-        {
-            const decoder = new TextDecoder();
-            const body: string = decoder.decode(await io.readAll(request.body));
-            const query: Query = { query: "" };
-            switch (request.headers.get("content-type"))
-            {
-                case "application/json":
-                    {
-                        const json = JSON.parse(body);
-                        query.query = json.query;
-                        query.operationName = json.operationName;
-                        query.variables = json.variables;
-                        break;
-                    }
-                case "application/graphql":
-                    {
-                        query.query = body;
-                        break;
-                    }
-                default:
-                    throw new Error("Invalid GraphQL MIME type");
-            }
-            const graphqlargs: graphql.GraphQLArgs =
-            {
-                schema: GraphQL.schema.schema as graphql.GraphQLSchema,
-                source: query.query,
-                rootValue: GraphQL.resolvers,
-                variableValues: query.variables,
-                operationName: query.operationName,
-            };
-            const result = await graphql.graphql(graphqlargs);
-            const response: http.Response =
-            {
-                status: http.Status.OK,
-                body: JSON.stringify(result),
-            };
-            return response;
-        }
-        catch (error)
-        {
-            Console.warn("Encountered GraphQL error");
-            const json =
-            {
-                data: null,
-                errors: [{ message: error.message ? error.message : error }],
-            };
-            const response: http.Response =
-            {
-                status: http.Status.OK,
-                body: JSON.stringify(json),
-            };
-            return response;
-        }
+        const schema = await Deno.readTextFile(this.schema.path);
+        this.schema.schema = graphql.buildSchema(schema);
     }
-    private static renderPlayground(url: string)
+    private renderPlayground(url: string): void
     {
         const playgroundOptions: playground.RenderPageOptions =
         {
@@ -108,25 +66,66 @@ export class GraphQL
                 "tracing.tracingSupported": true,
             }
         };
-        GraphQL.playgroundHTML = playground.renderPlaygroundPage(playgroundOptions);
+        this.playgroundHTML.resolve(playground.renderPlaygroundPage(playgroundOptions));
     }
-    public static async build(attributes: GraphQLBuildAttributes)
+    public async build(attributes: GraphQLBuildAttributes)
     {
-        await GraphQL.buildSchema();
-        GraphQL.renderPlayground(attributes.url);
+        await this.buildSchema();
+        this.renderPlayground(attributes.url);
     }
-    public static async resolve(request: http.ServerRequest): Promise<http.Response>
+    public async query(context: Oak.Context): Promise<void>
     {
-        if (request.url !== "/graphql")
-            throw new Error("Invalid request URL for GraphQL");
-        switch (request.method)
+        try
         {
-            case "GET":
-                return { status: http.Status.OK, body: GraphQL.playgroundHTML };
-            case "POST":
-                return await GraphQL.query(request);
-            default:
-                throw new Error("Invalid HTTP method for GraphQL");
+            const query: Query = { query: "" };
+            switch (context.request.headers.get("content-type"))
+            {
+                case "application/json":
+                    {
+                        const jsonRequest = await context.request.body({ type: "json" }).value;
+                        query.query = jsonRequest.query;
+                        query.operationName = jsonRequest.operationName;
+                        query.variables = jsonRequest.variables;
+                        break;
+                    }
+                case "application/graphql":
+                    {
+                        const textRequest = await context.request.body({ type: "text" }).value;
+                        query.query = textRequest;
+                        break;
+                    }
+                default:
+                    throw new Error("Invalid GraphQL MIME type");
+            }
+            const graphqlargs: graphql.GraphQLArgs =
+            {
+                schema: this.schema.schema as graphql.GraphQLSchema,
+                source: query.query,
+                rootValue: this.resolvers,
+                variableValues: query.variables,
+                operationName: query.operationName,
+            };
+            const result = await graphql.graphql(graphqlargs);
+
+            context.response.status = Oak.Status.OK;
+            context.response.body = JSON.stringify(result);
         }
+        catch (error)
+        {
+            if (!(error instanceof Deno.errors.Http))
+                Console.warn(error);
+            const jsonError =
+            {
+                data: null,
+                errors: [{ message: error.message ? error.message : error }],
+            };
+            context.response.status = Oak.Status.OK;
+            context.response.body = JSON.stringify(jsonError);
+        }
+    }
+    public async playground(context: Oak.Context): Promise<void>
+    {
+        context.response.status = Oak.Status.OK;
+        context.response.body = await this.playgroundHTML;
     }
 }

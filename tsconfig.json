@@ -16,8 +16,9 @@
     "lib": [
         "deno.ns",
         "deno.unstable",
+        "esnext",
         "dom"
     ],
-    "strict": true,
-    "target": "esnext"
+    "target": "es5",
+    "strict": true
 }

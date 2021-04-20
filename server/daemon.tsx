@@ -14,19 +14,19 @@ const args = yargs.default(Deno.args)
 
 try
 {
-    const serverAttributes =
+    const serverAttributes: server.ServerAttributes =
     {
-        protocol: args.tls ? "https" as const : "http" as const,
+        secure: !!args.tls,
         domain: args.domain,
         routes:
         {
             "/favicon.ico": "/static/favicon.ico",
-            "/robots.txt": "/static/robots.txt",
+            "/robots.txt": "/static/robots.txt"
         },
         hostname: args.hostname,
-        httpPort: 8080,
+        port: 8080,
 
-        httpsPort: 8443,
+        portTls: 8443,
         cert: args.tls,
 
         App: App,
