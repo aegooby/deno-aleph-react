@@ -7,6 +7,9 @@
 .dist/
 remote.pem
 
+# Build
+build/
+
 # Logs
 logs/
 *.log

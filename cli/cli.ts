@@ -4,9 +4,9 @@ import { Arguments } from "@yargs/types";
 import * as colors from "@std/colors";
 import * as fs from "@std/fs";
 import * as path from "@std/path";
+import { Console, Bundler } from "../server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
-const { Console, Bundler } = await import("./server/server.tsx");
 
 const thisFile = path.basename(path.fromFileUrl(Deno.mainModule));
 const command = `deno run --unstable --import-map import-map.json --allow-all ${thisFile}`;
