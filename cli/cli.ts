@@ -11,7 +11,8 @@ function createCommand(): [string[], string]
 {
     const targetIndex = Deno.args.indexOf("--target");
     const targetValueIndex = targetIndex + 1;
-    const defaultCommand = "deno run --unstable --import-map import-map.json --allow-all cli/cli.ts";
+    const defaultCommand =
+        "deno run --unstable --import-map import-map.json --allow-all cli/cli.ts";
     if (targetIndex < 0 || targetValueIndex >= Deno.args.length)
         return [Deno.args, defaultCommand];
     const target = Deno.args[targetValueIndex];
