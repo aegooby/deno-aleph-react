@@ -15,7 +15,6 @@
         "graphql": "https://esm.sh/graphql",
         "graphql-playground": "https://esm.sh/graphql-playground-html",
         "@yargs/types": "https://deno.land/x/yargs/deno-types.ts",
-        "@yargs/yargs": "https://deno.land/x/yargs/deno.ts",
-        "dotenv": "https://deno.land/x/dotenv/mod.ts"
+        "@yargs/yargs": "https://deno.land/x/yargs/deno.ts"
     }
 }
