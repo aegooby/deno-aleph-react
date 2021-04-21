@@ -195,7 +195,10 @@ export class Server
                 </head>
                 <body>
                     <div id="root">
-                        <ReactRouter.StaticRouter location={context.request.url} context={staticContext}>
+                        <ReactRouter.StaticRouter
+                            location={context.request.url.pathname}
+                            context={staticContext}
+                        >
                             <this.App client={undefined} />
                         </ReactRouter.StaticRouter>
                     </div>
