@@ -37,7 +37,7 @@ function all(_: Arguments)
 }
 function version(_: Arguments)
 {
-    Console.log(`${colors.bold("https")}${colors.reset("aurus")} v2.0.8`);
+    Console.log(`${colors.bold("https")}${colors.reset("aurus")} v2.0.9`);
 }
 async function clean(args: Arguments)
 {

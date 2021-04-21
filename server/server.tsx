@@ -5,7 +5,6 @@ import * as colors from "@std/colors";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-// deno-lint-ignore no-unused-vars
 import * as ReactRouter from "react-router";
 import * as Oak from "oak";
 
@@ -213,7 +212,7 @@ export class Server
         context.response.status = staticContext.statusCode as Oak.Status ?? Oak.Status.OK;
         context.response.body = body;
     }
-    private async listen(connection: Deno.Conn<Deno.NetAddr>, secure: boolean): Promise<void>
+    private async listen(connection: Deno.Conn, secure: boolean): Promise<void>
     {
         try 
         {
@@ -239,14 +238,14 @@ export class Server
     private async accept(): Promise<void>
     {
         for await (const connection of this.listener)
-            this.listen(connection as Deno.Conn<Deno.NetAddr>, false);
+            this.listen(connection, false);
     }
     private async acceptTls(): Promise<void>
     {
         if (!this.secure)
             return;
         for await (const connection of this.listenerTls)
-            this.listen(connection as Deno.Conn<Deno.NetAddr>, true);
+            this.listen(connection, true);
     }
     public async serve(): Promise<void>
     {
