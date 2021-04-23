@@ -172,8 +172,10 @@ export class Server
     {
         const sendOptions: Oak.SendOptions =
         {
-            root: Deno.cwd(),
-            hidden: true
+            gzip: true,
+            hidden: true,
+            maxbuffer: 0x400,
+            root: Deno.cwd()
         };
         await Oak.send(context, context.request.url.pathname, sendOptions);
     }
@@ -204,7 +206,8 @@ export class Server
                 </body>
             </html>;
 
-        const body = `<!DOCTYPE html> ${await ReactDOMServer.renderToString(page)}`;
+        const render = Promise.resolve(ReactDOMServer.renderToString(page));
+        const body = `<!DOCTYPE html> ${await render}`;
 
         if (staticContext.url)
             context.response.redirect(staticContext.url as string);
@@ -226,26 +229,28 @@ export class Server
                     if (response)
                         await event.respondWith(response);
                 }
-                catch { /* */ }
+                catch { undefined; }
             }
         }
-        catch (error) 
-        {
-            if (!(error instanceof Deno.errors.Http))
-                throw error;
-        }
+        catch { undefined; }
     }
     private async accept(): Promise<void>
     {
         for await (const connection of this.listener)
-            this.listen(connection, false);
+        {
+            try { this.listen(connection, false); }
+            catch { undefined; }
+        }
     }
     private async acceptTls(): Promise<void>
     {
         if (!this.secure)
             return;
         for await (const connection of this.listenerTls)
-            this.listen(connection, true);
+        {
+            try { this.listen(connection, true); }
+            catch { undefined; }
+        }
     }
     public async serve(): Promise<void>
     {
