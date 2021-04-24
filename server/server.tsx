@@ -2,6 +2,7 @@
 import * as path from "@std/path";
 import * as fs from "@std/fs";
 import * as colors from "@std/colors";
+import * as async from "@std/async";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
@@ -32,8 +33,10 @@ export interface ServerAttributes
 
 interface OakServer
 {
-    router: Oak.Router;
-    app: Oak.Application;
+    appBase: Oak.Application;
+    appTls: Oak.Application;
+    listenOptionsBase: Oak.ListenOptionsBase;
+    listenOptionsTls: Oak.ListenOptionsTls;
 }
 
 export class Server
@@ -43,9 +46,7 @@ export class Server
     private routes: Map<string, string> = new Map<string, string>();
 
     private oak: OakServer;
-
-    private __listener: Deno.Listener;
-    private __listenerTls: Deno.Listener | undefined;
+    private closed: async.Deferred<void> = async.deferred();
 
     private graphql: GraphQL;
 
@@ -70,28 +71,27 @@ export class Server
             }
         }
 
-        const listenOptions: Deno.ListenOptions =
+        this.oak =
         {
-            hostname: attributes.hostname,
-            port: attributes.port as number
-        };
-        this.__listener = Deno.listen(listenOptions);
-
-        if (this.secure)
-        {
-            const listenTlsOptions: Deno.ListenTlsOptions =
+            appBase: new Oak.Application(),
+            appTls: new Oak.Application(),
+            listenOptionsBase:
+            {
+                hostname: attributes.hostname,
+                port: attributes.port as number,
+                secure: false
+            },
+            listenOptionsTls:
             {
                 hostname: attributes.hostname,
                 port: attributes.portTls as number,
                 certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
                 keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
                 alpnProtocols: ["http/1.1", "h2"],
-                transport: "tcp"
-            };
-            this.__listenerTls = Deno.listenTls(listenTlsOptions);
-        }
-
-        this.oak = { router: new Oak.Router(), app: new Oak.Application() };
+                transport: "tcp",
+                secure: true
+            }
+        };
 
         this.graphql = new GraphQL(attributes);
 
@@ -100,26 +100,16 @@ export class Server
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
 
-        this.content = this.content.bind(this);
+        this.router = this.router.bind(this);
         this.static = this.static.bind(this);
         this.react = this.react.bind(this);
 
-        this.listen = this.listen.bind(this);
-        this.accept = this.accept.bind(this);
+        this.acceptBase = this.acceptBase.bind(this);
         this.acceptTls = this.acceptTls.bind(this);
+        this.accept = this.accept.bind(this);
 
         this.serve = this.serve.bind(this);
         this.close = this.close.bind(this);
-    }
-    private get listener(): Deno.Listener
-    {
-        return this.__listener;
-    }
-    private get listenerTls(): Deno.Listener
-    {
-        if (!this.secure)
-            throw new Error("Attempt to access TLS listener without TLS enabled");
-        return this.__listenerTls!;
     }
     public get protocol(): "http" | "https"
     {
@@ -127,15 +117,11 @@ export class Server
     }
     public get port(): number
     {
-        const addr = this.secure ? this.listenerTls.addr : this.listener.addr;
-        return (addr as Deno.NetAddr).port;
+        return this.secure ? this.oak.listenOptionsTls.port : this.oak.listenOptionsBase.port;
     }
     public get hostname(): string
     {
-        const address = this.listener.addr as Deno.NetAddr;
-        if ((["::1", "127.0.0.1"]).includes(address.hostname))
-            return "localhost";
-        return address.hostname;
+        return this.oak.listenOptionsTls.hostname as string;
     }
     public get url(): string
     {
@@ -145,7 +131,7 @@ export class Server
     {
         return `${this.protocol}://${this.hostname}`;
     }
-    private async content(context: Oak.Context): Promise<void>
+    private async router(context: Oak.Context): Promise<void>
     {
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
@@ -154,6 +140,31 @@ export class Server
             const host = context.request.headers.get("host");
             context.response.redirect(`https://${host}${urlRequest.pathname}`);
             return;
+        }
+
+        /* Reroute any mapped routes from server configuration */
+        if (this.routes.has(context.request.url.pathname))
+        {
+            const to = this.routes.get(context.request.url.pathname) as string;
+            context.response.redirect(to);
+            return;
+        }
+
+        /* Check for GraphQL */
+        if (context.request.url.pathname === "/graphql")
+        {
+            switch (context.request.method)
+            {
+                case "GET":
+                    await this.graphql.playground(context);
+                    return;
+                case "POST":
+                    await this.graphql.query(context);
+                    return;
+                default:
+                    /** @todo Add error checking. */
+                    break;
+            }
         }
 
         /* Convert URL to filepath. */
@@ -215,42 +226,19 @@ export class Server
         context.response.status = staticContext.statusCode as Oak.Status ?? Oak.Status.OK;
         context.response.body = body;
     }
-    private async listen(connection: Deno.Conn, secure: boolean): Promise<void>
+    private async acceptBase(): Promise<void>
     {
-        try 
-        {
-            const httpConnection = Deno.serveHttp(connection);
-            for await (const event of httpConnection)
-            {
-                try 
-                {
-                    const response =
-                        await this.oak.app.handle(event.request, connection, secure);
-                    if (response)
-                        await event.respondWith(response);
-                }
-                catch { undefined; }
-            }
-        }
-        catch { undefined; }
-    }
-    private async accept(): Promise<void>
-    {
-        for await (const connection of this.listener)
-        {
-            try { this.listen(connection, false); }
-            catch { undefined; }
-        }
+        await this.oak.appBase.listen(this.oak.listenOptionsBase);
     }
     private async acceptTls(): Promise<void>
     {
         if (!this.secure)
             return;
-        for await (const connection of this.listenerTls)
-        {
-            try { this.listen(connection, true); }
-            catch { undefined; }
-        }
+        await this.oak.appTls.listen(this.oak.listenOptionsTls);
+    }
+    private async accept(): Promise<void>
+    {
+        await Promise.all([this.acceptBase(), this.acceptTls()]);
     }
     public async serve(): Promise<void>
     {
@@ -259,22 +247,13 @@ export class Server
 
         Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
 
-        for (const [from, to] of this.routes)
-            this.oak.router.redirect(from, to, Oak.Status.TemporaryRedirect);
-        this.oak.router.post("/graphql", this.graphql.query);
-        this.oak.router.get("/graphql", this.graphql.playground);
-        this.oak.router.use(Oak.etag.factory());
+        this.oak.appBase.use(this.router);
+        this.oak.appTls.use(this.router);
 
-        this.oak.app.use(this.oak.router.routes());
-        this.oak.app.use(this.content);
-
-        await Promise.all([this.accept(), this.acceptTls()]);
-        Console.log("serve(): done");
+        await Promise.race([this.accept(), this.closed]);
     }
     public close(): void
     {
-        this.listener.close();
-        if (this.secure)
-            this.listenerTls.close();
+        this.closed.resolve();
     }
 }

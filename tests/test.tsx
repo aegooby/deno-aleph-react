@@ -2,8 +2,6 @@
 import * as server from "../server/server.tsx";
 import * as async from "@std/async";
 
-import App from "../components/App.tsx";
-
 try
 {
     const tests: Deno.TestDefinition[] =
@@ -12,32 +10,24 @@ try
                 name: ": run for 5 seconds (HTTP)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes: server.ServerAttributes =
+                    console.log("");
+                    const serverRunOptions: Deno.RunOptions =
                     {
-                        secure: false,
-                        domain: undefined,
-                        hostname: "localhost",
-                        port: 8080,
-                        routes:
-                        {
-                            "/favicon.ico": "/static/favicon.ico",
-                            "/robots.txt": "/static/robots.txt",
-                        },
-
-                        portTls: undefined,
-                        cert: undefined,
-
-                        App: App,
-
-                        schema: "graphql/schema.gql",
-                        resolvers: { request: function () { return "response"; } },
+                        cmd:
+                            [
+                                "deno", "run", "--unstable", "--allow-all",
+                                "--import-map", "import-map.json", "server/daemon.tsx",
+                                "--hostname", "localhost", "--tls", "cert/localhost/"
+                            ],
+                        env: { DENO_DIR: ".cache/" }
                     };
-                    const httpserver = new server.Server(serverAttributes);
+                    const serverProcess = Deno.run(serverRunOptions);
                     const time = async.delay(5000);
-                    const serve = httpserver.serve();
+                    const status = serverProcess.status();
                     await time;
-                    httpserver.close();
-                    await serve;
+                    serverProcess.close();
+                    serverProcess.kill(Deno.Signal.SIGKILL);
+                    await status;
                 },
                 sanitizeOps: false,
                 sanitizeResources: false,
@@ -46,35 +36,25 @@ try
                 name: ": run for 5 seconds (HTTPS)",
                 async fn(): Promise<void>
                 {
-                    const serverAttributes: server.ServerAttributes =
+                    console.log("");
+                    const serverRunOptions: Deno.RunOptions =
                     {
-                        secure: true,
-                        domain: undefined,
-                        hostname: "localhost",
-                        port: 8080,
-                        routes:
-                        {
-                            "/favicon.ico": "/static/favicon.ico",
-                            "/robots.txt": "/static/robots.txt",
-                        },
-
-                        portTls: 8443,
-                        cert: "cert/localhost",
-
-                        App: App,
-
-                        schema: "graphql/schema.gql",
-                        resolvers: { request: function () { return "response"; } },
+                        cmd:
+                            [
+                                "deno", "run", "--unstable", "--allow-all",
+                                "--import-map", "import-map.json", "server/daemon.tsx",
+                                "--hostname", "localhost"
+                            ],
+                        env: { DENO_DIR: ".cache/" }
                     };
-                    const httpserver = new server.Server(serverAttributes);
+                    const serverProcess = Deno.run(serverRunOptions);
                     const time = async.delay(5000);
-                    const serve = httpserver.serve();
+                    const status = serverProcess.status();
                     await time;
-                    httpserver.close();
-                    await serve;
+                    serverProcess.close();
+                    serverProcess.kill(Deno.Signal.SIGKILL);
+                    await status;
                 },
-                sanitizeOps: false,
-                sanitizeResources: false,
             },
         ];
     for (const test of tests)
