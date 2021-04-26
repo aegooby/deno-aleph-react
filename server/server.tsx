@@ -31,7 +31,7 @@ class Version
         return `v${this.major}.${this.minor}.${this.patch}`;
     }
 }
-export const version: Version = new Version(2, 0, 13);
+export const version: Version = new Version(2, 0, 14);
 
 export interface ServerAttributes
 {
@@ -386,7 +386,7 @@ export class Server
         this.oak.use(this.router);
         this.oak.use(Oak.etag.factory());
 
-        Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
+        Console.success(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
 
         await Promise.race([this.listen(), this.closed]);
     }
