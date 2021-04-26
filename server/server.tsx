@@ -241,6 +241,9 @@ export class Server
     }
     private async router(context: Oak.Context): Promise<void>
     {
+        /* Allow all CORS */
+        context.response.headers.set("access-control-allowed-origin", "*");
+
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
         {
@@ -343,6 +346,8 @@ export class Server
             const httpConnection = Deno.serveHttp(connection);
             for await (const event of httpConnection)
             {
+                /** @todo Remove. */
+                Console.log(`Received request: ${Deno.inspect(event.request)}`);
                 try 
                 {
                     const request = event.request;
@@ -351,6 +356,8 @@ export class Server
                         await event.respondWith(response);
                 }
                 catch { undefined; }
+                /** @todo Remove. */
+                Console.log(`Completed request: ${Deno.inspect(event.request)}`);
             }
         }
         catch { undefined; }
@@ -360,6 +367,8 @@ export class Server
         const secure = this.listener.secure(key);
         for await (const connection of this.listener.accept(key))
         {
+            /** @todo Remove. */
+            Console.log(`Handling connection: ${Deno.inspect(connection)}`);
             try { this.handle(connection, secure); }
             catch { undefined; }
         }
