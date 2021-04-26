@@ -31,12 +31,6 @@ export interface ServerAttributes
     resolvers: unknown;
 }
 
-interface OakServer
-{
-    router: Oak.Router;
-    app: Oak.Application;
-}
-
 interface ListenOptions extends Deno.ListenOptions
 {
     secure: false;
@@ -134,7 +128,7 @@ export class Server
     private domain: string;
     private routes: Map<string, string> = new Map<string, string>();
 
-    private oak: OakServer;
+    private oak: Oak.Application;
 
     private listener: Listener;
     private hostname: string;
@@ -195,7 +189,7 @@ export class Server
         }
         this.listener = new Listener(options);
 
-        this.oak = { router: new Oak.Router(), app: new Oak.Application() };
+        this.oak = new Oak.Application();
 
         this.graphql = new GraphQL(attributes);
 
@@ -204,7 +198,7 @@ export class Server
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
 
-        this.content = this.content.bind(this);
+        this.router = this.router.bind(this);
         this.static = this.static.bind(this);
         this.react = this.react.bind(this);
 
@@ -226,7 +220,7 @@ export class Server
     {
         return `${this.protocol}://${this.hostname}`;
     }
-    private async content(context: Oak.Context): Promise<void>
+    private async router(context: Oak.Context): Promise<void>
     {
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
@@ -235,6 +229,33 @@ export class Server
             const host = context.request.headers.get("host");
             context.response.redirect(`https://${host}${urlRequest.pathname}`);
             return;
+        }
+
+        /* Check reroutes */
+        if (this.routes.has(context.request.url.pathname))
+        {
+            const from = context.request.url.pathname;
+            const to = this.routes.get(from) as string;
+            context.response.redirect(to);
+            return;
+        }
+
+        /* Handle GraphQL */
+        if (context.request.url.pathname === "/graphql")
+        {
+            switch (context.request.method)
+            {
+                case "GET":
+                    await this.graphql.playground(context);
+                    return;
+                case "POST":
+                    await this.graphql.query(context);
+                    return;
+                default:
+                    context.response.status = Oak.Status.MethodNotAllowed;
+                    context.response.body = "405 Method Not Allowed (GraphQL)";
+                    return;
+            }
         }
 
         /* Convert URL to filepath. */
@@ -305,8 +326,8 @@ export class Server
             {
                 try 
                 {
-                    const response =
-                        await this.oak.app.handle(event.request, connection, secure);
+                    const request = event.request;
+                    const response = await this.oak.handle(request, connection, secure);
                     if (response)
                         await event.respondWith(response);
                 }
@@ -337,14 +358,8 @@ export class Server
 
         this.listener.listen();
 
-        for (const [from, to] of this.routes)
-            this.oak.router.redirect(from, to, Oak.Status.TemporaryRedirect);
-        this.oak.router.post("/graphql", this.graphql.query);
-        this.oak.router.get("/graphql", this.graphql.playground);
-        this.oak.router.use(Oak.etag.factory());
-
-        this.oak.app.use(this.oak.router.routes());
-        this.oak.app.use(this.content);
+        this.oak.use(this.router);
+        this.oak.use(Oak.etag.factory());
 
         Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
 
