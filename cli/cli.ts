@@ -4,7 +4,7 @@ import { Arguments } from "@yargs/types";
 import * as colors from "@std/colors";
 import * as fs from "@std/fs";
 
-import { Console, Bundler } from "../server/server.tsx";
+import { Console, Bundler, version as serverVersion } from "../server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
 function createCommand(): [string[], string]
@@ -37,7 +37,7 @@ function all(_: Arguments)
 }
 function version(_: Arguments)
 {
-    Console.log(`${colors.bold("https")}${colors.reset("aurus")} v2.0.11`);
+    Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${serverVersion.string()}`);
 }
 async function clean(args: Arguments)
 {

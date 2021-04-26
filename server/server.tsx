@@ -14,6 +14,25 @@ import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
 export { Bundler } from "./bundler.tsx";
 
+class Version
+{
+    public major: number;
+    public minor: number;
+    public patch: number;
+
+    constructor(major: number, minor: number, patch: number)
+    {
+        this.major = major;
+        this.minor = minor;
+        this.patch = patch;
+    }
+    public string()
+    {
+        return `v${this.major}.${this.minor}.${this.patch}`;
+    }
+}
+export const version: Version = new Version(2, 0, 12);
+
 export interface ServerAttributes
 {
     secure: boolean;
@@ -353,6 +372,7 @@ export class Server
     }
     public async serve(): Promise<void>
     {
+        Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
         Console.log(`Building GraphQL...`);
         await this.graphql.build({ url: this.domain });
 
