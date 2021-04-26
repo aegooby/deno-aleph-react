@@ -131,12 +131,14 @@ class Listener
         if (key && this.nativeListeners.has(key))
         {
             const [_, listener] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+            this.nativeListeners.delete(listener.rid);
             listener.close();
         }
         else
         {
             for (const [_1, [_2, listener]] of this.nativeListeners)
                 listener.close();
+            this.nativeListeners.clear();
         }
     }
 }
@@ -241,6 +243,9 @@ export class Server
     }
     private async router(context: Oak.Context): Promise<void>
     {
+        /* Allow all CORS */
+        context.response.headers.set("access-control-allowed-origin", "*");
+
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
         {
