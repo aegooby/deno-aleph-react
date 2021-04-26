@@ -50,7 +50,7 @@ export interface ServerAttributes
     resolvers: unknown;
 }
 
-interface ListenOptions extends Deno.ListenOptions
+interface ListenBaseOptions extends Deno.ListenOptions
 {
     secure: false;
 }
@@ -58,13 +58,17 @@ interface ListenTlsOptions extends Deno.ListenTlsOptions
 {
     secure: true;
 }
-type ListenOptionsEither = ListenOptions | ListenTlsOptions;
+type ListenOptions = ListenBaseOptions | ListenTlsOptions;
+type ConnectionAsyncIter =
+    {
+        [Symbol.asyncIterator](): AsyncGenerator<Deno.Conn, never, unknown>;
+    };
 class Listener 
 {
     private nativeListeners: Map<number, [boolean, Deno.Listener]> = new Map<number, [boolean, Deno.Listener]>();
-    private options: Array<ListenOptionsEither> = [];
+    private options: Array<ListenOptions> = [];
 
-    constructor(options?: Array<ListenOptionsEither>)
+    constructor(options?: Array<ListenOptions>)
     {
         if (options) this.options = options;
 
@@ -72,7 +76,7 @@ class Listener
         this.listen = this.listen.bind(this);
         this.accept = this.accept.bind(this);
     }
-    private __listen(options: ListenOptionsEither): [boolean, Deno.Listener]
+    private __listen(options: ListenOptions): [boolean, Deno.Listener]
     {
         if (options.secure)
         {
@@ -87,14 +91,14 @@ class Listener
             return [options.secure, listener];
         }
     }
-    public listen(options?: Array<ListenOptionsEither>): Array<[boolean, Deno.Listener]>
+    public listen(options?: Array<ListenOptions>): Array<[boolean, Deno.Listener]>
     {
         if (!options)
             return this.options.map(this.__listen);
         else
             return options.map(this.__listen);
     }
-    public accept(key: number)
+    public accept(key: number): ConnectionAsyncIter
     {
         if (!this.nativeListeners.has(key))
             throw new Error("Listener not found");
@@ -182,8 +186,8 @@ export class Server
         this.port = attributes.port;
         this.portTls = this.secure ? attributes.portTls : undefined;
 
-        const options: Array<ListenOptionsEither> = [];
-        const listenOptions: ListenOptions =
+        const options: Array<ListenOptions> = [];
+        const listenOptions: ListenBaseOptions =
         {
             hostname: attributes.hostname,
             port: attributes.port as number,
@@ -220,7 +224,7 @@ export class Server
         this.static = this.static.bind(this);
         this.react = this.react.bind(this);
 
-        this.listen = this.listen.bind(this);
+        this.handle = this.handle.bind(this);
         this.accept = this.accept.bind(this);
 
         this.serve = this.serve.bind(this);
@@ -333,7 +337,10 @@ export class Server
         const body = `<!DOCTYPE html> ${await render}`;
 
         if (staticContext.url)
+        {
             context.response.redirect(staticContext.url as string);
+            return;
+        }
 
         context.response.status = staticContext.statusCode as Oak.Status ?? Oak.Status.OK;
         context.response.body = body;
@@ -349,8 +356,7 @@ export class Server
                 {
                     const request = event.request;
                     const response = await this.oak.handle(request, connection, secure);
-                    if (response)
-                        await event.respondWith(response);
+                    if (response) await event.respondWith(response);
                 }
                 catch { undefined; }
             }
@@ -362,15 +368,14 @@ export class Server
         const secure = this.listener.secure(key);
         for await (const connection of this.listener.accept(key))
         {
-            try { this.handle(connection, secure); }
+            const close = function ()
+            {
+                try { connection.close(); }
+                catch { undefined; }
+            };
+            try { this.handle(connection, secure).then(function () { close(); }); }
             catch { undefined; }
         }
-    }
-    private async listen(): Promise<void>
-    {
-        const keys = this.listener.keys();
-        const promises = keys.map(this.accept);
-        await Promise.all(promises);
     }
     public async serve(): Promise<void>
     {
@@ -385,10 +390,14 @@ export class Server
 
         Console.success(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
 
-        await Promise.race([this.listen(), this.closed]);
+        const keys = this.listener.keys();
+        const promises = keys.map(this.accept);
+        promises.push(this.closed);
+        await Promise.race(promises);
     }
     public close(): void
     {
         this.listener.close();
+        this.closed.resolve();
     }
 }

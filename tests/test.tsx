@@ -17,7 +17,7 @@ try
                             [
                                 "deno", "run", "--unstable", "--allow-all",
                                 "--import-map", "import-map.json", "server/daemon.tsx",
-                                "--hostname", "localhost", "--tls", "cert/localhost/"
+                                "--hostname", "localhost"
                             ],
                         env: { DENO_DIR: ".cache/" }
                     };
@@ -43,7 +43,7 @@ try
                             [
                                 "deno", "run", "--unstable", "--allow-all",
                                 "--import-map", "import-map.json", "server/daemon.tsx",
-                                "--hostname", "localhost"
+                                "--hostname", "localhost", "--tls", "cert/localhost/"
                             ],
                         env: { DENO_DIR: ".cache/" }
                     };
