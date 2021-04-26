@@ -121,10 +121,7 @@ class Listener
     }
     public keys(): Array<number>
     {
-        const array: Array<number> = [];
-        for (const key of this.nativeListeners.keys())
-            array.push(key);
-        return array;
+        return Array.from(this.nativeListeners.keys());
     }
     public close(key?: number): void
     {
