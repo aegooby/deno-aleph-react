@@ -37,6 +37,97 @@ interface OakServer
     app: Oak.Application;
 }
 
+interface ListenOptions extends Deno.ListenOptions
+{
+    secure: false;
+}
+interface ListenTlsOptions extends Deno.ListenTlsOptions
+{
+    secure: true;
+}
+type ListenOptionsEither = ListenOptions | ListenTlsOptions;
+class Listener 
+{
+    private nativeListeners: Map<number, [boolean, Deno.Listener]> = new Map<number, [boolean, Deno.Listener]>();
+    private options: Array<ListenOptionsEither> = [];
+
+    constructor(options?: Array<ListenOptionsEither>)
+    {
+        if (options) this.options = options;
+
+        this.__listen = this.__listen.bind(this);
+        this.listen = this.listen.bind(this);
+        this.accept = this.accept.bind(this);
+    }
+    private __listen(options: ListenOptionsEither): [boolean, Deno.Listener]
+    {
+        if (options.secure)
+        {
+            const listener = Deno.listenTls(options as Deno.ListenTlsOptions);
+            this.nativeListeners.set(listener.rid, [options.secure, listener]);
+            return [options.secure, listener];
+        }
+        else
+        {
+            const listener = Deno.listen(options as Deno.ListenOptions);
+            this.nativeListeners.set(listener.rid, [options.secure, listener]);
+            return [options.secure, listener];
+        }
+    }
+    public listen(options?: Array<ListenOptionsEither>): Array<[boolean, Deno.Listener]>
+    {
+        if (!options)
+            return this.options.map(this.__listen);
+        else
+            return options.map(this.__listen);
+    }
+    public accept(key: number)
+    {
+        if (!this.nativeListeners.has(key))
+            throw new Error("Listener not found");
+        const [_, nativeListener] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+        const iterable =
+        {
+            async *[Symbol.asyncIterator]()
+            {
+                while (true)
+                {
+                    try { yield await nativeListener.accept(); }
+                    catch { undefined; }
+                }
+            }
+        };
+        return iterable;
+    }
+    public secure(key: number): boolean
+    {
+        if (!this.nativeListeners.has(key))
+            throw new Error("Listener not found");
+        const [secure, _] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+        return secure;
+    }
+    public keys(): Array<number>
+    {
+        const array: Array<number> = [];
+        for (const key of this.nativeListeners.keys())
+            array.push(key);
+        return array;
+    }
+    public close(key?: number): void
+    {
+        if (key && this.nativeListeners.has(key))
+        {
+            const [_, listener] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+            listener.close();
+        }
+        else
+        {
+            for (const [_1, [_2, listener]] of this.nativeListeners)
+                listener.close();
+        }
+    }
+}
+
 export class Server
 {
     private secure: boolean;
@@ -45,8 +136,10 @@ export class Server
 
     private oak: OakServer;
 
-    private __listener: Deno.Listener;
-    private __listenerTls: Deno.Listener | undefined;
+    private listener: Listener;
+    private hostname: string;
+    private port: number;
+    private portTls: number | undefined;
 
     private closed: async.Deferred<void> = async.deferred();
 
@@ -73,26 +166,34 @@ export class Server
             }
         }
 
-        const listenOptions: Deno.ListenOptions =
+        this.hostname = attributes.hostname;
+        this.port = attributes.port;
+        this.portTls = this.secure ? attributes.portTls : undefined;
+
+        const options: Array<ListenOptionsEither> = [];
+        const listenOptions: ListenOptions =
         {
             hostname: attributes.hostname,
-            port: attributes.port as number
+            port: attributes.port as number,
+            secure: false
         };
-        this.__listener = Deno.listen(listenOptions);
+        options.push(listenOptions);
 
         if (this.secure)
         {
-            const listenTlsOptions: Deno.ListenTlsOptions =
+            const listenTlsOptions: ListenTlsOptions =
             {
                 hostname: attributes.hostname,
                 port: attributes.portTls as number,
                 certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
                 keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
                 alpnProtocols: ["http/1.1", "h2"],
-                transport: "tcp"
+                transport: "tcp",
+                secure: true,
             };
-            this.__listenerTls = Deno.listenTls(listenTlsOptions);
+            options.push(listenTlsOptions);
         }
+        this.listener = new Listener(options);
 
         this.oak = { router: new Oak.Router(), app: new Oak.Application() };
 
@@ -109,40 +210,17 @@ export class Server
 
         this.listen = this.listen.bind(this);
         this.accept = this.accept.bind(this);
-        this.acceptTls = this.acceptTls.bind(this);
 
         this.serve = this.serve.bind(this);
         this.close = this.close.bind(this);
-    }
-    private get listener(): Deno.Listener
-    {
-        return this.__listener;
-    }
-    private get listenerTls(): Deno.Listener
-    {
-        if (!this.secure)
-            throw new Error("Attempt to access TLS listener without TLS enabled");
-        return this.__listenerTls!;
     }
     public get protocol(): "http" | "https"
     {
         return this.secure ? "https" : "http";
     }
-    public get port(): number
-    {
-        const addr = this.secure ? this.listenerTls.addr : this.listener.addr;
-        return (addr as Deno.NetAddr).port;
-    }
-    public get hostname(): string
-    {
-        const address = this.listener.addr as Deno.NetAddr;
-        if ((["::1", "127.0.0.1"]).includes(address.hostname))
-            return "localhost";
-        return address.hostname;
-    }
     public get url(): string
     {
-        return `${this.protocol}://${this.hostname}:${this.port}`;
+        return `${this.protocol}://${this.hostname}:${this.portTls ?? this.port}`;
     }
     public get urlSimple(): string
     {
@@ -220,7 +298,7 @@ export class Server
     }
     private async handle(connection: Deno.Conn, secure: boolean): Promise<void>
     {
-        try 
+        try
         {
             const httpConnection = Deno.serveHttp(connection);
             for await (const event of httpConnection)
@@ -237,34 +315,27 @@ export class Server
         }
         catch { undefined; }
     }
-    private async accept(): Promise<void>
+    private async accept(key: number): Promise<void>
     {
-        for await (const connection of this.listener)
+        const secure = this.listener.secure(key);
+        for await (const connection of this.listener.accept(key))
         {
-            try { this.handle(connection, false); }
-            catch { undefined; }
-        }
-    }
-    private async acceptTls(): Promise<void>
-    {
-        if (!this.secure)
-            return;
-        for await (const connection of this.listenerTls)
-        {
-            try { this.handle(connection, true); }
+            try { this.handle(connection, secure); }
             catch { undefined; }
         }
     }
     private async listen(): Promise<void>
     {
-        await Promise.all([this.accept(), this.acceptTls()]);
+        const keys = this.listener.keys();
+        const promises = keys.map(this.accept);
+        await Promise.all(promises);
     }
     public async serve(): Promise<void>
     {
         Console.log(`Building GraphQL...`);
         await this.graphql.build({ url: this.domain });
 
-        Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
+        this.listener.listen();
 
         for (const [from, to] of this.routes)
             this.oak.router.redirect(from, to, Oak.Status.TemporaryRedirect);
@@ -275,14 +346,12 @@ export class Server
         this.oak.app.use(this.oak.router.routes());
         this.oak.app.use(this.content);
 
+        Console.log(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
+
         await Promise.race([this.listen(), this.closed]);
     }
     public close(): void
     {
         this.listener.close();
-        if (this.secure)
-            this.listenerTls.close();
-
-        this.closed.resolve();
     }
 }
