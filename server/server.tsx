@@ -33,6 +33,7 @@ class Version
 }
 export const version: Version = new Version(2, 0, 15);
 
+
 export interface ServerAttributes
 {
     secure: boolean;
@@ -368,18 +369,19 @@ export class Server
         {
             const httpConnection = Deno.serveHttp(connection);
             /** @todo Remove. */
-            Console.log("serveHttp(): success");
+            Console.log("serveHttp(): success", Console.timestamp);
             for await (const event of httpConnection)
             {
                 try 
                 {
                     const request = event.request;
                     /** @todo Remove. */
-                    Console.log(`Request for URL ${request.url}`);
+                    Console.log(`Request for URL ${request.url}`, Console.timestamp);
                     const response = await this.oak.handle(request, connection, secure);
                     if (response) await event.respondWith(response);
                     /** @todo Remove. */
-                    if (response) Console.log(`Responded to URL ${request.url}`);
+                    if (response)
+                        Console.log(`Responded to URL ${request.url}`, Console.timestamp);
                 }
                 catch { undefined; }
             }
@@ -400,7 +402,7 @@ export class Server
                 {
                     connection.close();
                     /** @todo Remove. */
-                    Console.warn(`Connection to ${host} closed`);
+                    Console.warn(`Connection to ${host} closed`, Console.timestamp);
                 }
                 catch { undefined; }
             };
@@ -433,11 +435,11 @@ export class Server
                 promises.push(this.closed);
                 Console.success(`Server is running on ${linkString(this.url)}`);
                 const status = await Promise.race(promises);
-                Console.warn(`Restarting (status: ${status})`);
+                Console.warn(`Restarting (status: ${status})`, Console.timestamp);
             }
             catch (error)
             {
-                Console.warn(`Restarting due to error ${Deno.inspect(error)}`);
+                Console.warn(`Restarting due to error ${Deno.inspect(error)}`, Console.timestamp);
                 this.close();
                 this.closed = async.deferred();
             }

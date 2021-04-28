@@ -11,6 +11,7 @@
         "@std/colors": "https://deno.land/std/fmt/colors.ts",
         "@std/async": "https://deno.land/std/async/mod.ts",
         "@std/asserts": "https://deno.land/std/testing/asserts.ts",
+        "@std/datetime": "https://deno.land/std/datetime/mod.ts",
         "oak": "https://deno.land/x/oak/mod.ts",
         "graphql": "https://esm.sh/graphql",
         "graphql-playground": "https://esm.sh/graphql-playground-html",
