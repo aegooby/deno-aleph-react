@@ -74,7 +74,11 @@ class Listener
 
         this.__listen = this.__listen.bind(this);
         this.listen = this.listen.bind(this);
-        this.accept = this.accept.bind(this);
+        this.connections = this.connections.bind(this);
+        this.secure = this.secure.bind(this);
+        this.listener = this.listener.bind(this);
+        this.keys = this.keys.bind(this);
+        this.close = this.close.bind(this);
     }
     private __listen(options: ListenOptions): [boolean, Deno.Listener]
     {
@@ -98,7 +102,7 @@ class Listener
         else
             return options.map(this.__listen);
     }
-    public accept(key: number): ConnectionAsyncIter
+    public connections(key: number): ConnectionAsyncIter
     {
         if (!this.nativeListeners.has(key))
             throw new Error("Listener not found");
@@ -123,6 +127,13 @@ class Listener
         const [secure, _] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
         return secure;
     }
+    public listener(key: number): Deno.Listener
+    {
+        if (!this.nativeListeners.has(key))
+            throw new Error("Listener not found");
+        const [_, native] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+        return native;
+    }
     public keys(): Array<number>
     {
         return Array.from(this.nativeListeners.keys());
@@ -144,6 +155,12 @@ class Listener
     }
 }
 
+enum StatusCode
+{
+    success = 0,
+    failure = 1,
+}
+
 export class Server
 {
     private secure: boolean;
@@ -157,7 +174,7 @@ export class Server
     private port: number;
     private portTls: number | undefined;
 
-    private closed: async.Deferred<void> = async.deferred();
+    private closed: async.Deferred<StatusCode> = async.deferred();
 
     private graphql: GraphQL;
 
@@ -350,54 +367,85 @@ export class Server
         try
         {
             const httpConnection = Deno.serveHttp(connection);
+            /** @todo Remove. */
+            Console.log("serveHttp(): success");
             for await (const event of httpConnection)
             {
                 try 
                 {
                     const request = event.request;
+                    /** @todo Remove. */
+                    Console.log(`Request for URL ${request.url}`);
                     const response = await this.oak.handle(request, connection, secure);
                     if (response) await event.respondWith(response);
+                    /** @todo Remove. */
+                    if (response) Console.log(`Responded to URL ${request.url}`);
                 }
                 catch { undefined; }
             }
         }
         catch { undefined; }
     }
-    private async accept(key: number): Promise<void>
+    private async accept(key: number): Promise<StatusCode>
     {
         const secure = this.listener.secure(key);
-        for await (const connection of this.listener.accept(key))
+        for await (const connection of this.listener.connections(key))
         {
+            /** @todo Remove. */
+            const host = (connection.remoteAddr as Deno.NetAddr).hostname;
+            Console.log(`Connected to ${host}`);
             const close = function ()
             {
-                try { connection.close(); }
+                try
+                {
+                    connection.close();
+                    /** @todo Remove. */
+                    Console.warn(`Connection to ${host} closed`);
+                }
                 catch { undefined; }
             };
             try { this.handle(connection, secure).then(function () { close(); }); }
             catch { undefined; }
         }
+        return StatusCode.failure;
     }
-    public async serve(): Promise<void>
+    public async serve(): Promise<never>
     {
         Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
         Console.log(`Building GraphQL...`);
         await this.graphql.build({ url: this.domain });
 
-        this.listener.listen();
-
         this.oak.use(this.router);
         this.oak.use(Oak.etag.factory());
 
-        Console.success(`Server is running on ${colors.underline(colors.magenta(this.url))}`);
+        const linkString = function (link: string)
+        {
+            return colors.underline(colors.magenta(link));
+        };
 
-        const keys = this.listener.keys();
-        const promises = keys.map(this.accept);
-        promises.push(this.closed);
-        await Promise.race(promises);
+        while (true)
+        {
+            try 
+            {
+                this.listener.listen();
+                const keys = this.listener.keys();
+                const promises = keys.map(this.accept);
+                promises.push(this.closed);
+                Console.success(`Server is running on ${linkString(this.url)}`);
+                const status = await Promise.race(promises);
+                Console.warn(`Restarting (status: ${status})`);
+            }
+            catch (error)
+            {
+                Console.warn(`Restarting due to error ${Deno.inspect(error)}`);
+                this.close();
+                this.closed = async.deferred();
+            }
+        }
     }
     public close(): void
     {
         this.listener.close();
-        this.closed.resolve();
+        this.closed.resolve(StatusCode.success);
     }
 }

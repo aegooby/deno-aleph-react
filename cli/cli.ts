@@ -130,12 +130,15 @@ async function bundle(args: Arguments)
     process.close();
     return status.code;
 }
-async function localhost(_: Arguments)
+async function localhost(args: Arguments)
 {
-    if (await install(_))
-        throw new Error("Installation failed");
-    if (await cache(_))
-        throw new Error("Caching failed");
+    if (!args.quick)
+    {
+        if (await install(args))
+            throw new Error("Installation failed");
+        if (await cache(args))
+            throw new Error("Caching failed");
+    }
 
     const bundlerAttributes =
     {
@@ -163,11 +166,14 @@ async function localhost(_: Arguments)
         env: { DENO_DIR: ".cache/" }
     };
 
-    await bundler.bundle({ entry: "client/bundle.tsx", watch: false });
+    if (!args.quick)
+    {
+        await bundler.bundle({ entry: "client/bundle.tsx", watch: false });
 
-    const webpackProcess = Deno.run(webpackRunOptions);
-    await webpackProcess.status();
-    webpackProcess.close();
+        const webpackProcess = Deno.run(webpackRunOptions);
+        await webpackProcess.status();
+        webpackProcess.close();
+    }
 
     const serverProcess = Deno.run(serverRunOptions);
     await serverProcess.status();
@@ -216,13 +222,10 @@ async function remote(args: Arguments)
     if (!webpackStatus.success)
         return webpackStatus.code;
 
-    /* Run server continuously to catch crashes. */
-    while (true)
-    {
-        const serverProcess = Deno.run(serverRunOptions);
-        await serverProcess.status();
-        serverProcess.close();
-    }
+    const serverProcess = Deno.run(serverRunOptions);
+    const serverStatus = await serverProcess.status();
+    serverProcess.close();
+    return serverStatus.code;
 }
 async function test(_: Arguments)
 {
