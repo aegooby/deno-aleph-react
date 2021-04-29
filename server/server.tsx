@@ -114,8 +114,15 @@ class Listener
             {
                 while (true)
                 {
+                    /** @todo Remove. */
+                    Console.log("Accepting connections...", Console.timestamp);
                     try { yield await nativeListener.accept(); }
-                    catch { undefined; }
+                    catch
+                    {
+                        /** @todo Remove. */
+                        Console.error("Failed to receive connection", Console.timestamp);
+                        undefined;
+                    }
                 }
             }
         };
@@ -368,20 +375,13 @@ export class Server
         try
         {
             const httpConnection = Deno.serveHttp(connection);
-            /** @todo Remove. */
-            Console.log("serveHttp(): success", Console.timestamp);
             for await (const event of httpConnection)
             {
                 try 
                 {
                     const request = event.request;
-                    /** @todo Remove. */
-                    Console.log(`Request for URL ${request.url}`, Console.timestamp);
                     const response = await this.oak.handle(request, connection, secure);
                     if (response) await event.respondWith(response);
-                    /** @todo Remove. */
-                    if (response)
-                        Console.log(`Responded to URL ${request.url}`, Console.timestamp);
                 }
                 catch { undefined; }
             }
@@ -395,15 +395,10 @@ export class Server
         {
             /** @todo Remove. */
             const host = (connection.remoteAddr as Deno.NetAddr).hostname;
-            Console.log(`Connected to ${host}`);
+            Console.log(`Connected to ${host}`, Console.timestamp);
             const close = function ()
             {
-                try
-                {
-                    connection.close();
-                    /** @todo Remove. */
-                    Console.warn(`Connection to ${host} closed`, Console.timestamp);
-                }
+                try { connection.close(); }
                 catch { undefined; }
             };
             try { this.handle(connection, secure).then(function () { close(); }); }
