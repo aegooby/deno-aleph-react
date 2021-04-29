@@ -47,7 +47,7 @@ async function clean(args: Arguments)
     if (args.all || args.cache)
         runOptions.cmd.push(".cache/");
     if (args.all || args.dist)
-        runOptions.cmd.push(".dist/");
+        runOptions.cmd.push("public/dist/");
     if (args.all || args.node)
         runOptions.cmd.push("node_modules/");
 
@@ -109,7 +109,7 @@ async function bundle(args: Arguments)
 
     const bundlerAttributes =
     {
-        dist: ".dist",
+        dist: "public/dist/",
         importMap: "import-map.json",
         env: { DENO_DIR: ".cache/" }
     };
@@ -142,7 +142,7 @@ async function localhost(args: Arguments)
 
     const bundlerAttributes =
     {
-        dist: ".dist",
+        dist: "public/dist/",
         importMap: "import-map.json",
         env: { DENO_DIR: ".cache/" }
     };
@@ -188,7 +188,7 @@ async function remote(args: Arguments)
 
     const bundlerAttributes =
     {
-        dist: ".dist",
+        dist: "public/dist/",
         importMap: "import-map.json",
         env: { DENO_DIR: ".cache/" }
     };

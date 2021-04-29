@@ -18,11 +18,7 @@ try
     {
         secure: !!args.tls,
         domain: args.domain,
-        routes:
-        {
-            "/favicon.ico": "/static/favicon.ico",
-            "/robots.txt": "/static/robots.txt"
-        },
+        routes: {},
         hostname: args.hostname,
         port: 8080,
 

@@ -4,7 +4,7 @@
 
 # Server
 .cache/
-.dist/
+dist/ 
 remote.pem
 
 # Build

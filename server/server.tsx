@@ -309,7 +309,7 @@ export class Server
         }
 
         /* Convert URL to filepath. */
-        const filepath = path.join(".", context.request.url.pathname);
+        const filepath = path.join(".", "/public", context.request.url.pathname);
 
         /* File not found or is directory -> not static. */
         if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
@@ -327,7 +327,7 @@ export class Server
             gzip: true,
             hidden: true,
             maxbuffer: 0x400,
-            root: Deno.cwd()
+            root: path.join(".", "/public")
         };
         await Oak.send(context, context.request.url.pathname, sendOptions);
     }
@@ -343,8 +343,8 @@ export class Server
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
-                    <script src="/.dist/webpack.bundle.js" defer></script>
-                    <link rel="stylesheet" href="/static/index.css" />
+                    <script src="/dist/webpack.bundle.js" defer></script>
+                    <link rel="stylesheet" href="/index.css" />
                 </head>
                 <body>
                     <div id="root">

@@ -13,10 +13,10 @@ export default function (env: Record<string, string>)
     {
         mode: "none",
         stats: "normal",
-        entry: path.resolve(__dirname, ".dist/deno.bundle.js"),
+        entry: path.resolve(__dirname, "public/dist/deno.bundle.js"),
         output:
         {
-            path: path.resolve(__dirname, ".dist/"),
+            path: path.resolve(__dirname, "public/dist/"),
             filename: "webpack.bundle.js",
         },
         plugins:
