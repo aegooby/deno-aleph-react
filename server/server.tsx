@@ -115,12 +115,23 @@ class Listener
                 while (true)
                 {
                     /** @todo Remove. */
-                    Console.log("Accepting connections...", Console.timestamp);
-                    try { yield await nativeListener.accept(); }
-                    catch
+                    try 
+                    {
+                        if (_)
+                            Console.log(`Awaiting next connection...`, Console.timestamp);
+                        const connection = await nativeListener.accept();
+                        if (_)
+                        {
+                            const host = (connection.remoteAddr as Deno.NetAddr).hostname;
+                            Console.log(`Accepted connection from ${host}`, Console.timestamp);
+                        }
+                        yield connection;
+                    }
+                    catch (error)
                     {
                         /** @todo Remove. */
-                        Console.error("Failed to receive connection", Console.timestamp);
+                        if (_)
+                            Console.error(error, Console.timestamp);
                         undefined;
                     }
                 }
@@ -395,12 +406,7 @@ export class Server
             /** @todo Remove. */
             const host = (connection.remoteAddr as Deno.NetAddr).hostname;
             Console.log(`Connected to ${host}`, Console.timestamp);
-            const close = function ()
-            {
-                try { connection.close(); }
-                catch { undefined; }
-            };
-            try { this.handle(connection, secure).then(function () { close(); }); }
+            try { this.handle(connection, secure); }
             catch { undefined; }
         }
         return StatusCode.failure;
