@@ -114,12 +114,13 @@ class Listener
             {
                 while (true)
                 {
-                    /** @todo Remove. */
                     try 
                     {
+                        /** @todo Remove. */
                         if (_)
                             Console.log(`Awaiting next connection...`, Console.timestamp);
                         const connection = await nativeListener.accept();
+                        /** @todo Remove. */
                         if (_)
                         {
                             const host = (connection.remoteAddr as Deno.NetAddr).hostname;
