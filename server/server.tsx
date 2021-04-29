@@ -31,7 +31,7 @@ class Version
         return `v${this.major}.${this.minor}.${this.patch}`;
     }
 }
-export const version: Version = new Version(2, 0, 15);
+export const version: Version = new Version(2, 1, 0);
 
 
 export interface ServerAttributes
