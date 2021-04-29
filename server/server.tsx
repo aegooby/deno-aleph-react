@@ -8,6 +8,7 @@ import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import * as ReactRouter from "react-router";
 import * as Oak from "oak";
+import * as denoflate from "denoflate";
 
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
@@ -412,11 +413,28 @@ export class Server
         }
         return StatusCode.failure;
     }
+    private async compress()
+    {
+        for await (const file of fs.expandGlob("public/**/*"))
+        {
+            if (!(await Deno.stat(file.path)).isDirectory)
+            {
+                const gunzipped = await Deno.readFile(file.path);
+                const gzipped = denoflate.gzip(gunzipped, undefined);
+                await Deno.writeFile(`${file.path}.gz`, gzipped);
+            }
+        }
+    }
     public async serve(): Promise<never>
     {
         Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
         Console.log(`Building GraphQL...`);
         await this.graphql.build({ url: this.domain });
+        Console.success(`GraphQL built`);
+
+        Console.log(`Compressing static files...`);
+        await this.compress();
+        Console.success(`Static files compressed`);
 
         this.oak.use(this.router);
         this.oak.use(Oak.etag.factory());

@@ -4,7 +4,8 @@
 
 # Server
 .cache/
-dist/ 
+dist/
+public/**/*.gz
 remote.pem
 
 # Build

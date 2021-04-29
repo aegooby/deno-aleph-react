@@ -43,18 +43,28 @@ async function clean(args: Arguments)
 {
     if (!args.cache && !args.dist && !args.node)
         args.all = true;
-    const runOptions: Deno.RunOptions = { cmd: ["rm", "-rf"] };
-    if (args.all || args.cache)
-        runOptions.cmd.push(".cache/");
-    if (args.all || args.dist)
-        runOptions.cmd.push("public/dist/");
-    if (args.all || args.node)
-        runOptions.cmd.push("node_modules/");
 
-    const process = Deno.run(runOptions);
-    const status = await process.status();
-    process.close();
-    return status.code;
+    const directories: Array<string> = [];
+    if (args.all || args.cache)
+        directories.push(".cache/");
+    if (args.all || args.dist)
+        directories.push("public/dist/");
+    if (args.all || args.node)
+        directories.push("node_modules/");
+
+    const rmRunOptions: Deno.RunOptions = { cmd: ["rm", "-rf", ...directories] };
+    const rmProcess = Deno.run(rmRunOptions);
+    const rmStatus = await rmProcess.status();
+    rmProcess.close();
+    if (!rmStatus.success)
+        return rmStatus.code;
+
+    const mkdirRunOptions: Deno.RunOptions =
+        { cmd: ["mkdir", "-p", ...directories] };
+    const mkdirProcess = Deno.run(mkdirRunOptions);
+    const mkdirStatus = await mkdirProcess.status();
+    mkdirProcess.close();
+    return mkdirStatus.code;
 }
 async function install(_: Arguments)
 {
