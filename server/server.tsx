@@ -269,8 +269,7 @@ export class Server
     }
     private async router(context: Oak.Context): Promise<void>
     {
-        /* Allow all CORS */
-        context.response.headers.set("access-control-allowed-origin", "*");
+        /** @todo CORS. */
 
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
