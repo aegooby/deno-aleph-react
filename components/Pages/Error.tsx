@@ -4,23 +4,22 @@ import * as ReactHelmet from "react-helmet";
 
 interface Props
 {
-    staticContext?:
-    {
-        statusCode: number;
-    };
+    code: number;
+    text: string;
+    staticContext?: { statusCode: number; };
 }
 
 export default function NotFound(props: Props)
 {
     if (props.staticContext)
-        props.staticContext.statusCode = 404;
+        props.staticContext.statusCode = props.code;
     const element: React.ReactElement =
         <>
             <ReactHelmet.Helmet>
-                <title>httpsaurus | Not Found</title>
+                <title>httpsaurus | {props.text}</title>
             </ReactHelmet.Helmet>
             <div className="page">
-                <h1><strong>404</strong> Not Found</h1>
+                <h1><strong>404</strong> {props.text}</h1>
             </div>
         </>;
     return element;

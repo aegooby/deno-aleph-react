@@ -5,8 +5,7 @@ import * as ReactRouter from "react-router-dom";
 import { GraphQL, Suspense } from "./Core/Core.tsx";
 
 const Index = React.lazy(() => import("./Pages/Index.tsx"));
-const NotFound = React.lazy(() => import("./Pages/NotFound.tsx"));
-const InternalError = React.lazy(() => import("./Pages/InternalError.tsx"));
+const Error = React.lazy(() => import("./Pages/Error.tsx"));
 
 interface Props
 {
@@ -20,8 +19,7 @@ export default function App(props: Props)
             <Suspense fallback={<></>}>
                 <ReactRouter.Routes>
                     <ReactRouter.Route path="/" element={<Index />} />
-                    <ReactRouter.Route path="/internalerror" element={<InternalError />} />
-                    <ReactRouter.Route path="*" element={<NotFound />} />
+                    <ReactRouter.Route path="*" element={<Error code={404} text="Not Found" />} />
                 </ReactRouter.Routes>
             </Suspense>
         </GraphQL.Provider>;
