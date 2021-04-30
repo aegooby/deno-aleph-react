@@ -171,7 +171,9 @@ export class Server
     private secure: boolean;
     private domain: string;
     private routes: Map<string, string> = new Map<string, string>();
+
     private public: string = "/dist" as const;
+    private scriptElements: Array<React.ReactElement> = [];
 
     private oak: Oak.Application;
 
@@ -249,6 +251,9 @@ export class Server
 
         this.handle = this.handle.bind(this);
         this.accept = this.accept.bind(this);
+
+        this.compress = this.compress.bind(this);
+        this.scripts = this.scripts.bind(this);
 
         this.serve = this.serve.bind(this);
         this.close = this.close.bind(this);
@@ -346,9 +351,7 @@ export class Server
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
-                    <script src="/dist/webpack/webpack-runtime.js" defer></script>
-                    <script src="/dist/webpack/lib-react-dom.js" defer></script>
-                    <script src="/dist/webpack/bundle.js" defer></script>
+                    {this.scriptElements}
                     <link rel="icon" href="/favicon.ico" />
                     <link rel="stylesheet" href="/index.css" />
                 </head>
@@ -408,7 +411,7 @@ export class Server
         }
         return StatusCode.failure;
     }
-    private async compress()
+    private async compress(): Promise<void>
     {
         const ext = [".js", ".map", ".txt", ".css"];
         const folder = path.join(".", this.public, "**", "*");
@@ -422,6 +425,17 @@ export class Server
             }
         }
     }
+    private async scripts(): Promise<void>
+    {
+        const folder = path.join(".", this.public, "scripts", "webpack", "*.js");
+        for await (const file of fs.expandGlob(folder))
+        {
+            const basename = path.basename(file.path);
+            const [name, id, _] = basename.split(".", 3);
+            if (name !== id)
+                this.scriptElements.push(<script src={`/scripts/webpack/${basename}`} defer></script>);
+        }
+    }
     public async serve(): Promise<never>
     {
         Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
@@ -432,6 +446,10 @@ export class Server
         Console.log(`Compressing static files...`);
         await this.compress();
         Console.success(`Static files compressed`);
+
+        Console.log(`Collecting scripts...`);
+        await this.scripts();
+        Console.success(`Scripts collected`);
 
         this.oak.use(this.router);
         this.oak.use(Oak.etag.factory());

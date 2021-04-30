@@ -4,9 +4,9 @@ const config =
     mount: 
     {
         "../public": "/",
-        "../client": "/dist",
-        "../components": "/dist",
-        "../graphql": "/dist"
+        "../client": "/scripts",
+        "../components": "/scripts",
+        "../graphql": "/scripts"
     },
     plugins: 
     [
@@ -16,7 +16,7 @@ const config =
             {
                 sourceMap: true,
                 failOnWarnings: true,
-                outputPattern: { js: "dist/webpack/[name].js" },
+                outputPattern: { js: "scripts/webpack/[name].[id].js" },
                 extendConfig: function (config)
                 {
                     const babel = 
@@ -44,14 +44,23 @@ const config =
         ]
     ],
     routes: [{ match: "routes", src: ".*", dest: "/index.html" }],
-    /** @todo See what to do about this. */
-    /* optimize: { bundle: true }, */
+    /** @todo Switch from webpack to esbuild once stable. */
+    /* optimize:                */
+    /* {                        */
+    /*     entrypoints: "auto", */
+    /*     bundle: true,        */
+    /*     sourcemap: true,     */
+    /*     splitting: true,     */
+    /*     treeshake: true,     */
+    /*     minify: true,        */
+    /*     target: "es2020"     */
+    /* },                       */
     packageOptions: 
     {
         polyfillNode: true
         /** @todo Restore when react-router-dom is fixed. */
-        /* "source": "remote", */
-        /* "cache": "../.cache/" */
+        /* "source": "remote",      */
+        /* "cache": "../.cache/"    */
     },
     devOptions: 
     {
