@@ -45,12 +45,13 @@ const config =
     ],
     routes: [{ match: "routes", src: ".*", dest: "/index.html" }],
     /** @todo See what to do about this. */
-    // optimize: { bundle: true },
+    /* optimize: { bundle: true }, */
     packageOptions: 
     {
-        polyfillNode: true,
-        "@todo-source": "remote",
-        "@todo-cache": "../.cache/"
+        polyfillNode: true
+        /** @todo Restore when react-router-dom is fixed. */
+        /* "source": "remote", */
+        /* "cache": "../.cache/" */
     },
     devOptions: 
     {

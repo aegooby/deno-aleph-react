@@ -116,25 +116,10 @@ class Listener
                 {
                     try 
                     {
-                        /** @todo Remove. */
-                        if (_)
-                            Console.log(`Awaiting next connection...`, Console.timestamp);
                         const connection = await nativeListener.accept();
-                        /** @todo Remove. */
-                        if (_)
-                        {
-                            const host = (connection.remoteAddr as Deno.NetAddr).hostname;
-                            Console.log(`Accepted connection from ${host}`, Console.timestamp);
-                        }
                         yield connection;
                     }
-                    catch (error)
-                    {
-                        /** @todo Remove. */
-                        if (_)
-                            Console.error(error, Console.timestamp);
-                        undefined;
-                    }
+                    catch { undefined; }
                 }
             }
         };
@@ -329,8 +314,8 @@ export class Server
         /* Convert URL to filepath. */
         const filepath = path.join(".", this.public, context.request.url.pathname);
 
-        /* File not found or is directory -> not static. */
-        if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
+        /* File path not found or is not a file -> not static. */
+        if (!await fs.exists(filepath) || !(await Deno.stat(filepath)).isFile)
         {
             await this.react(context);
             return;
@@ -406,6 +391,10 @@ export class Server
                 }
                 catch { undefined; }
             }
+            try { httpConnection.close(); }
+            catch { undefined; }
+            try { connection.close(); }
+            catch { undefined; }
         }
         catch { undefined; }
     }
@@ -414,9 +403,6 @@ export class Server
         const secure = this.listener.secure(key);
         for await (const connection of this.listener.connections(key))
         {
-            /** @todo Remove. */
-            const host = (connection.remoteAddr as Deno.NetAddr).hostname;
-            Console.log(`Connected to ${host}`, Console.timestamp);
             try { this.handle(connection, secure); }
             catch { undefined; }
         }
@@ -466,6 +452,8 @@ export class Server
                 Console.success(`Server is running on ${linkString(this.url)}`);
                 const status = await Promise.race(promises);
                 Console.warn(`Restarting (status: ${status})`, Console.timestamp);
+                this.close();
+                this.closed = async.deferred();
             }
             catch (error)
             {
