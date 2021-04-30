@@ -29,9 +29,9 @@ function createCommand(): [string[], string]
             return [args, defaultCommand];
     }
 }
-const [args, command] = createCommand();
+export const [args, command] = createCommand();
 
-function all(_: Arguments)
+export function all(_: Arguments)
 {
     Console.error(`usage: ${command} <command> [options]`);
 }
@@ -39,7 +39,7 @@ function version(_: Arguments)
 {
     Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${serverVersion.string()}`);
 }
-async function clean(args: Arguments)
+export async function clean(args: Arguments)
 {
     if (!args.cache && !args.dist && !args.node)
         args.all = true;
@@ -66,21 +66,21 @@ async function clean(args: Arguments)
     mkdirProcess.close();
     return mkdirStatus.code;
 }
-async function install(_: Arguments)
+export async function install(_: Arguments)
 {
     const npmProcess = Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
     const npmStatus = await npmProcess.status();
     npmProcess.close();
     return npmStatus.code;
 }
-async function upgrade(_: Arguments)
+export async function upgrade(_: Arguments)
 {
     const process = Deno.run({ cmd: ["deno", "upgrade"] });
     const status = await process.status();
     process.close();
     return status.code;
 }
-async function cache(_: Arguments)
+export async function cache(_: Arguments)
 {
     const files: string[] = [];
     for await (const file of fs.expandGlob("**/*.tsx"))
@@ -106,7 +106,7 @@ async function cache(_: Arguments)
     if (!yarnStatus.success)
         return yarnStatus.code;
 }
-async function bundle(args: Arguments)
+export async function bundle(args: Arguments)
 {
     if (!args.graphql)
     {
@@ -127,7 +127,7 @@ async function bundle(args: Arguments)
     process.close();
     return status.code;
 }
-async function localhost(args: Arguments)
+export async function localhost(args: Arguments)
 {
     if (!args.server)
     {
@@ -141,7 +141,11 @@ async function localhost(args: Arguments)
             {
                 const runOptions: Deno.RunOptions =
                 {
-                    cmd: ["yarn", "run", "snowpack", "--config", "config/localhost.snowpack.json", "dev", "--secure"]
+                    cmd:
+                        [
+                            "yarn", "run", "snowpack", "--config",
+                            "config/localhost.snowpack.json", "dev", "--secure"
+                        ]
                 };
                 const process = Deno.run(runOptions);
                 await process.status();
@@ -152,7 +156,11 @@ async function localhost(args: Arguments)
             {
                 const snowpackRunOptions: Deno.RunOptions =
                 {
-                    cmd: ["yarn", "run", "snowpack", "--config", "config/localhost.snowpack.json", "build"]
+                    cmd:
+                        [
+                            "yarn", "run", "snowpack", "--config",
+                            "config/localhost.snowpack.json", "build"
+                        ]
                 };
                 const snowpackProcess = Deno.run(snowpackRunOptions);
                 const snowpackStatus = await snowpackProcess.status();
@@ -180,7 +188,7 @@ async function localhost(args: Arguments)
             return;
     }
 }
-async function remote(args: Arguments)
+export async function remote(args: Arguments)
 {
     if (await install(args))
         throw new Error("Installation failed");
@@ -189,7 +197,11 @@ async function remote(args: Arguments)
 
     const snowpackRunOptions: Deno.RunOptions =
     {
-        cmd: ["yarn", "run", "snowpack", "--config", "config/remote.snowpack.json", "build"],
+        cmd:
+            [
+                "yarn", "run", "snowpack", "--config",
+                "config/remote.snowpack.json", "build"
+            ],
     };
     const snowpackProcess = Deno.run(snowpackRunOptions);
     const snowpackStatus = await snowpackProcess.status();
@@ -213,7 +225,7 @@ async function remote(args: Arguments)
     serverProcess.close();
     return serverStatus.code;
 }
-async function test(_: Arguments)
+export async function test(_: Arguments)
 {
     const runOptions: Deno.RunOptions =
     {
@@ -229,7 +241,7 @@ async function test(_: Arguments)
     process.close();
     return status.code;
 }
-async function prune(_: Arguments)
+export async function prune(_: Arguments)
 {
     const containerProcess =
         Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
@@ -245,7 +257,7 @@ async function prune(_: Arguments)
     if (!imageStatus.success)
         return imageStatus.code;
 }
-async function docker(args: Arguments)
+export async function docker(args: Arguments)
 {
     if (!args.target)
     {
@@ -264,7 +276,7 @@ async function docker(args: Arguments)
     if (!buildStatus.success)
         return buildStatus.code;
 }
-function help(_: Arguments)
+export function help(_: Arguments)
 {
     Console.log(`usage: ${command} <command> [options]`);
 }
