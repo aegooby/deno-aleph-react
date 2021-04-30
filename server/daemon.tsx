@@ -33,8 +33,4 @@ try
     const httpserver = new server.Server(serverAttributes);
     await httpserver.serve();
 }
-catch (error)
-{
-    server.Console.error(error);
-    Deno.exit(1);
-}
+catch (error) { server.Console.error(error); }

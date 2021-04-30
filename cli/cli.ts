@@ -6,7 +6,8 @@ import * as yargs from "@yargs/yargs";
 import { Arguments } from "@yargs/types";
 import * as opener from "opener";
 
-import { Console, version as serverVersion } from "../server/server.tsx";
+import { Console, version } from "../server/server.tsx";
+export { version } from "../server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
 function createCommand(): [string[], string]
@@ -36,10 +37,6 @@ export const [args, command] = createCommand();
 export function all(_: Arguments)
 {
     Console.error(`usage: ${command} <command> [options]`);
-}
-function version(_: Arguments)
-{
-    Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${serverVersion.string()}`);
 }
 export async function clean(args: Arguments)
 {
@@ -302,7 +299,10 @@ export function help(_: Arguments)
 yargs.default(args)
     .help(false)
     .command("*", "", {}, all)
-    .command("version", "", {}, version)
+    .command("version", "", {}, function (_: Arguments)
+    {
+        Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
+    })
     .command("clean", "", {}, clean)
     .command("install", "", {}, install)
     .command("upgrade", "", {}, upgrade)
