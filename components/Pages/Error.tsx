@@ -9,7 +9,7 @@ interface Props
     staticContext?: { statusCode: number; };
 }
 
-export default function NotFound(props: Props)
+export default function Error(props: Props)
 {
     if (props.staticContext)
         props.staticContext.statusCode = props.code;
