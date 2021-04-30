@@ -287,6 +287,12 @@ export class Server
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
         {
+            if (context.request.headers.has("x-http-only"))
+            {
+                context.response.status = Oak.Status.OK;
+                context.response.body = "";
+                return;
+            }
             const urlRequest = context.request.url;
             const host = context.request.headers.get("host");
             context.response.redirect(`https://${host}${urlRequest.pathname}`);

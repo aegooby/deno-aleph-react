@@ -18,6 +18,7 @@
         "graphql-playground": "https://esm.sh/graphql-playground-html",
         "denoflate": "https://deno.land/x/denoflate/mod.ts",
         "@yargs/types": "https://deno.land/x/yargs/deno-types.ts",
-        "@yargs/yargs": "https://deno.land/x/yargs/deno.ts"
+        "@yargs/yargs": "https://deno.land/x/yargs/deno.ts",
+        "opener": "https://deno.land/x/opener/mod.ts"
     }
 }

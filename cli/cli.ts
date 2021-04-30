@@ -1,8 +1,10 @@
 
-import * as yargs from "@yargs/yargs";
-import { Arguments } from "@yargs/types";
 import * as colors from "@std/colors";
 import * as fs from "@std/fs";
+import * as async from "@std/async";
+import * as yargs from "@yargs/yargs";
+import { Arguments } from "@yargs/types";
+import * as opener from "opener";
 
 import { Console, version as serverVersion } from "../server/server.tsx";
 
@@ -131,7 +133,7 @@ export async function localhost(args: Arguments)
 {
     if (!args.server)
     {
-        Console.error(`usage: ${command} localhost --server <snowpack | deno> [--quick]`);
+        Console.error(`usage: ${command} localhost --server <snowpack | deno>`);
         return;
     }
 
@@ -144,7 +146,7 @@ export async function localhost(args: Arguments)
                     cmd:
                         [
                             "yarn", "run", "snowpack", "--config",
-                            "config/localhost.snowpack.json", "dev", "--secure"
+                            "config/base.snowpack.json", "dev", "--secure"
                         ]
                 };
                 const process = Deno.run(runOptions);
@@ -168,6 +170,22 @@ export async function localhost(args: Arguments)
                 if (!snowpackStatus.success)
                     return snowpackStatus.code;
 
+                const browser = async function () 
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            await async.delay(750);
+                            await fetch("http://localhost:8080/", { headers: { "x-http-only": "" } });
+                            await opener.open("https://localhost:8443/");
+                            return;
+                        }
+                        catch { undefined; }
+                    }
+                };
+                Promise.race([browser(), async.delay(2500)]);
+
                 const serverRunOptions: Deno.RunOptions =
                 {
                     cmd:
@@ -184,7 +202,7 @@ export async function localhost(args: Arguments)
                 return serverStatus.code;
             }
         default:
-            Console.error(`usage: ${command} localhost --server <snowpack | deno> [--quick]`);
+            Console.error(`usage: ${command} localhost --server <snowpack | deno>`);
             return;
     }
 }

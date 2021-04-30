@@ -5,25 +5,23 @@ import * as client from "./client.tsx";
 
 import App from "../components/App.tsx";
 
-type Snowpack = ImportMeta & { hot: { accept: () => unknown; }; env: Record<string, string>; };
-
 try
 {
     const clientAttributes =
     {
-        api: (import.meta as Snowpack).env.SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT,
+        api: (import.meta as client.Snowpack).env.SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT,
     };
     const httpclient = new client.Client(clientAttributes);
     const element: React.ReactElement =
         <ReactRouter.BrowserRouter>
             <App client={httpclient} />
         </ReactRouter.BrowserRouter>;
-    switch ((import.meta as Snowpack).env.MODE)
+    switch ((import.meta as client.Snowpack).env.MODE)
     {
         case "development":
             httpclient.render(element);
-            if ((import.meta as Snowpack).hot)
-                (import.meta as Snowpack).hot.accept();
+            if ((import.meta as client.Snowpack).hot)
+                (import.meta as client.Snowpack).hot.accept();
             break;
         case "production":
             httpclient.hydrate(element);

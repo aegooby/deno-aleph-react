@@ -17,6 +17,7 @@ interface ClientAttributes
 }
 
 export declare const document: Document;
+export type Snowpack = ImportMeta & { hot: { accept: () => unknown; }; env: Record<string, string>; };
 
 export class Client
 {
