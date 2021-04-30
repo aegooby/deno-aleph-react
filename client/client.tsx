@@ -16,13 +16,8 @@ interface ClientAttributes
     api: string;
 }
 
-interface Process
-{
-    env: Record<string, string>;
-}
-
-export declare const process: Process;
 export declare const document: Document;
+export type Snowpack = ImportMeta & { hot: { accept: () => unknown; }; env: Record<string, string>; };
 
 export class Client
 {
@@ -60,5 +55,10 @@ export class Client
     {
         Console.log("Hydrating bundle");
         ReactDOM.hydrate(element, document.querySelector("#root"));
+    }
+    public render(element: React.ReactElement): void
+    {
+        Console.log("Hydrating bundle");
+        ReactDOM.render(element, document.querySelector("#root"));
     }
 }

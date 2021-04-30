@@ -1,12 +1,12 @@
 
 import * as React from "react";
-import * as ReactRouter from "react-router";
+import * as ReactRouter from "react-router-dom";
 
-import { GraphQL } from "./Core/Core.tsx";
+import { GraphQL, Suspense } from "./Core/Core.tsx";
 
-import Index from "./Pages/Index.tsx";
-import NotFound from "./Pages/NotFound.tsx";
-import InternalError from "./Pages/InternalError.tsx";
+const Index = React.lazy(() => import("./Pages/Index.tsx"));
+const NotFound = React.lazy(() => import("./Pages/NotFound.tsx"));
+const InternalError = React.lazy(() => import("./Pages/InternalError.tsx"));
 
 interface Props
 {
@@ -17,13 +17,13 @@ export default function App(props: Props)
 {
     const element =
         <GraphQL.Provider value={props.client}>
-            <ReactRouter.Switch>
-                <ReactRouter.Route exact path="/">
-                    <Index />
-                </ReactRouter.Route>
-                <ReactRouter.Route exact path="/internalerror" component={InternalError} />
-                <ReactRouter.Route component={NotFound} />
-            </ReactRouter.Switch>
+            <Suspense fallback={<></>}>
+                <ReactRouter.Routes>
+                    <ReactRouter.Route path="/" element={<Index />} />
+                    <ReactRouter.Route path="/internalerror" element={<InternalError />} />
+                    <ReactRouter.Route path="*" element={<NotFound />} />
+                </ReactRouter.Routes>
+            </Suspense>
         </GraphQL.Provider>;
     return element;
 }

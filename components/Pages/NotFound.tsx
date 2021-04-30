@@ -1,10 +1,10 @@
 
-import * as React from "https://esm.sh/react";
+import * as React from "react";
 import * as ReactHelmet from "react-helmet";
 
 interface Props
 {
-    staticContext:
+    staticContext?:
     {
         statusCode: number;
     };

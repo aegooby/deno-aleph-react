@@ -5,6 +5,7 @@
 # Server
 .cache/
 dist/
+_snowpack/
 public/**/*.gz
 remote.pem
 

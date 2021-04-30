@@ -1,10 +1,13 @@
 
-import * as yargs from "@yargs/yargs";
-import { Arguments } from "@yargs/types";
 import * as colors from "@std/colors";
 import * as fs from "@std/fs";
+import * as async from "@std/async";
+import * as yargs from "@yargs/yargs";
+import { Arguments } from "@yargs/types";
+import * as opener from "opener";
 
-import { Console, Bundler, version as serverVersion } from "../server/server.tsx";
+import { Console, version } from "../server/server.tsx";
+export { version } from "../server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
 function createCommand(): [string[], string]
@@ -29,17 +32,13 @@ function createCommand(): [string[], string]
             return [args, defaultCommand];
     }
 }
-const [args, command] = createCommand();
+export const [args, command] = createCommand();
 
-function all(_: Arguments)
+export function all(_: Arguments)
 {
     Console.error(`usage: ${command} <command> [options]`);
 }
-function version(_: Arguments)
-{
-    Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${serverVersion.string()}`);
-}
-async function clean(args: Arguments)
+export async function clean(args: Arguments)
 {
     if (!args.cache && !args.dist && !args.node)
         args.all = true;
@@ -48,7 +47,7 @@ async function clean(args: Arguments)
     if (args.all || args.cache)
         directories.push(".cache/");
     if (args.all || args.dist)
-        directories.push("public/dist/");
+        directories.push("dist/");
     if (args.all || args.node)
         directories.push("node_modules/");
 
@@ -66,21 +65,21 @@ async function clean(args: Arguments)
     mkdirProcess.close();
     return mkdirStatus.code;
 }
-async function install(_: Arguments)
+export async function install(_: Arguments)
 {
     const npmProcess = Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
     const npmStatus = await npmProcess.status();
     npmProcess.close();
     return npmStatus.code;
 }
-async function upgrade(_: Arguments)
+export async function upgrade(_: Arguments)
 {
     const process = Deno.run({ cmd: ["deno", "upgrade"] });
     const status = await process.status();
     process.close();
     return status.code;
 }
-async function cache(_: Arguments)
+export async function cache(_: Arguments)
 {
     const files: string[] = [];
     for await (const file of fs.expandGlob("**/*.tsx"))
@@ -106,7 +105,7 @@ async function cache(_: Arguments)
     if (!yarnStatus.success)
         return yarnStatus.code;
 }
-async function bundle(args: Arguments)
+export async function bundle(args: Arguments)
 {
     if (!args.graphql)
     {
@@ -117,103 +116,114 @@ async function bundle(args: Arguments)
     if (await cache(args))
         throw new Error("Caching failed");
 
-    const bundlerAttributes =
-    {
-        dist: "public/dist/",
-        importMap: "import-map.json",
-        env: { DENO_DIR: ".cache/" }
-    };
-    const bundler = new Bundler(bundlerAttributes);
-    try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
-    catch (error) { throw error; }
-
     const runOptions: Deno.RunOptions =
     {
-        cmd:
-            [
-                "yarn", "run", "webpack",
-                "--env", `GRAPHQL_API_ENDPOINT=${args.graphql}`
-            ]
+        cmd: ["yarn", "run", "snowpack", "--config", "config/base.snowpack.json", "build"],
+        env: { SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT: args.graphql }
     };
     const process = Deno.run(runOptions);
     const status = await process.status();
     process.close();
     return status.code;
 }
-async function localhost(args: Arguments)
+export async function localhost(args: Arguments)
 {
-    if (!args.quick)
+    if (!args.server)
     {
-        if (await install(args))
-            throw new Error("Installation failed");
-        if (await cache(args))
-            throw new Error("Caching failed");
+        Console.error(`usage: ${command} localhost --server <snowpack | deno>`);
+        return;
     }
 
-    const bundlerAttributes =
+    switch (args.server)
     {
-        dist: "public/dist/",
-        importMap: "import-map.json",
-        env: { DENO_DIR: ".cache/" }
-    };
-    const bundler = new Bundler(bundlerAttributes);
-    const webpackRunOptions: Deno.RunOptions =
-    {
-        cmd:
-            [
-                "yarn", "run", "webpack", "--env",
-                "GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql"
-            ]
-    };
-    const serverRunOptions: Deno.RunOptions =
-    {
-        cmd:
-            [
-                "deno", "run", "--unstable", "--allow-all",
-                "--import-map", "import-map.json", "server/daemon.tsx",
-                "--hostname", "localhost", "--tls", "cert/localhost/"
-            ],
-        env: { DENO_DIR: ".cache/" }
-    };
+        case "snowpack":
+            {
+                const runOptions: Deno.RunOptions =
+                {
+                    cmd:
+                        [
+                            "yarn", "run", "snowpack", "--config",
+                            "config/base.snowpack.json", "dev", "--secure"
+                        ]
+                };
+                const process = Deno.run(runOptions);
+                await process.status();
+                process.close();
+                return;
+            }
+        case "deno":
+            {
+                const snowpackRunOptions: Deno.RunOptions =
+                {
+                    cmd:
+                        [
+                            "yarn", "run", "snowpack", "--config",
+                            "config/localhost.snowpack.json", "build"
+                        ]
+                };
+                const snowpackProcess = Deno.run(snowpackRunOptions);
+                const snowpackStatus = await snowpackProcess.status();
+                snowpackProcess.close();
+                if (!snowpackStatus.success)
+                    return snowpackStatus.code;
 
-    if (!args.quick)
-    {
-        await bundler.bundle({ entry: "client/bundle.tsx", watch: false });
+                const browser = async function () 
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            await async.delay(750);
+                            await fetch("http://localhost:8080/", { headers: { "x-http-only": "" } });
+                            await opener.open("https://localhost:8443/");
+                            return;
+                        }
+                        catch { undefined; }
+                    }
+                };
+                Promise.race([browser(), async.delay(2500)]);
 
-        const webpackProcess = Deno.run(webpackRunOptions);
-        await webpackProcess.status();
-        webpackProcess.close();
+                const serverRunOptions: Deno.RunOptions =
+                {
+                    cmd:
+                        [
+                            "deno", "run", "--unstable", "--allow-all",
+                            "--import-map", "import-map.json", "server/daemon.tsx",
+                            "--hostname", "localhost", "--tls", "cert/localhost/"
+                        ],
+                    env: { DENO_DIR: ".cache/" }
+                };
+                const serverProcess = Deno.run(serverRunOptions);
+                const serverStatus = await serverProcess.status();
+                serverProcess.close();
+                return serverStatus.code;
+            }
+        default:
+            Console.error(`usage: ${command} localhost --server <snowpack | deno>`);
+            return;
     }
-
-    const serverProcess = Deno.run(serverRunOptions);
-    await serverProcess.status();
-    serverProcess.close();
 }
-async function remote(args: Arguments)
+export async function remote(args: Arguments)
 {
     if (await install(args))
         throw new Error("Installation failed");
     if (await cache(args))
         throw new Error("Caching failed");
 
-    const bundlerAttributes =
-    {
-        dist: "public/dist/",
-        importMap: "import-map.json",
-        env: { DENO_DIR: ".cache/" }
-    };
-    const bundler = new Bundler(bundlerAttributes);
-    try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
-    catch (error) { throw error; }
-
-    const webpackRunOptions: Deno.RunOptions =
+    const snowpackRunOptions: Deno.RunOptions =
     {
         cmd:
             [
-                "yarn", "run", "webpack", "--env",
-                "GRAPHQL_API_ENDPOINT=https://localhost/graphql"
+                "yarn", "run", "snowpack", "--config",
+                "config/remote.snowpack.json", "build"
             ],
     };
+    const snowpackProcess = Deno.run(snowpackRunOptions);
+    const snowpackStatus = await snowpackProcess.status();
+    snowpackProcess.close();
+    if (!snowpackStatus.success)
+        return snowpackStatus.code;
+
     const serverRunOptions: Deno.RunOptions =
     {
         cmd:
@@ -225,19 +235,12 @@ async function remote(args: Arguments)
             ],
         env: { DENO_DIR: ".cache/" }
     };
-
-    const webpackProcess = Deno.run(webpackRunOptions);
-    const webpackStatus = await webpackProcess.status();
-    webpackProcess.close();
-    if (!webpackStatus.success)
-        return webpackStatus.code;
-
     const serverProcess = Deno.run(serverRunOptions);
     const serverStatus = await serverProcess.status();
     serverProcess.close();
     return serverStatus.code;
 }
-async function test(_: Arguments)
+export async function test(_: Arguments)
 {
     const runOptions: Deno.RunOptions =
     {
@@ -253,7 +256,7 @@ async function test(_: Arguments)
     process.close();
     return status.code;
 }
-async function prune(_: Arguments)
+export async function prune(_: Arguments)
 {
     const containerProcess =
         Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
@@ -269,7 +272,7 @@ async function prune(_: Arguments)
     if (!imageStatus.success)
         return imageStatus.code;
 }
-async function docker(args: Arguments)
+export async function docker(args: Arguments)
 {
     if (!args.target)
     {
@@ -288,24 +291,30 @@ async function docker(args: Arguments)
     if (!buildStatus.success)
         return buildStatus.code;
 }
-function help(_: Arguments)
+export function help(_: Arguments)
 {
     Console.log(`usage: ${command} <command> [options]`);
 }
 
-yargs.default(args)
-    .help(false)
-    .command("*", "", {}, all)
-    .command("version", "", {}, version)
-    .command("clean", "", {}, clean)
-    .command("install", "", {}, install)
-    .command("upgrade", "", {}, upgrade)
-    .command("cache", "", {}, cache)
-    .command("bundle", "", {}, bundle)
-    .command("localhost", "", {}, localhost)
-    .command("remote", "", {}, remote)
-    .command("test", "", {}, test)
-    .command("prune", "", {}, prune)
-    .command("docker", "", {}, docker)
-    .command("help", "", {}, help)
-    .parse();
+if (import.meta.main)
+{
+    yargs.default(args)
+        .help(false)
+        .command("*", "", {}, all)
+        .command("version", "", {}, function (_: Arguments)
+        {
+            Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
+        })
+        .command("clean", "", {}, clean)
+        .command("install", "", {}, install)
+        .command("upgrade", "", {}, upgrade)
+        .command("cache", "", {}, cache)
+        .command("bundle", "", {}, bundle)
+        .command("localhost", "", {}, localhost)
+        .command("remote", "", {}, remote)
+        .command("test", "", {}, test)
+        .command("prune", "", {}, prune)
+        .command("docker", "", {}, docker)
+        .command("help", "", {}, help)
+        .parse();
+}

@@ -6,14 +6,13 @@ import * as async from "@std/async";
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import * as ReactRouter from "react-router";
+import * as ReactRouterServer from "react-router-dom/server";
 import * as Oak from "oak";
 import * as denoflate from "denoflate";
 
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
-export { Bundler } from "./bundler.tsx";
 
 class Version
 {
@@ -117,25 +116,10 @@ class Listener
                 {
                     try 
                     {
-                        /** @todo Remove. */
-                        if (_)
-                            Console.log(`Awaiting next connection...`, Console.timestamp);
                         const connection = await nativeListener.accept();
-                        /** @todo Remove. */
-                        if (_)
-                        {
-                            const host = (connection.remoteAddr as Deno.NetAddr).hostname;
-                            Console.log(`Accepted connection from ${host}`, Console.timestamp);
-                        }
                         yield connection;
                     }
-                    catch (error)
-                    {
-                        /** @todo Remove. */
-                        if (_)
-                            Console.error(error, Console.timestamp);
-                        undefined;
-                    }
+                    catch { undefined; }
                 }
             }
         };
@@ -187,6 +171,7 @@ export class Server
     private secure: boolean;
     private domain: string;
     private routes: Map<string, string> = new Map<string, string>();
+    private public: string = "/dist" as const;
 
     private oak: Oak.Application;
 
@@ -287,6 +272,12 @@ export class Server
         /* Redirect HTTP to HTTPS if it's available. */
         if (!context.request.secure && this.secure)
         {
+            if (context.request.headers.has("x-http-only"))
+            {
+                context.response.status = Oak.Status.OK;
+                context.response.body = "";
+                return;
+            }
             const urlRequest = context.request.url;
             const host = context.request.headers.get("host");
             context.response.redirect(`https://${host}${urlRequest.pathname}`);
@@ -321,10 +312,10 @@ export class Server
         }
 
         /* Convert URL to filepath. */
-        const filepath = path.join(".", "/public", context.request.url.pathname);
+        const filepath = path.join(".", this.public, context.request.url.pathname);
 
-        /* File not found or is directory -> not static. */
-        if (!await fs.exists(filepath) || (await Deno.stat(filepath)).isDirectory)
+        /* File path not found or is not a file -> not static. */
+        if (!await fs.exists(filepath) || !(await Deno.stat(filepath)).isFile)
         {
             await this.react(context);
             return;
@@ -339,7 +330,7 @@ export class Server
             gzip: true,
             hidden: true,
             maxbuffer: 0x400,
-            root: path.join(".", "/public")
+            root: path.join(".", this.public)
         };
         await Oak.send(context, context.request.url.pathname, sendOptions);
     }
@@ -355,17 +346,20 @@ export class Server
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                     <meta httpEquiv="Content-Security-Policy" />
                     <meta charSet="UTF-8" />
-                    <script src="/dist/webpack.bundle.js" defer></script>
+                    <script src="/dist/webpack/webpack-runtime.js" defer></script>
+                    <script src="/dist/webpack/lib-react-dom.js" defer></script>
+                    <script src="/dist/webpack/bundle.js" defer></script>
+                    <link rel="icon" href="/favicon.ico" />
                     <link rel="stylesheet" href="/index.css" />
                 </head>
                 <body>
                     <div id="root">
-                        <ReactRouter.StaticRouter
+                        <ReactRouterServer.StaticRouter
                             location={context.request.url.pathname}
                             context={staticContext}
                         >
                             <this.App client={undefined} />
-                        </ReactRouter.StaticRouter>
+                        </ReactRouterServer.StaticRouter>
                     </div>
                 </body>
             </html>;
@@ -397,6 +391,10 @@ export class Server
                 }
                 catch { undefined; }
             }
+            try { httpConnection.close(); }
+            catch { undefined; }
+            try { connection.close(); }
+            catch { undefined; }
         }
         catch { undefined; }
     }
@@ -405,9 +403,6 @@ export class Server
         const secure = this.listener.secure(key);
         for await (const connection of this.listener.connections(key))
         {
-            /** @todo Remove. */
-            const host = (connection.remoteAddr as Deno.NetAddr).hostname;
-            Console.log(`Connected to ${host}`, Console.timestamp);
             try { this.handle(connection, secure); }
             catch { undefined; }
         }
@@ -415,9 +410,11 @@ export class Server
     }
     private async compress()
     {
-        for await (const file of fs.expandGlob("public/**/*"))
+        const ext = [".js", ".map", ".txt", ".css"];
+        const folder = path.join(".", this.public, "**", "*");
+        for await (const file of fs.expandGlob(folder))
         {
-            if (!(await Deno.stat(file.path)).isDirectory)
+            if ((await Deno.stat(file.path)).isFile && ext.includes(path.extname(file.path)))
             {
                 const gunzipped = await Deno.readFile(file.path);
                 const gzipped = denoflate.gzip(gunzipped, undefined);
@@ -455,6 +452,8 @@ export class Server
                 Console.success(`Server is running on ${linkString(this.url)}`);
                 const status = await Promise.race(promises);
                 Console.warn(`Restarting (status: ${status})`, Console.timestamp);
+                this.close();
+                this.closed = async.deferred();
             }
             catch (error)
             {
