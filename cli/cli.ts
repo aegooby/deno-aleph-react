@@ -296,22 +296,25 @@ export function help(_: Arguments)
     Console.log(`usage: ${command} <command> [options]`);
 }
 
-yargs.default(args)
-    .help(false)
-    .command("*", "", {}, all)
-    .command("version", "", {}, function (_: Arguments)
-    {
-        Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
-    })
-    .command("clean", "", {}, clean)
-    .command("install", "", {}, install)
-    .command("upgrade", "", {}, upgrade)
-    .command("cache", "", {}, cache)
-    .command("bundle", "", {}, bundle)
-    .command("localhost", "", {}, localhost)
-    .command("remote", "", {}, remote)
-    .command("test", "", {}, test)
-    .command("prune", "", {}, prune)
-    .command("docker", "", {}, docker)
-    .command("help", "", {}, help)
-    .parse();
+if (import.meta.main)
+{
+    yargs.default(args)
+        .help(false)
+        .command("*", "", {}, all)
+        .command("version", "", {}, function (_: Arguments)
+        {
+            Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
+        })
+        .command("clean", "", {}, clean)
+        .command("install", "", {}, install)
+        .command("upgrade", "", {}, upgrade)
+        .command("cache", "", {}, cache)
+        .command("bundle", "", {}, bundle)
+        .command("localhost", "", {}, localhost)
+        .command("remote", "", {}, remote)
+        .command("test", "", {}, test)
+        .command("prune", "", {}, prune)
+        .command("docker", "", {}, docker)
+        .command("help", "", {}, help)
+        .parse();
+}
