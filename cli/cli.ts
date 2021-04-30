@@ -4,7 +4,7 @@ import { Arguments } from "@yargs/types";
 import * as colors from "@std/colors";
 import * as fs from "@std/fs";
 
-import { Console, Bundler, version as serverVersion } from "../server/server.tsx";
+import { Console, version as serverVersion } from "../server/server.tsx";
 
 Deno.env.set("DENO_DIR", ".cache/");
 function createCommand(): [string[], string]
@@ -48,7 +48,7 @@ async function clean(args: Arguments)
     if (args.all || args.cache)
         directories.push(".cache/");
     if (args.all || args.dist)
-        directories.push("public/dist/");
+        directories.push("dist/");
     if (args.all || args.node)
         directories.push("node_modules/");
 
@@ -117,23 +117,10 @@ async function bundle(args: Arguments)
     if (await cache(args))
         throw new Error("Caching failed");
 
-    const bundlerAttributes =
-    {
-        dist: "public/dist/",
-        importMap: "import-map.json",
-        env: { DENO_DIR: ".cache/" }
-    };
-    const bundler = new Bundler(bundlerAttributes);
-    try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
-    catch (error) { throw error; }
-
     const runOptions: Deno.RunOptions =
     {
-        cmd:
-            [
-                "yarn", "run", "webpack",
-                "--env", `GRAPHQL_API_ENDPOINT=${args.graphql}`
-            ]
+        cmd: ["yarn", "run", "snowpack", "--config", "config/base.snowpack.json", "build"],
+        env: { SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT: args.graphql }
     };
     const process = Deno.run(runOptions);
     const status = await process.status();
@@ -142,52 +129,56 @@ async function bundle(args: Arguments)
 }
 async function localhost(args: Arguments)
 {
-    if (!args.quick)
+    if (!args.server)
     {
-        if (await install(args))
-            throw new Error("Installation failed");
-        if (await cache(args))
-            throw new Error("Caching failed");
+        Console.error(`usage: ${command} localhost --server <snowpack | deno> [--quick]`);
+        return;
     }
 
-    const bundlerAttributes =
+    switch (args.server)
     {
-        dist: "public/dist/",
-        importMap: "import-map.json",
-        env: { DENO_DIR: ".cache/" }
-    };
-    const bundler = new Bundler(bundlerAttributes);
-    const webpackRunOptions: Deno.RunOptions =
-    {
-        cmd:
-            [
-                "yarn", "run", "webpack", "--env",
-                "GRAPHQL_API_ENDPOINT=https://localhost:8443/graphql"
-            ]
-    };
-    const serverRunOptions: Deno.RunOptions =
-    {
-        cmd:
-            [
-                "deno", "run", "--unstable", "--allow-all",
-                "--import-map", "import-map.json", "server/daemon.tsx",
-                "--hostname", "localhost", "--tls", "cert/localhost/"
-            ],
-        env: { DENO_DIR: ".cache/" }
-    };
+        case "snowpack":
+            {
+                const runOptions: Deno.RunOptions =
+                {
+                    cmd: ["yarn", "run", "snowpack", "--config", "config/localhost.snowpack.json", "dev", "--secure"]
+                };
+                const process = Deno.run(runOptions);
+                await process.status();
+                process.close();
+                return;
+            }
+        case "deno":
+            {
+                const snowpackRunOptions: Deno.RunOptions =
+                {
+                    cmd: ["yarn", "run", "snowpack", "--config", "config/localhost.snowpack.json", "build"]
+                };
+                const snowpackProcess = Deno.run(snowpackRunOptions);
+                const snowpackStatus = await snowpackProcess.status();
+                snowpackProcess.close();
+                if (!snowpackStatus.success)
+                    return snowpackStatus.code;
 
-    if (!args.quick)
-    {
-        await bundler.bundle({ entry: "client/bundle.tsx", watch: false });
-
-        const webpackProcess = Deno.run(webpackRunOptions);
-        await webpackProcess.status();
-        webpackProcess.close();
+                const serverRunOptions: Deno.RunOptions =
+                {
+                    cmd:
+                        [
+                            "deno", "run", "--unstable", "--allow-all",
+                            "--import-map", "import-map.json", "server/daemon.tsx",
+                            "--hostname", "localhost", "--tls", "cert/localhost/"
+                        ],
+                    env: { DENO_DIR: ".cache/" }
+                };
+                const serverProcess = Deno.run(serverRunOptions);
+                const serverStatus = await serverProcess.status();
+                serverProcess.close();
+                return serverStatus.code;
+            }
+        default:
+            Console.error(`usage: ${command} localhost --server <snowpack | deno> [--quick]`);
+            return;
     }
-
-    const serverProcess = Deno.run(serverRunOptions);
-    await serverProcess.status();
-    serverProcess.close();
 }
 async function remote(args: Arguments)
 {
@@ -196,24 +187,16 @@ async function remote(args: Arguments)
     if (await cache(args))
         throw new Error("Caching failed");
 
-    const bundlerAttributes =
+    const snowpackRunOptions: Deno.RunOptions =
     {
-        dist: "public/dist/",
-        importMap: "import-map.json",
-        env: { DENO_DIR: ".cache/" }
+        cmd: ["yarn", "run", "snowpack", "--config", "config/remote.snowpack.json", "build"],
     };
-    const bundler = new Bundler(bundlerAttributes);
-    try { await bundler.bundle({ entry: "client/bundle.tsx", watch: false }); }
-    catch (error) { throw error; }
+    const snowpackProcess = Deno.run(snowpackRunOptions);
+    const snowpackStatus = await snowpackProcess.status();
+    snowpackProcess.close();
+    if (!snowpackStatus.success)
+        return snowpackStatus.code;
 
-    const webpackRunOptions: Deno.RunOptions =
-    {
-        cmd:
-            [
-                "yarn", "run", "webpack", "--env",
-                "GRAPHQL_API_ENDPOINT=https://localhost/graphql"
-            ],
-    };
     const serverRunOptions: Deno.RunOptions =
     {
         cmd:
@@ -225,13 +208,6 @@ async function remote(args: Arguments)
             ],
         env: { DENO_DIR: ".cache/" }
     };
-
-    const webpackProcess = Deno.run(webpackRunOptions);
-    const webpackStatus = await webpackProcess.status();
-    webpackProcess.close();
-    if (!webpackStatus.success)
-        return webpackStatus.code;
-
     const serverProcess = Deno.run(serverRunOptions);
     const serverStatus = await serverProcess.status();
     serverProcess.close();

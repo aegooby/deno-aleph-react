@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import * as ReactRouter from "react-router";
+import * as ReactRouter from "react-router-dom";
 
 import { GraphQL } from "./Core/Core.tsx";
 
@@ -17,13 +17,11 @@ export default function App(props: Props)
 {
     const element =
         <GraphQL.Provider value={props.client}>
-            <ReactRouter.Switch>
-                <ReactRouter.Route exact path="/">
-                    <Index />
-                </ReactRouter.Route>
-                <ReactRouter.Route exact path="/internalerror" component={InternalError} />
-                <ReactRouter.Route component={NotFound} />
-            </ReactRouter.Switch>
+            <ReactRouter.Routes>
+                <ReactRouter.Route path="/" element={<Index />} />
+                <ReactRouter.Route path="/internalerror" element={<InternalError />} />
+                <ReactRouter.Route path="*" element={<NotFound />} />
+            </ReactRouter.Routes>
         </GraphQL.Provider>;
     return element;
 }

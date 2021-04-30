@@ -4,7 +4,7 @@ import * as ReactHelmet from "react-helmet";
 
 interface Props
 {
-    staticContext:
+    staticContext?:
     {
         statusCode: number;
     };
@@ -20,7 +20,7 @@ export default function NotFound(props: Props)
                 <title>httpsaurus | Internal Error</title>
             </ReactHelmet.Helmet>
             <div className="page">
-                <h1><strong>500</strong> Not Found</h1>
+                <h1><strong>500</strong> Internal Error</h1>
             </div>
         </>;
     return element;

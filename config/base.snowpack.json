@@ -1,0 +1,3 @@
+{
+    "extends": "./snowpack.config.js"
+}
