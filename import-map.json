@@ -19,6 +19,7 @@
         "denoflate": "https://deno.land/x/denoflate/mod.ts",
         "@yargs/types": "https://deno.land/x/yargs/deno-types.ts",
         "@yargs/yargs": "https://deno.land/x/yargs/deno.ts",
-        "opener": "https://deno.land/x/opener/mod.ts"
+        "opener": "https://deno.land/x/opener/mod.ts",
+        "dotenv": "https://deno.land/x/dotenv/mod.ts"
     }
 }
