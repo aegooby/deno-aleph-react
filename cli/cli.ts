@@ -118,7 +118,7 @@ export async function bundle(args: Arguments)
 
     const runOptions: Deno.RunOptions =
     {
-        cmd: ["yarn", "run", "snowpack", "--config", "config/base.snowpack.json", "build"],
+        cmd: ["yarn", "run", "snowpack", "--config", "config/base.snowpack.js", "build"],
         env: { SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT: args.graphql }
     };
     const process = Deno.run(runOptions);
@@ -143,7 +143,7 @@ export async function localhost(args: Arguments)
                     cmd:
                         [
                             "yarn", "run", "snowpack", "--config",
-                            "config/base.snowpack.json", "dev", "--secure"
+                            "config/base.snowpack.js", "dev", "--secure"
                         ]
                 };
                 const process = Deno.run(runOptions);
@@ -158,7 +158,7 @@ export async function localhost(args: Arguments)
                     cmd:
                         [
                             "yarn", "run", "snowpack", "--config",
-                            "config/localhost.snowpack.json", "build"
+                            "config/localhost.snowpack.js", "build"
                         ]
                 };
                 const snowpackProcess = Deno.run(snowpackRunOptions);
@@ -215,7 +215,7 @@ export async function remote(args: Arguments)
         cmd:
             [
                 "yarn", "run", "snowpack", "--config",
-                "config/remote.snowpack.json", "build"
+                "config/remote.snowpack.js", "build"
             ],
     };
     const snowpackProcess = Deno.run(snowpackRunOptions);
