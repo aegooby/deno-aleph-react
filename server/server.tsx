@@ -343,7 +343,7 @@ export class Server
         const filename = path.basename(filepath);
         if (filename.startsWith("google") && filename.endsWith(".html"))
         {
-            const body = `google-site-verification: ${filename}`;
+            const body = await Deno.readTextFile(path.join(".", this.public, `${filepath}.txt`));
             context.response.body = body;
             context.response.type = "text/plain";
             return;
