@@ -330,6 +330,7 @@ export class Server
     }
     private async static(context: Oak.Context): Promise<void>
     {
+        const filepath = context.request.url.pathname;
         const sendOptions: Oak.SendOptions =
         {
             gzip: true,
@@ -337,7 +338,18 @@ export class Server
             maxbuffer: 0x400,
             root: path.join(".", this.public)
         };
-        await Oak.send(context, context.request.url.pathname, sendOptions);
+
+        /* Google verification pages */
+        const filename = path.basename(filepath);
+        if (filename.startsWith("google") && filename.endsWith(".html"))
+        {
+            const body = `google-site-verification: ${filename}`;
+            context.response.body = body;
+            context.response.type = "text/plain";
+            return;
+        }
+
+        await Oak.send(context, filepath, sendOptions);
     }
     private async react(context: Oak.Context): Promise<void>
     {
