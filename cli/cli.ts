@@ -167,21 +167,21 @@ export async function localhost(args: Arguments)
                 if (!snowpackStatus.success)
                     return snowpackStatus.code;
 
-                const browser = async function () 
+                const ready = async function (): Promise<void>
                 {
                     while (true)
                     {
                         try
                         {
                             await async.delay(750);
-                            await fetch("http://localhost:8080/", { headers: { "x-http-only": "" } });
-                            await opener.open("https://localhost:8443/");
+                            const init = { headers: { "x-http-only": "" } };
+                            await fetch("http://localhost:8080/", init);
                             return;
                         }
                         catch { undefined; }
                     }
                 };
-                Promise.race([browser(), async.delay(2500)]);
+                ready().then(async function () { await opener.open("https://localhost:8443/"); });
 
                 const serverRunOptions: Deno.RunOptions =
                 {
@@ -210,6 +210,8 @@ export async function remote(args: Arguments)
     if (await cache(args))
         throw new Error("Caching failed");
 
+    const domain = "localhost";
+
     const snowpackRunOptions: Deno.RunOptions =
     {
         cmd:
@@ -231,14 +233,50 @@ export async function remote(args: Arguments)
                 "deno", "run", "--unstable", "--allow-all",
                 "--import-map", "import-map.json",
                 "server/daemon.tsx", "--hostname", "0.0.0.0",
-                "--tls", "cert/0.0.0.0"
+                "--domain", domain, "--tls", "cert/0.0.0.0"
             ],
         env: { DENO_DIR: ".cache/" }
     };
-    const serverProcess = Deno.run(serverRunOptions);
-    const serverStatus = await serverProcess.status();
-    serverProcess.close();
-    return serverStatus.code;
+    const fetcher = async function (): Promise<never>
+    {
+        while (true)
+        {
+            const controller = new AbortController();
+            async.delay(5000).then(function () { controller.abort(); });
+            const init = { signal: controller.signal };
+            const response = await fetch(`https://${domain}:8443/`, init);
+            if (!response.ok)
+                throw new Error(`${domain} is down`);
+            Console.log("fetch(): server is up", Console.timestamp);
+            await async.delay(30000);
+        }
+    };
+    const ready = async function (): Promise<void>
+    {
+        while (true)
+        {
+            try
+            {
+                await async.delay(750);
+                const init = { headers: { "x-http-only": "" } };
+                await fetch(`http://${domain}:8080/`, init);
+                return;
+            }
+            catch { undefined; }
+        }
+    };
+    while (true)
+    {
+        const serverProcess = Deno.run(serverRunOptions);
+        try
+        {
+            await ready();
+            Console.success("fetch(): server is ready", Console.timestamp);
+            await Promise.race([serverProcess.status(), fetcher()]);
+        }
+        catch { Console.error("fetch(): server is down, restarting", Console.timestamp); }
+        serverProcess.close();
+    }
 }
 export async function test(_: Arguments)
 {
