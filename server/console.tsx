@@ -2,45 +2,44 @@
 import * as colors from "@std/colors";
 import * as datetime from "@std/datetime";
 
-export type Timestamp = true;
+export interface ConsoleAttributes
+{
+    time?: true;
+    clear?: true;
+}
+
+type ConsoleFunction = (...data: unknown[]) => void;
 
 export class Console
 {
-    public static timestamp: Timestamp = true;
-    private static time(): string
+    private static timestamp(): string
     {
         return datetime.format(new Date(), "MM-dd-yyyy hh:mm a");
     }
-    public static log(message: unknown, timestamp?: Timestamp): void
+    private static write(stream: ConsoleFunction, token: string, message: unknown, attributes?: ConsoleAttributes): void
+    {
+        const time = attributes?.time ? colors.black(`(${this.timestamp()})`) : undefined;
+        const value = typeof message === "string" ? message as string : Deno.inspect(message);
+        time ? stream(token, time, value) : stream(token, value);
+    }
+    public static log(message: unknown, attributes?: ConsoleAttributes): void
     {
         const token = colors.bold(colors.cyan("[*]"));
-        if (timestamp)
-            console.log(token, colors.black(`(${this.time()})`), message);
-        else
-            console.log(token, message);
+        this.write(console.log, token, message, attributes);
     }
-    public static success(message: unknown, timestamp?: Timestamp): void
+    public static success(message: unknown, attributes?: ConsoleAttributes): void
     {
         const token = colors.bold(colors.green("[$]"));
-        if (timestamp)
-            console.log(token, colors.black(`(${this.time()})`), message);
-        else
-            console.log(token, message);
+        this.write(console.info, token, message, attributes);
     }
-    public static warn(message: unknown, timestamp?: Timestamp): void
+    public static warn(message: unknown, attributes?: ConsoleAttributes): void
     {
         const token = colors.bold(colors.yellow("[?]"));
-        if (timestamp)
-            console.log(token, colors.black(`(${this.time()})`), message);
-        else
-            console.warn(token, message);
+        this.write(console.warn, token, message, attributes);
     }
-    public static error(message: unknown, timestamp?: Timestamp): void
+    public static error(message: unknown, attributes?: ConsoleAttributes): void
     {
         const token = colors.bold(colors.red("[!]"));
-        if (timestamp)
-            console.log(token, colors.black(`(${this.time()})`), message);
-        else
-            console.error(token, message);
+        this.write(console.error, token, message, attributes);
     }
 }

@@ -33,10 +33,12 @@ export class GraphQL
         this.resolvers = attributes.resolvers;
 
         this.buildSchema = this.buildSchema.bind(this);
-        this.query = this.query.bind(this);
         this.renderPlayground = this.renderPlayground.bind(this);
         this.build = this.build.bind(this);
-        this.playground = this.playground.bind(this);
+
+        this.post = this.post.bind(this);
+        this.get = this.get.bind(this);
+        this.head = this.head.bind(this);
     }
     private async buildSchema(): Promise<void>
     {
@@ -73,7 +75,7 @@ export class GraphQL
         await this.buildSchema();
         this.renderPlayground(attributes.url);
     }
-    public async query(context: Oak.Context): Promise<void>
+    public async post(context: Oak.Context): Promise<void>
     {
         try
         {
@@ -123,9 +125,15 @@ export class GraphQL
             context.response.body = JSON.stringify(jsonError);
         }
     }
-    public async playground(context: Oak.Context): Promise<void>
+    public async get(context: Oak.Context): Promise<void>
     {
         context.response.status = Oak.Status.OK;
         context.response.body = await this.playgroundHTML;
+    }
+    public async head(context: Oak.Context): Promise<void>
+    {
+        await this.get(context);
+        context.response.status = Oak.Status.MethodNotAllowed;
+        context.response.body = undefined;
     }
 }

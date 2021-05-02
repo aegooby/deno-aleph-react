@@ -33,24 +33,6 @@ class Version
 }
 export const version: Version = new Version(2, 1, 0);
 
-
-export interface ServerAttributes
-{
-    secure: boolean;
-    domain: string | undefined;
-    hostname: string;
-    port: number;
-    routes: Record<string, string>;
-
-    portTls: number | undefined;
-    cert: string | undefined;
-
-    App: React.FunctionComponent<{ client: undefined; }>;
-
-    schema: string;
-    resolvers: unknown;
-}
-
 interface ListenBaseOptions extends Deno.ListenOptions
 {
     secure: false;
@@ -73,7 +55,7 @@ class Listener
     {
         if (options) this.options = options;
 
-        this.__listen = this.__listen.bind(this);
+        this.create = this.create.bind(this);
         this.listen = this.listen.bind(this);
         this.connections = this.connections.bind(this);
         this.secure = this.secure.bind(this);
@@ -81,7 +63,7 @@ class Listener
         this.keys = this.keys.bind(this);
         this.close = this.close.bind(this);
     }
-    private __listen(options: ListenOptions): [boolean, Deno.Listener]
+    private create(options: ListenOptions): [boolean, Deno.Listener]
     {
         if (options.secure)
         {
@@ -99,9 +81,9 @@ class Listener
     public listen(options?: Array<ListenOptions>): Array<[boolean, Deno.Listener]>
     {
         if (!options)
-            return this.options.map(this.__listen);
+            return this.options.map(this.create);
         else
-            return options.map(this.__listen);
+            return options.map(this.create);
     }
     public connections(key: number): ConnectionAsyncIter
     {
@@ -166,6 +148,29 @@ enum StatusCode
     failure = 1,
 }
 
+export interface ServerAttributes
+{
+    secure: boolean;
+    domain: string | undefined;
+    hostname: string;
+    port: number;
+    routes: Record<string, string>;
+
+    portTls: number | undefined;
+    cert: string | undefined;
+
+    App: React.FunctionComponent<{ client: undefined; }>;
+
+    schema: string;
+    resolvers: unknown;
+}
+
+interface OakServer
+{
+    app: Oak.Application;
+    router: Oak.Router;
+}
+
 export class Server
 {
     private secure: boolean;
@@ -175,7 +180,7 @@ export class Server
     private public: string = "/dist" as const;
     private scriptElements: Array<React.ReactElement> = [];
 
-    private oak: Oak.Application;
+    private oak: OakServer;
 
     private listener: Listener;
     private hostname: string;
@@ -236,7 +241,7 @@ export class Server
         }
         this.listener = new Listener(options);
 
-        this.oak = new Oak.Application();
+        this.oak = { app: new Oak.Application(), router: new Oak.Router() };
 
         this.graphql = new GraphQL(attributes);
 
@@ -245,9 +250,11 @@ export class Server
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
 
-        this.router = this.router.bind(this);
         this.static = this.static.bind(this);
         this.react = this.react.bind(this);
+
+        this.get = this.get.bind(this);
+        this.head = this.head.bind(this);
 
         this.handle = this.handle.bind(this);
         this.accept = this.accept.bind(this);
@@ -269,64 +276,6 @@ export class Server
     public get urlSimple(): string
     {
         return `${this.protocol}://${this.hostname}`;
-    }
-    private async router(context: Oak.Context): Promise<void>
-    {
-        /** @todo CORS. */
-
-        /* Redirect HTTP to HTTPS if it's available. */
-        if (!context.request.secure && this.secure)
-        {
-            if (context.request.headers.has("x-http-only"))
-            {
-                context.response.status = Oak.Status.OK;
-                context.response.body = "";
-                return;
-            }
-            const urlRequest = context.request.url;
-            const host = context.request.headers.get("host");
-            context.response.redirect(`https://${host}${urlRequest.pathname}`);
-            return;
-        }
-
-        /* Check reroutes */
-        if (this.routes.has(context.request.url.pathname))
-        {
-            const from = context.request.url.pathname;
-            const to = this.routes.get(from) as string;
-            context.response.redirect(to);
-            return;
-        }
-
-        /* Handle GraphQL */
-        if (context.request.url.pathname === "/graphql")
-        {
-            switch (context.request.method)
-            {
-                case "GET":
-                    await this.graphql.playground(context);
-                    return;
-                case "POST":
-                    await this.graphql.query(context);
-                    return;
-                default:
-                    context.response.status = Oak.Status.MethodNotAllowed;
-                    context.response.body = "405 Method Not Allowed (GraphQL)";
-                    return;
-            }
-        }
-
-        /* Convert URL to filepath. */
-        const filepath = path.join(".", this.public, context.request.url.pathname);
-
-        /* File path not found or is not a file -> not static. */
-        if (!await fs.exists(filepath) || !(await Deno.stat(filepath)).isFile)
-        {
-            await this.react(context);
-            return;
-        }
-
-        await this.static(context);
     }
     private async static(context: Oak.Context): Promise<void>
     {
@@ -391,6 +340,49 @@ export class Server
         context.response.status = staticContext.statusCode as Oak.Status ?? Oak.Status.OK;
         context.response.body = body;
     }
+    private async get(context: Oak.Context): Promise<void>
+    {
+        /** @todo CORS. */
+
+        /* Redirect HTTP to HTTPS if it's available. */
+        if (!context.request.secure && this.secure)
+        {
+            if (context.request.headers.has("x-http-only"))
+            {
+                context.response.status = Oak.Status.OK;
+                context.response.body = "";
+                return;
+            }
+            const urlRequest = context.request.url;
+            const host = context.request.headers.get("host");
+            return context.response.redirect(`https://${host}${urlRequest.pathname}`);
+        }
+
+        /* Check reroutes */
+        if (this.routes.has(context.request.url.pathname))
+        {
+            const from = context.request.url.pathname;
+            const to = this.routes.get(from) as string;
+            return context.response.redirect(to);
+        }
+
+        /* Convert URL to filepath. */
+        const filepath = path.join(".", this.public, context.request.url.pathname);
+
+        /* File path not found or is not a file -> not static. */
+        if (!await fs.exists(filepath) || !(await Deno.stat(filepath)).isFile)
+            return await this.react(context);
+
+        return await this.static(context);
+    }
+    private async head(context: Oak.Context): Promise<void>
+    {
+        await this.get(context);
+        const response = await context.response.toDomResponse();
+        const length = response.headers.get("content-length");
+        context.response.headers.set("content-length", length ?? "0");
+        context.response.body = undefined;
+    }
     private async handle(connection: Deno.Conn, secure: boolean): Promise<void>
     {
         try
@@ -401,7 +393,7 @@ export class Server
                 try 
                 {
                     const request = event.request;
-                    const response = await this.oak.handle(request, connection, secure);
+                    const response = await this.oak.app.handle(request, connection, secure);
                     if (response) await event.respondWith(response);
                 }
                 catch { undefined; }
@@ -451,7 +443,7 @@ export class Server
     public async serve(): Promise<never>
     {
         Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
-        Console.log(`Building GraphQL...`);
+        Console.log(`Building GraphQL...`, { clear: true });
         await this.graphql.build({ url: this.domain });
         Console.success(`GraphQL built`);
 
@@ -463,8 +455,15 @@ export class Server
         await this.scripts();
         Console.success(`Scripts collected`);
 
-        this.oak.use(this.router);
-        this.oak.use(Oak.etag.factory());
+        this.oak.router.head("/graphql", this.graphql.head);
+        this.oak.router.get("/graphql", this.graphql.get);
+        this.oak.router.post("/graphql", this.graphql.post);
+        this.oak.router.head("/(.*)", this.head);
+        this.oak.router.get("/(.*)", this.get);
+
+        this.oak.app.use(this.oak.router.routes());
+        this.oak.app.use(this.oak.router.allowedMethods());
+        this.oak.app.use(Oak.etag.factory());
 
         const linkString = function (link: string)
         {
@@ -481,13 +480,13 @@ export class Server
                 promises.push(this.closed);
                 Console.success(`Server is running on ${linkString(this.url)}`);
                 const status = await Promise.race(promises);
-                Console.warn(`Restarting (status: ${status})`, Console.timestamp);
+                Console.warn(`Restarting (status: ${status})`, { time: true });
                 this.close();
                 this.closed = async.deferred();
             }
             catch (error)
             {
-                Console.warn(`Restarting due to error ${Deno.inspect(error)}`, Console.timestamp);
+                Console.warn(`Restarting due to error ${Deno.inspect(error)}`, { time: true });
                 this.close();
                 this.closed = async.deferred();
             }

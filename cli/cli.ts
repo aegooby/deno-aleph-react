@@ -247,7 +247,7 @@ export async function remote(args: Arguments)
             const response = await fetch(`https://${domain}:8443/`, init);
             if (!response.ok)
                 throw new Error(`${domain} is down`);
-            Console.log("fetch(): server is up", Console.timestamp);
+            Console.log("fetch(): server is up", { time: true, clear: true });
             await async.delay(30000);
         }
     };
@@ -271,10 +271,10 @@ export async function remote(args: Arguments)
         try
         {
             await ready();
-            Console.success("fetch(): server is ready", Console.timestamp);
+            Console.success("fetch(): server is ready", { time: true });
             await Promise.race([serverProcess.status(), fetcher()]);
         }
-        catch { Console.error("fetch(): server is down, restarting", Console.timestamp); }
+        catch { Console.error("fetch(): server is down, restarting", { time: true }); }
         serverProcess.close();
     }
 }
