@@ -226,6 +226,7 @@ export async function remote(args: Arguments)
     if (!snowpackStatus.success)
         return snowpackStatus.code;
 
+    /** @todo Add Deno TLS. */
     const serverRunOptions: Deno.RunOptions =
     {
         cmd:
@@ -233,7 +234,7 @@ export async function remote(args: Arguments)
                 "deno", "run", "--unstable", "--allow-all",
                 "--import-map", "import-map.json",
                 "server/daemon.tsx", "--hostname", "0.0.0.0",
-                "--domain", domain, "--tls", "cert/0.0.0.0"
+                "--domain", domain, // "--tls", "cert/0.0.0.0"
             ],
         env: { DENO_DIR: ".cache/" }
     };
@@ -272,7 +273,9 @@ export async function remote(args: Arguments)
         {
             await ready();
             Console.success("fetch(): server is ready", { time: true });
-            await Promise.race([serverProcess.status(), fetcher()]);
+            /** @todo See if fetcher is needed for Deno TLS. */
+            // await Promise.race([serverProcess.status(), fetcher()]);
+            await serverProcess.status();
         }
         catch { Console.error("fetch(): server is down, restarting", { time: true }); }
         serverProcess.close();
