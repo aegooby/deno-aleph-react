@@ -315,7 +315,6 @@ export class Server
                     {this.scriptElements}
                     <link rel="icon" href="/favicon.ico" />
                     <link rel="stylesheet" href="/index.css" />
-                    <link rel="stylesheet" href="/nprogress.css" />
                 </head>
                 <body>
                     <div id="root">
