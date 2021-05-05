@@ -1,9 +1,10 @@
 
 import * as React from "react";
-import * as ReactHelmet from "react-helmet";
 
 import { GraphQL, Console } from "../Core/Core.tsx";
 import graphql from "../../graphql/graphql.tsx";
+const Lazy = React.lazy(() => import("./Lazy/Index.tsx"));
+import Page from "../Page.tsx";
 
 export default function Index()
 {
@@ -19,18 +20,10 @@ export default function Index()
     }
     React.useEffect(effect);
     const element: React.ReactElement =
-        <>
-            <ReactHelmet.Helmet>
-                <title>httpsaurus</title>
-            </ReactHelmet.Helmet>
-            <div className="page">
-                <p className="logo">
-                    <img src="/logo.webp" height={304} width={256} alt="logo" />
-                </p>
-                <h1><strong>https</strong>aurus</h1>
-                <h2>React v{React.version}</h2>
-                <p className="copyinfo">© 0000 Company, Inc.</p>
-            </div>
-        </>;
+        <Page
+            helmet={<title>httpsaurus</title>}
+            content={<Lazy />}
+            lazy
+        />;
     return element;
 }

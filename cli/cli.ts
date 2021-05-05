@@ -119,7 +119,6 @@ export async function bundle(args: Arguments)
     const runOptions: Deno.RunOptions =
     {
         cmd: ["yarn", "run", "snowpack", "--config", "config/base.snowpack.js", "build"],
-        env: { SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT: args.graphql }
     };
     const process = Deno.run(runOptions);
     const status = await process.status();
@@ -238,20 +237,21 @@ export async function remote(args: Arguments)
             ],
         env: { DENO_DIR: ".cache/" }
     };
-    const fetcher = async function (): Promise<never>
-    {
-        while (true)
-        {
-            const controller = new AbortController();
-            async.delay(5000).then(function () { controller.abort(); });
-            const init = { signal: controller.signal };
-            const response = await fetch(`https://${domain}:8443/`, init);
-            if (!response.ok)
-                throw new Error(`${domain} is down`);
-            Console.log("fetch(): server is up", { time: true, clear: true });
-            await async.delay(30000);
-        }
-    };
+    /** @todo See if fetcher is needed for Deno TLS. */
+    // const fetcher = async function (): Promise<never>
+    // {
+    //     while (true)
+    //     {
+    //         const controller = new AbortController();
+    //         async.delay(5000).then(function () { controller.abort(); });
+    //         const init = { signal: controller.signal };
+    //         const response = await fetch(`https://${domain}:8443/`, init);
+    //         if (!response.ok)
+    //             throw new Error(`${domain} is down`);
+    //         Console.log("fetch(): server is up", { time: true, clear: true });
+    //         await async.delay(30000);
+    //     }
+    // };
     const ready = async function (): Promise<void>
     {
         while (true)

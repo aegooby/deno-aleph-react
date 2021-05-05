@@ -306,7 +306,7 @@ export class Server
 
         const staticContext: Record<string, unknown> = {};
 
-        const page: React.ReactElement =
+        const element: React.ReactElement =
             <html lang="en">
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -315,6 +315,7 @@ export class Server
                     {this.scriptElements}
                     <link rel="icon" href="/favicon.ico" />
                     <link rel="stylesheet" href="/index.css" />
+                    <link rel="stylesheet" href="/nprogress.css" />
                 </head>
                 <body>
                     <div id="root">
@@ -328,7 +329,7 @@ export class Server
                 </body>
             </html>;
 
-        const render = Promise.resolve(ReactDOMServer.renderToString(page));
+        const render = Promise.resolve(ReactDOMServer.renderToString(element));
         const body = `<!DOCTYPE html> ${await render}`;
 
         if (staticContext.url)
