@@ -16,12 +16,14 @@ interface Props
 export default function App(props: Props)
 {
     const element =
-        <GraphQL.Provider value={props.client}>
-            <ReactRouter.Routes>
-                <ReactRouter.Route path="/" element={<Index />} />
-                <ReactRouter.Route path="/mobile-prof" element={<MobileProf />} />
-                <ReactRouter.Route path="*" element={<Error code={404} text="Not Found" />} />
-            </ReactRouter.Routes>
-        </GraphQL.Provider>;
+        <React.StrictMode>
+            <GraphQL.Provider value={props.client}>
+                <ReactRouter.Routes>
+                    <ReactRouter.Route path="/" element={<Index />} />
+                    <ReactRouter.Route path="/mobile-prof" element={<MobileProf />} />
+                    <ReactRouter.Route path="*" element={<Error code={404} text="Not Found" />} />
+                </ReactRouter.Routes>
+            </GraphQL.Provider>
+        </React.StrictMode>;
     return element;
 }
