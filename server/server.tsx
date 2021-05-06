@@ -443,17 +443,17 @@ export class Server
     public async serve(): Promise<never>
     {
         Console.log(`${colors.bold("https")}${colors.reset("aurus")} ${version.string()}`);
-        Console.log(`Building GraphQL...`, { clear: true });
+        Console.log(`Building GraphQL...`);
         await this.graphql.build({ url: this.domain });
-        Console.success(`GraphQL built`);
+        Console.success(`GraphQL built`, { clear: true });
 
-        Console.log(`Compressing static files...`);
+        Console.log(`Compressing static files...`, { clear: true });
         await this.compress();
-        Console.success(`Static files compressed`);
+        Console.success(`Static files compressed`, { clear: true });
 
-        Console.log(`Collecting scripts...`);
+        Console.log(`Collecting scripts...`, { clear: true });
         await this.scripts();
-        Console.success(`Scripts collected`);
+        Console.success(`Scripts collected`, { clear: true });
 
         this.oak.router.head("/graphql", this.graphql.head);
         this.oak.router.get("/graphql", this.graphql.get);
@@ -478,9 +478,9 @@ export class Server
                 const keys = this.listener.keys();
                 const promises = keys.map(this.accept);
                 promises.push(this.closed);
-                Console.success(`Server is running on ${linkString(this.url)}`);
+                Console.log(`Server is running on ${linkString(this.url)}`, { clear: true });
                 const status = await Promise.race(promises);
-                Console.warn(`Restarting (status: ${status})`, { time: true });
+                Console.warn(`Restarting (status: ${status})`, { time: true, clear: true });
                 this.close();
                 this.closed = async.deferred();
             }
