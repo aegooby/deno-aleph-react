@@ -1,6 +1,7 @@
 
 import * as React from "react";
 import { throwOnClient } from "../Core.tsx";
+
 import nprogress from "nprogress";
 
 interface SuspenseProps extends React.SuspenseProps
@@ -17,21 +18,11 @@ export function Suspense(props: SuspenseProps)
     }
     catch
     {
-        if (props.loading) React.useState(nprogress.done());
-        if (props.loading) React.useState(nprogress.start());
-        const Children = function ()
-        {
-            const effect = function () 
-            {
-                try { throwOnClient(); }
-                catch { nprogress.done(); }
-            };
-            React.useEffect(effect);
-            return <>{props.children}</>;
-        };
+        if (props.loading && !nprogress.isStarted())
+            React.useState(nprogress.start());
         const element: React.ReactElement =
             <React.Suspense fallback={props.fallback}>
-                {props.loading ? < Children /> : props.children}
+                {props.children}
             </React.Suspense>;
         return element;
     }

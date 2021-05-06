@@ -1,8 +1,11 @@
 
 import * as React from "react";
 
+import * as Loading from "../../Loading.tsx";
+
 export default function MobileProf()
 {
+    Loading.useFinishLoading();
     const element =
         <div className="page">
             <p className="logo">
