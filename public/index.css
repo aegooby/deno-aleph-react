@@ -105,3 +105,10 @@ body
     line-height: 1.5;
     text-align: center;
 }
+
+input 
+{
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
