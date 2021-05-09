@@ -6,6 +6,7 @@ import nprogress from "nprogress";
 
 interface SuspenseProps extends React.SuspenseProps
 {
+    children?: React.ReactNode;
     loading?: true;
 }
 
