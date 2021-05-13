@@ -159,7 +159,8 @@ export interface ServerAttributes
     portTls: number | undefined;
     cert: string | undefined;
 
-    App: React.FunctionComponent<{ client: undefined; }>;
+    App: React.ReactElement;
+    headElements: Array<React.ReactElement>;
 
     schema: string;
     resolvers: unknown;
@@ -191,13 +192,15 @@ export class Server
 
     private graphql: GraphQL;
 
-    private App: React.ComponentType<{ client: undefined; }>;
+    private App: React.ReactElement;
+    private headElements: Array<React.ReactElement>;
 
     constructor(attributes: ServerAttributes)
     {
         this.secure = attributes.secure;
 
         this.App = attributes.App;
+        this.headElements = attributes.headElements;
 
         for (const key in attributes.routes)
         {
@@ -315,6 +318,7 @@ export class Server
                     {this.scriptElements}
                     <link rel="icon" href="/favicon.ico" />
                     <link rel="stylesheet" href="/index.css" />
+                    {this.headElements}
                 </head>
                 <body>
                     <div id="root">
@@ -322,7 +326,7 @@ export class Server
                             location={context.request.url.pathname}
                             context={staticContext}
                         >
-                            <this.App client={undefined} />
+                            {this.App}
                         </ReactRouterServer.StaticRouter>
                     </div>
                 </body>

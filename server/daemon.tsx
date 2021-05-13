@@ -1,4 +1,5 @@
 
+import * as React from "react";
 import * as server from "./server.tsx";
 import App from "../components/App.tsx";
 
@@ -25,7 +26,8 @@ try
         portTls: 8443,
         cert: args.tls,
 
-        App: App,
+        App: <App client={undefined} />,
+        headElements: [],
 
         schema: "graphql/schema.gql",
         resolvers: { request: function () { return "response"; } },
