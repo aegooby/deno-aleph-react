@@ -8,7 +8,7 @@ export default function MobileProf()
 {
     const element =
         <Page
-            helmet={<title>httpsaurus | lazy</title>}
+            helmet={<title>httpsaurus | mobile-prof</title>}
             content={<Lazy />}
             lazy
         />;
