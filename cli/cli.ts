@@ -202,13 +202,8 @@ export async function localhost(args: Arguments)
             return;
     }
 }
-export async function remote(args: Arguments)
+export async function remote(_: Arguments)
 {
-    if (await install(args))
-        throw new Error("Installation failed");
-    if (await cache(args))
-        throw new Error("Caching failed");
-
     const domain = "localhost";
 
     const snowpackRunOptions: Deno.RunOptions =
