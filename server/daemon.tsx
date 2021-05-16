@@ -21,9 +21,9 @@ try
         domain: args.domain,
         routes: {},
         hostname: args.hostname,
-        port: 8080,
+        port: 5080,
 
-        portTls: 8443,
+        portTls: 5443,
         cert: args.tls,
 
         App: <App client={undefined} />,
