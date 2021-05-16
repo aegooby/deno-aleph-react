@@ -87,7 +87,7 @@ export async function cache(_: Arguments)
 
     const denoRunOptions: Deno.RunOptions =
     {
-        cmd: ["deno", "cache", "--unstable", "--import-map", "import-map.json", ...files],
+        cmd: ["deno", "cache", "--unstable", "--reload", "--import-map", "import-map.json", ...files],
         env: { DENO_DIR: ".cache/" }
     };
     const yarnRunOptions: Deno.RunOptions = { cmd: ["yarn", "install"] };
@@ -321,6 +321,8 @@ export async function docker(args: Arguments)
         return;
     }
 
+    if (await cache(args))
+        throw new Error("Caching failed");
     if (args.prune)
         await prune(args);
 
