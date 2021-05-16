@@ -1,6 +1,9 @@
 
 FROM aegooby/httpsaurus:base-latest AS httpsaurus
 
+# Dokku
+EXPOSE 5080
+
 WORKDIR /root/httpsaurus
 ADD . /root/httpsaurus
 RUN build/linux upgrade
