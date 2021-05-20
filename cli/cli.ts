@@ -79,15 +79,16 @@ export async function upgrade(_: Arguments)
     process.close();
     return status.code;
 }
-export async function cache(_: Arguments)
+export async function cache(args: Arguments)
 {
     const files: string[] = [];
     for await (const file of fs.expandGlob("**/*.tsx"))
         files.push(file.path);
 
+    const flags = args.reload ? ["--reload"] : [];
     const denoRunOptions: Deno.RunOptions =
     {
-        cmd: ["deno", "cache", "--unstable", "--reload", "--import-map", "import-map.json", ...files],
+        cmd: ["deno", "cache", "--unstable", ...flags, "--import-map", "import-map.json", ...files],
         env: { DENO_DIR: ".cache/" }
     };
     const yarnRunOptions: Deno.RunOptions = { cmd: ["yarn", "install"] };
@@ -299,8 +300,6 @@ export async function docker(args: Arguments)
         return;
     }
 
-    if (await cache(args))
-        throw new Error("Caching failed");
     if (args.prune)
         await prune(args);
 
