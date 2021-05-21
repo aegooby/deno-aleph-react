@@ -315,9 +315,9 @@ export async function prune(_: Arguments)
 }
 export async function image(args: Arguments)
 {
-    if (!args.target)
+    if (!args.target || !args.tag)
     {
-        Console.error(`usage: ${command} image --target <value>`);
+        Console.error(`usage: ${command} image --target <value> --tag <name> [--prune]`);
         return;
     }
 
@@ -325,7 +325,7 @@ export async function image(args: Arguments)
         await prune(args);
 
     const buildRunOptions: Deno.RunOptions =
-        { cmd: ["docker", "build", "--target", args.target, "--tag", "httpsaurus/server", "."] };
+        { cmd: ["docker", "build", "--target", args.target, "--tag", args.tag, "."] };
     const buildProcess = Deno.run(buildRunOptions);
     const buildStatus = await buildProcess.status();
     buildProcess.close();
