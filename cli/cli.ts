@@ -29,7 +29,7 @@ function createCommand(): [string[], string]
         case "linux":
             return [args, "build/linux"];
         default:
-            return [args, defaultCommand];
+            return [Deno.args, defaultCommand];
     }
 }
 export const [args, command] = createCommand();
@@ -203,16 +203,37 @@ export async function localhost(args: Arguments)
             return;
     }
 }
-export async function remote(_: Arguments)
+export async function docker(args: Arguments)
 {
-    const domain = "localhost";
+    if (!args.target || !(["localhost", "dev", "live"].includes(args.target)))
+    {
+        Console.error(`usage: ${command} docker --target <localhost | dev | live>`);
+        return;
+    }
+
+    if (await cache(args))
+        throw new Error("Caching failed");
+
+    const targetDomain = function ()
+    {
+        switch (args.target)
+        {
+            case "localhost": return "localhost";
+            case "dev": return "localhost";
+            case "live": return "localhost";
+            default:
+                Console.error(`usage: ${command} docker --target <localhost | dev | live>`);
+                throw new Error();
+        }
+    };
+    const domain = targetDomain();
 
     const snowpackRunOptions: Deno.RunOptions =
     {
         cmd:
             [
                 "yarn", "run", "snowpack", "--config",
-                "config/remote.snowpack.js", "build"
+                `config/docker-${args.target}.snowpack.js`, "build"
             ],
     };
     const snowpackProcess = Deno.run(snowpackRunOptions);
@@ -292,11 +313,11 @@ export async function prune(_: Arguments)
     if (!imageStatus.success)
         return imageStatus.code;
 }
-export async function docker(args: Arguments)
+export async function image(args: Arguments)
 {
     if (!args.target)
     {
-        Console.error(`usage: ${command} docker --target <value>`);
+        Console.error(`usage: ${command} image --target <value>`);
         return;
     }
 
@@ -331,10 +352,10 @@ if (import.meta.main)
         .command("cache", "", {}, cache)
         .command("bundle", "", {}, bundle)
         .command("localhost", "", {}, localhost)
-        .command("remote", "", {}, remote)
+        .command("docker", "", {}, docker)
         .command("test", "", {}, test)
         .command("prune", "", {}, prune)
-        .command("docker", "", {}, docker)
+        .command("image", "", {}, image)
         .command("help", "", {}, help)
         .parse();
 }
