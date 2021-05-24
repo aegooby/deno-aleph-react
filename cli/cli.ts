@@ -175,13 +175,13 @@ export async function localhost(args: Arguments)
                         {
                             await async.delay(750);
                             const init = { headers: { "x-http-only": "" } };
-                            await fetch("http://localhost:5080/", init);
+                            await fetch("http://localhost:3080/", init);
                             return;
                         }
                         catch { undefined; }
                     }
                 };
-                ready().then(async function () { await opener.open("https://localhost:5443/"); });
+                ready().then(async function () { await opener.open("https://localhost:3443/"); });
 
                 const serverRunOptions: Deno.RunOptions =
                 {
@@ -205,28 +205,15 @@ export async function localhost(args: Arguments)
 }
 export async function docker(args: Arguments)
 {
+    const usage = `usage: ${command} docker --target <localhost | dev | live> --domain <domain>`;
     if (!args.target || !(["localhost", "dev", "live"].includes(args.target)))
     {
-        Console.error(`usage: ${command} docker --target <localhost | dev | live>`);
+        Console.error(usage);
         return;
     }
 
     if (await cache(args))
         throw new Error("Caching failed");
-
-    const targetDomain = function ()
-    {
-        switch (args.target)
-        {
-            case "localhost": return "localhost";
-            case "dev": return "localhost";
-            case "live": return "localhost";
-            default:
-                Console.error(`usage: ${command} docker --target <localhost | dev | live>`);
-                throw new Error();
-        }
-    };
-    const domain = targetDomain();
 
     const snowpackRunOptions: Deno.RunOptions =
     {
@@ -242,44 +229,57 @@ export async function docker(args: Arguments)
     if (!snowpackStatus.success)
         return snowpackStatus.code;
 
-    /** @todo Add Deno TLS. */
-    const serverRunOptions: Deno.RunOptions =
+    const zero = async function (): Promise<void>
     {
-        cmd:
-            [
-                "deno", "run", "--unstable", "--allow-all",
-                "--import-map", "import-map.json",
-                "server/daemon.tsx", "--hostname", "0.0.0.0",
-                "--domain", domain, // "--tls", "cert/0.0.0.0"
-            ],
-        env: { DENO_DIR: ".cache/" }
+        const zeroRunOptions: Deno.RunOptions = { cmd: ["dgraph", "zero"] };
+        const zeroProcess = Deno.run(zeroRunOptions);
+        await zeroProcess.status();
+        zeroProcess.close();
     };
-    const ready = async function (): Promise<void>
+    const alpha = async function (): Promise<void>
     {
+        const alphaRunOptions: Deno.RunOptions =
+        {
+            cmd:
+                [
+                    "dgraph", "alpha", "--cache", "size-mb=2048",
+                    "--zero", "localhost:5080", "--security", "whitelist=0.0.0.0/0"
+                ]
+        };
+        const alphaProcess = Deno.run(alphaRunOptions);
+        await alphaProcess.status();
+        alphaProcess.close();
+    };
+    const ratel = async function (): Promise<void>
+    {
+        const ratelRunOptions: Deno.RunOptions = { cmd: ["ratel"] };
+        const ratelProcess = Deno.run(ratelRunOptions);
+        await ratelProcess.status();
+        ratelProcess.close();
+    };
+    const server = async function (): Promise<never>
+    {
+        /** @todo Add Deno TLS. */
+        const serverRunOptions: Deno.RunOptions =
+        {
+            cmd:
+                [
+                    "deno", "run", "--unstable", "--allow-all",
+                    "--import-map", "import-map.json",
+                    "server/daemon.tsx", "--hostname", "0.0.0.0",
+                    "--domain", args.domain, // "--tls", "cert/0.0.0.0"
+                ],
+            env: { DENO_DIR: ".cache/" }
+        };
         while (true)
         {
-            try
-            {
-                await async.delay(750);
-                const init = { headers: { "x-http-only": "" } };
-                await fetch(`http://${domain}:5080/`, init);
-                return;
-            }
+            const serverProcess = Deno.run(serverRunOptions);
+            try { await serverProcess.status(); }
             catch { undefined; }
+            serverProcess.close();
         }
     };
-    while (true)
-    {
-        const serverProcess = Deno.run(serverRunOptions);
-        try
-        {
-            await ready();
-            Console.success("fetch(): server is ready", { time: true });
-            await serverProcess.status();
-        }
-        catch { Console.error("fetch(): server is down, restarting", { time: true }); }
-        serverProcess.close();
-    }
+    await Promise.all([server(), zero(), alpha(), ratel()]);
 }
 export async function test(_: Arguments)
 {
@@ -324,13 +324,40 @@ export async function image(args: Arguments)
     if (args.prune)
         await prune(args);
 
-    const buildRunOptions: Deno.RunOptions =
+    const imageRunOptions: Deno.RunOptions =
         { cmd: ["docker", "build", "--target", args.target, "--tag", args.tag, "."] };
-    const buildProcess = Deno.run(buildRunOptions);
-    const buildStatus = await buildProcess.status();
-    buildProcess.close();
-    if (!buildStatus.success)
-        return buildStatus.code;
+    const imageProcess = Deno.run(imageRunOptions);
+    const imageStatus = await imageProcess.status();
+    imageProcess.close();
+    if (!imageStatus.success)
+        return imageStatus.code;
+}
+export async function container(args: Arguments)
+{
+    if (!args.tag)
+    {
+        Console.error(`usage: ${command} container --tag <name> [--prune]`);
+        return;
+    }
+
+    if (args.prune)
+        await prune(args);
+
+    const containerRunOptions: Deno.RunOptions =
+    {
+        cmd:
+            [
+                "docker", "run", "--init", "-itd",
+                "-p", "80:3080", "-p", "5080:5080", "-p", "6080:6080",
+                "-p", "8080:8080", "-p", "9080:9080", "-p", "8000:8000",
+                "-v", "dgraph:/root/dgraph", `${args.tag}:latest`
+            ]
+    };
+    const containerProcess = Deno.run(containerRunOptions);
+    const containerStatus = await containerProcess.status();
+    containerProcess.close();
+    if (!containerStatus.success)
+        return containerStatus.code;
 }
 export function help(_: Arguments)
 {
@@ -356,6 +383,7 @@ if (import.meta.main)
         .command("test", "", {}, test)
         .command("prune", "", {}, prune)
         .command("image", "", {}, image)
+        .command("container", "", {}, container)
         .command("help", "", {}, help)
         .parse();
 }

@@ -1,4 +1,6 @@
-type Query 
-{ 
-    request: String
+
+type User @secret(field: "password")
+{
+    id: ID!
+    name: String! @id
 }

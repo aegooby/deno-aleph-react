@@ -1,9 +1,6 @@
 
 FROM ubuntu:latest
 
-# Dokku
-EXPOSE 5080
-
 # Setup
 ENV DEBIAN_FRONTEND="noninteractive"
 RUN apt-get update

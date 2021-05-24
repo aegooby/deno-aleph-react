@@ -66,7 +66,7 @@ const config =
     {
         output: "dashboard",
         hmrErrorOverlay: true,
-        port: 5443
+        port: 3443
     },
     buildOptions: 
     {
