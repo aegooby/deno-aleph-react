@@ -257,7 +257,7 @@ export async function docker(args: Arguments)
         await ratelProcess.status();
         ratelProcess.close();
     };
-    const server = async function (): Promise<never>
+    const server = async function (): Promise<void>
     {
         /** @todo Add Deno TLS. */
         const serverRunOptions: Deno.RunOptions =
@@ -271,15 +271,12 @@ export async function docker(args: Arguments)
                 ],
             env: { DENO_DIR: ".cache/" }
         };
-        while (true)
-        {
-            const serverProcess = Deno.run(serverRunOptions);
-            try { await serverProcess.status(); }
-            catch { undefined; }
-            serverProcess.close();
-        }
+        const serverProcess = Deno.run(serverRunOptions);
+        try { await serverProcess.status(); }
+        catch { undefined; }
+        serverProcess.close();
     };
-    await Promise.all([server(), zero(), alpha(), ratel()]);
+    await Promise.race([server(), zero(), alpha(), ratel()]);
 }
 export async function test(_: Arguments)
 {
