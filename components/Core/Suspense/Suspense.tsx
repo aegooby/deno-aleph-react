@@ -4,8 +4,9 @@ import { throwOnClient } from "../Core.tsx";
 
 import nprogress from "nprogress";
 
-interface SuspenseProps extends React.SuspenseProps
+interface SuspenseProps
 {
+    fallback: NonNullable<React.ReactNode> | null;
     children?: React.ReactNode;
     loading?: true;
 }

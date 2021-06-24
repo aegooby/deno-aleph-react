@@ -25,7 +25,7 @@ export default function Page(props: Props)
                 {props.helmet}
                 <link rel="stylesheet" href="/nprogress.css" />
             </ReactHelmet.Helmet>
-            <Suspense fallback={<></>} loading={props.lazy}>
+            <Suspense fallback={props.lazy ? <></> : props.content} loading={props.lazy}>
                 {props.content}
             </Suspense>
         </>;
