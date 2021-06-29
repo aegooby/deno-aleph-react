@@ -293,7 +293,8 @@ export class Server
         if (!host.startsWith("www.") && !host.startsWith("localhost"))
         {
             const wwwhost = `www.${host}`;
-            const redirect = `${this.protocol}://${wwwhost}${context.request.url.pathname}`;
+            const protocol = context.request.secure ? "https" : "http";
+            const redirect = `${protocol}://${wwwhost}${context.request.url.pathname}`;
             context.response.redirect(redirect);
         }
         await next();
