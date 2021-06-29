@@ -251,12 +251,12 @@ export class Server
         if (attributes.domain)
         {
             if (!attributes.domain.startsWith("www."))
-                this.domain = `${this.protocol}://www.${attributes.domain}`;
+                this.domain = `https://www.${attributes.domain}`;
             else
-                this.domain = `${this.protocol}://${attributes.domain}`;
+                this.domain = `https://${attributes.domain}`;
         }
         else
-            this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
+            this.domain = `https://${this.hostname}:${this.port}`;
 
         this.www = this.www.bind(this);
 
