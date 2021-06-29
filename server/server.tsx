@@ -258,6 +258,8 @@ export class Server
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
 
+        this.www = this.www.bind(this);
+
         this.static = this.static.bind(this);
         this.react = this.react.bind(this);
 
@@ -285,16 +287,16 @@ export class Server
     {
         return `${this.protocol}://${this.hostname}`;
     }
-    private www(context: Oak.Context, next: () => Promise<unknown>): void
+    private async www(context: Oak.Context, next: () => Promise<unknown>): Promise<void>
     {
         const host = context.request.headers.get("host") as string;
-        if (!host.startsWith("www."))
+        if (!host.startsWith("www.") && !host.startsWith("localhost"))
         {
             const wwwhost = `www.${host}`;
-            const redirect = `${context.request.url.protocol}://${wwwhost}${context.request.url.pathname}`;
-            return context.response.redirect(redirect);
+            const redirect = `${this.protocol}://${wwwhost}${context.request.url.pathname}`;
+            context.response.redirect(redirect);
         }
-        next();
+        await next();
     }
     private async static(context: Oak.Context): Promise<void>
     {
