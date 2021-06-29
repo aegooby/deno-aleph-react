@@ -249,7 +249,12 @@ export class Server
         this.graphql = new GraphQL(attributes);
 
         if (attributes.domain)
-            this.domain = `${this.protocol}://${attributes.domain}`;
+        {
+            if (!attributes.domain.startsWith("www."))
+                this.domain = `${this.protocol}://www.${attributes.domain}`;
+            else
+                this.domain = `${this.protocol}://${attributes.domain}`;
+        }
         else
             this.domain = `${this.protocol}://${this.hostname}:${this.port}`;
 
@@ -279,6 +284,17 @@ export class Server
     public get urlSimple(): string
     {
         return `${this.protocol}://${this.hostname}`;
+    }
+    private www(context: Oak.Context, next: () => Promise<unknown>): void
+    {
+        const host = context.request.headers.get("host") as string;
+        if (!host.startsWith("www."))
+        {
+            const wwwhost = `www.${host}`;
+            const redirect = `${context.request.url.protocol}://${wwwhost}${context.request.url.pathname}`;
+            return context.response.redirect(redirect);
+        }
+        next();
     }
     private async static(context: Oak.Context): Promise<void>
     {
@@ -465,6 +481,8 @@ export class Server
         this.oak.router.head("/(.*)", this.head);
         this.oak.router.get("/(.*)", this.get);
 
+        this.oak.app.proxy = true;
+        this.oak.app.use(this.www);
         this.oak.app.use(this.oak.router.routes());
         this.oak.app.use(this.oak.router.allowedMethods());
         this.oak.app.use(Oak.etag.factory());
