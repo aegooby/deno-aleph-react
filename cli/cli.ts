@@ -158,7 +158,7 @@ export async function localhost(args: Arguments)
                     cmd:
                         [
                             "yarn", "run", "snowpack", "--config",
-                            "config/localhost.snowpack.js", "build"
+                            "config/localhost.snowpack.js", "--watch", "build"
                         ]
                 };
                 const snowpackProcess = Deno.run(snowpackRunOptions);
@@ -187,7 +187,7 @@ export async function localhost(args: Arguments)
                 {
                     cmd:
                         [
-                            "deno", "run", "--unstable", "--allow-all",
+                            "deno", "run", "--unstable", "--watch", "--allow-all",
                             "--import-map", "import-map.json", "server/daemon.tsx",
                             "--hostname", "localhost", "--tls", "cert/localhost/"
                         ],
