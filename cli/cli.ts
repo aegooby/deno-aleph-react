@@ -371,8 +371,8 @@ export async function sync(args: Arguments)
             [
                 "rsync", "--progress", "--archive", "--relative", ...keyArgs,
                 "--exclude", ".cache", "--exclude", "dist", "--exclude", ".git",
-                "--exclude", "node_modules", "--exclude", ".env",
-                `${json.src}`, `${json.user}@${json.host}:${json.dest}`
+                "--exclude", "node_modules", "--exclude", ".env", `${json.src}`,
+                `${args.user ?? json.user}@${args.host ?? json.host}:${json.dest}`
             ],
         env: { DENO_DIR: ".cache/" }
     };
