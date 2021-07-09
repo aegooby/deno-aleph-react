@@ -356,6 +356,30 @@ export async function container(args: Arguments)
     if (!containerStatus.success)
         return containerStatus.code;
 }
+export async function sync(args: Arguments)
+{
+    const file = await Deno.readFile("config/rsync.json");
+    const decoder = new TextDecoder();
+    const string = decoder.decode(file);
+    const json = JSON.parse(string);
+
+    const keyArgs = args.key ? ["-e", "ssh", "-i", `${args.key}`] : [];
+
+    const runOptions: Deno.RunOptions =
+    {
+        cmd:
+            [
+                "rsync", "--progress", "--archive", "--relative", ...keyArgs,
+                "--exclude", ".cache", "--exclude", "dist",
+                "--exclude", "node_modules", "--exclude", ".env",
+                `${json.src}`, `${json.user}@${json.host}:${json.dest}`
+            ],
+        env: { DENO_DIR: ".cache/" }
+    };
+    const process = Deno.run(runOptions);
+    const status = await process.status();
+    return status.code;
+}
 export function help(_: Arguments)
 {
     Console.log(`usage: ${command} <command> [options]`);
@@ -381,6 +405,7 @@ if (import.meta.main)
         .command("prune", "", {}, prune)
         .command("image", "", {}, image)
         .command("container", "", {}, container)
+        .command("sync", "", {}, sync)
         .command("help", "", {}, help)
         .parse();
 }
