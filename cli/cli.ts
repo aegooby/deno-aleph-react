@@ -370,7 +370,7 @@ export async function sync(args: Arguments)
         cmd:
             [
                 "rsync", "--progress", "--archive", "--relative", ...keyArgs,
-                "--exclude", ".cache", "--exclude", "dist",
+                "--exclude", ".cache", "--exclude", "dist", "--exclude", ".git",
                 "--exclude", "node_modules", "--exclude", ".env",
                 `${json.src}`, `${json.user}@${json.host}:${json.dest}`
             ],
