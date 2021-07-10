@@ -1,6 +1,5 @@
 
-type User
+type User @secret(field: "password")
 {
-    id: ID!
-    name: String!
+    username: String! @id
 }
