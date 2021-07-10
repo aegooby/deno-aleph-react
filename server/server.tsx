@@ -46,7 +46,7 @@ type ConnectionAsyncIter =
     {
         [Symbol.asyncIterator](): AsyncGenerator<Deno.Conn, never, unknown>;
     };
-class Listener 
+class Listener
 {
     private nativeListeners: Map<number, [boolean, Deno.Listener]> = new Map<number, [boolean, Deno.Listener]>();
     private options: Array<ListenOptions> = [];
@@ -96,7 +96,7 @@ class Listener
             {
                 while (true)
                 {
-                    try 
+                    try
                     {
                         const connection = await nativeListener.accept();
                         yield connection;
@@ -413,7 +413,7 @@ export class Server
             const httpConnection = Deno.serveHttp(connection);
             for await (const event of httpConnection)
             {
-                try 
+                try
                 {
                     const request = event.request;
                     const response = await this.oak.app.handle(request, connection, secure);
@@ -478,11 +478,18 @@ export class Server
         await this.scripts();
         Console.success(`Scripts collected`, { clear: true });
 
-        this.oak.router.head("/graphql", this.graphql.head);
-        this.oak.router.get("/graphql", this.graphql.get);
-        this.oak.router.post("/graphql", this.graphql.post);
+
+        this.oak.router.head("/custom", this.graphql.customHead);
+        this.oak.router.get("/custom", this.graphql.customGet);
+        this.oak.router.post("/custom", this.graphql.customPost);
+
+        this.oak.router.head("/db", this.graphql.dbHead);
+        this.oak.router.get("/db", this.graphql.dbGet);
+        this.oak.router.post("/db", this.graphql.dbPost);
+
         this.oak.router.head("/(.*)", this.head);
         this.oak.router.get("/(.*)", this.get);
+
 
         this.oak.app.proxy = true;
         this.oak.app.use(this.www);
@@ -497,7 +504,7 @@ export class Server
 
         while (true)
         {
-            try 
+            try
             {
                 this.listener.listen();
                 const keys = this.listener.keys();

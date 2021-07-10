@@ -36,9 +36,15 @@ export class GraphQL
         this.renderPlayground = this.renderPlayground.bind(this);
         this.build = this.build.bind(this);
 
-        this.post = this.post.bind(this);
-        this.get = this.get.bind(this);
-        this.head = this.head.bind(this);
+        this.customPost = this.customPost.bind(this);
+        this.customGet = this.customGet.bind(this);
+        this.customHead = this.customHead.bind(this);
+
+        this.dbPost = this.dbPost.bind(this);
+        this.dbGet = this.dbGet.bind(this);
+        this.dbHead = this.dbHead.bind(this);
+
+
     }
     private async buildSchema(): Promise<void>
     {
@@ -75,7 +81,7 @@ export class GraphQL
         await this.buildSchema();
         this.renderPlayground(attributes.url);
     }
-    public async post(context: Oak.Context): Promise<void>
+    public async customPost(context: Oak.Context): Promise<void>
     {
         try
         {
@@ -125,15 +131,50 @@ export class GraphQL
             context.response.body = JSON.stringify(jsonError);
         }
     }
-    public async get(context: Oak.Context): Promise<void>
+    public async customGet(context: Oak.Context): Promise<void>
     {
         context.response.status = Oak.Status.OK;
         context.response.body = await this.playgroundHTML;
     }
-    public async head(context: Oak.Context): Promise<void>
+    public async customHead(context: Oak.Context): Promise<void>
     {
-        await this.get(context);
+        await this.customGet(context);
         context.response.status = Oak.Status.MethodNotAllowed;
         context.response.body = undefined;
     }
+
+
+    public async dbPost(context: Oak.Context): Promise<void>
+    {
+        const request = context.request.originalRequest;
+        const requestInit: RequestInit =
+        {
+            body: request.body,
+            method: request.method,
+            headers: request.headers,
+        }
+        const response = await fetch("http://localhost:8080/graphql", requestInit);
+        context.response.body = response.body;
+        context.response.headers = response.headers;
+    }
+
+    public async dbGet(context: Oak.Context): Promise<void>
+    {
+        context.response.status = Oak.Status.OK;
+        context.response.body = await this.playgroundHTML;
+        context.response.headers = await this.playgroundHTML;
+    }
+    public async dbHead(context: Oak.Context): Promise<void>
+    {
+        await this.dbGet(context);
+        context.response.status = Oak.Status.MethodNotAllowed;
+        context.response.body = undefined;
+        context.response.headers = undefined;
+    }
+
+
+
+
+
+
 }
