@@ -30,7 +30,7 @@ try
         headElements: [],
 
         customSchema: "graphql/custom.gql",
-        dbSchema: "graphql/db.gql",
+        schema: "graphql/schema.gql",
         resolvers: { request: function () { return "response"; } },
     };
     const httpserver = new server.Server(serverAttributes);

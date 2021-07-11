@@ -163,7 +163,7 @@ export interface ServerAttributes
     headElements: Array<React.ReactElement>;
 
     customSchema: string;
-    dbSchema: string;
+    schema: string;
     resolvers: unknown;
 }
 
@@ -208,8 +208,8 @@ export class Server
             const url = new URL(`key://${key}`);
             switch (url.pathname)
             {
-                case "/graphql/db":
-                    throw new Error("Cannot reroute /graphql/db URL");
+                case "/graphql":
+                    throw new Error("Cannot reroute /graphql URL");
                 case "/graphql/custom":
                     throw new Error("Cannot reroute /graphql/custom URL");
                 default:
@@ -486,9 +486,9 @@ export class Server
         this.oak.router.get("/graphql/custom", this.graphql.customGet);
         this.oak.router.post("/graphql/custom", this.graphql.customPost);
 
-        this.oak.router.head("/graphql/db", this.graphql.dbHead);
-        this.oak.router.get("/graphql/db", this.graphql.dbGet);
-        this.oak.router.post("/graphql/db", this.graphql.dbPost);
+        this.oak.router.head("/graphql", this.graphql.head);
+        this.oak.router.get("/graphql", this.graphql.get);
+        this.oak.router.post("/graphql", this.graphql.post);
 
         this.oak.router.head("/(.*)", this.head);
         this.oak.router.get("/(.*)", this.get);
