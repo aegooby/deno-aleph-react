@@ -82,11 +82,15 @@ export class GraphQL
                             body += decoder.decode(bytes);
                         const json = JSON.parse(body);
                         if (!json.errors)
-                            break;
+                            return;
                         else
                         {
                             for (const error of json.errors)
-                                Console.warn(error.message);
+                                if (!error.startsWith("Unavailable: Server not ready."))
+                                {
+                                    Console.error(error);
+                                    return;
+                                }
                         }
                     }
                 }
