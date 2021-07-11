@@ -10,6 +10,5 @@ type Query
         url: "http://localhost:3080/graphql/custom"
         method: "POST",
         graphql: "query { request }"
-        skipIntrospection: true
     })
 }

@@ -66,25 +66,30 @@ export class GraphQL
             method: "POST",
             headers: { "content-length": schema.byteLength.toString(), "content-type": "multipart/form-data" }
         };
-        while (true)
+        const loadSchema = async function ()
         {
-            try 
+            await async.delay(1500);
+            while (true)
             {
-                const response = await fetch("http://localhost:8080/admin/schema", requestInit);
-                if (response.ok && response.body)
+                try 
                 {
-                    let body = "";
-                    const decoder = new TextDecoder();
-                    for await (const bytes of response.body)
-                        body += decoder.decode(bytes);
-                    const json = JSON.parse(body);
-                    if (!json.errors)
-                        break;
+                    const response = await fetch("http://localhost:8080/admin/schema", requestInit);
+                    if (response.ok && response.body)
+                    {
+                        let body = "";
+                        const decoder = new TextDecoder();
+                        for await (const bytes of response.body)
+                            body += decoder.decode(bytes);
+                        const json = JSON.parse(body);
+                        if (!json.errors)
+                            break;
+                    }
                 }
+                catch { undefined; }
+                await async.delay(500);
             }
-            catch { undefined; }
-            await async.delay(500);
-        }
+        };
+        loadSchema();
     }
     private urlPlayground(url: string): string
     {
