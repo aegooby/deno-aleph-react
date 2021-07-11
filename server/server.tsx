@@ -208,8 +208,10 @@ export class Server
             const url = new URL(`key://${key}`);
             switch (url.pathname)
             {
-                case "/graphql":
-                    throw new Error("Cannot reroute /graphql URL");
+                case "/graphql/db":
+                    throw new Error("Cannot reroute /graphql/db URL");
+                case "/graphql/custom":
+                    throw new Error("Cannot reroute /graphql/custom URL");
                 default:
                     this.routes.set(key, attributes.routes[key]);
                     break;
