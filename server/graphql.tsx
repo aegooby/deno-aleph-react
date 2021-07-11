@@ -86,11 +86,14 @@ export class GraphQL
                         else
                         {
                             for (const error of json.errors)
+                            {
+                                Console.warn(error);
                                 if (!error.includes("Unavailable: Server not ready."))
                                 {
                                     Console.error(error);
                                     return;
                                 }
+                            }
                         }
                     }
                 }
