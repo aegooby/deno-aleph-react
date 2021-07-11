@@ -3,3 +3,13 @@ type User @secret(field: "password")
 {
     username: String! @id
 }
+
+type Query
+{
+    request: String @custom(http: {
+        url: "http://localhost:3080/graphql/custom"
+        method: "POST",
+        graphql: "query { request }"
+        skipIntrospection: true
+    })
+}

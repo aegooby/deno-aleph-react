@@ -13,6 +13,7 @@ interface GraphQLAttributes
     customSchema: string;
     schema: string;
     resolvers: unknown;
+    secure: boolean;
 }
 interface GraphQLBuildAttributes
 {
@@ -31,14 +32,17 @@ export class GraphQL
     private resolvers: unknown;
     private customPlayground: async.Deferred<string> = async.deferred();
     private playground: async.Deferred<string> = async.deferred();
+    private secure: boolean;
 
     constructor(attributes: GraphQLAttributes)
     {
         this.customSchema.path = attributes.customSchema;
         this.schema = attributes.schema;
         this.resolvers = attributes.resolvers;
+        this.secure = attributes.secure;
 
         this.buildSchema = this.buildSchema.bind(this);
+        this.urlPlayground = this.urlPlayground.bind(this);
         this.renderPlayground = this.renderPlayground.bind(this);
         this.build = this.build.bind(this);
 
@@ -82,12 +86,24 @@ export class GraphQL
             await async.delay(500);
         }
     }
+    private urlPlayground(url: string): string
+    {
+        const urlParsed = new URL(url);
+        switch (urlParsed.hostname)
+        {
+            case "localhost":
+                return this.secure ? "https://localhost" : "http://localhost";
+            default:
+                return url;
+        }
+    }
     private renderPlayground(url: string): void
     {
+        const urlPlayground = this.urlPlayground(url);
         const customPlaygroundOptions: playground.RenderPageOptions =
         {
-            endpoint: url + "/graphql/custom",
-            subscriptionEndpoint: url,
+            endpoint: urlPlayground + "/graphql/custom",
+            subscriptionEndpoint: urlPlayground,
             settings:
             {
                 "editor.cursorShape": "line",
@@ -107,8 +123,8 @@ export class GraphQL
         };
         const playgroundOptions: playground.RenderPageOptions =
         {
-            endpoint: url + "/graphql",
-            subscriptionEndpoint: url,
+            endpoint: urlPlayground + "/graphql",
+            subscriptionEndpoint: urlPlayground,
             settings:
             {
                 "editor.cursorShape": "line",
