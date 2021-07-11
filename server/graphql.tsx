@@ -11,8 +11,9 @@ import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
 interface GraphQLAttributes
 {
     customSchema: string;
-    dbSchema: string;
+    schema: string;
     resolvers: unknown;
+    secure: boolean;
 }
 interface GraphQLBuildAttributes
 {
@@ -27,18 +28,21 @@ interface GraphQLCustomSchema
 export class GraphQL
 {
     private customSchema: GraphQLCustomSchema = { schema: undefined, path: "" };
-    private dbSchema: string = "" as const;
+    private schema: string = "" as const;
     private resolvers: unknown;
     private customPlayground: async.Deferred<string> = async.deferred();
-    private dbPlayground: async.Deferred<string> = async.deferred();
+    private playground: async.Deferred<string> = async.deferred();
+    private secure: boolean;
 
     constructor(attributes: GraphQLAttributes)
     {
         this.customSchema.path = attributes.customSchema;
-        this.dbSchema = attributes.dbSchema;
+        this.schema = attributes.schema;
         this.resolvers = attributes.resolvers;
+        this.secure = attributes.secure;
 
         this.buildSchema = this.buildSchema.bind(this);
+        this.urlPlayground = this.urlPlayground.bind(this);
         this.renderPlayground = this.renderPlayground.bind(this);
         this.build = this.build.bind(this);
 
@@ -46,21 +50,21 @@ export class GraphQL
         this.customGet = this.customGet.bind(this);
         this.customHead = this.customHead.bind(this);
 
-        this.dbPost = this.dbPost.bind(this);
-        this.dbGet = this.dbGet.bind(this);
-        this.dbHead = this.dbHead.bind(this);
+        this.post = this.post.bind(this);
+        this.get = this.get.bind(this);
+        this.head = this.head.bind(this);
     }
     private async buildSchema(): Promise<void>
     {
         const customSchema = await Deno.readTextFile(this.customSchema.path);
         this.customSchema.schema = graphql.buildSchema(customSchema);
 
-        const dbSchema = await Deno.readFile(this.dbSchema);
+        const schema = await Deno.readFile(this.schema);
         const requestInit: RequestInit =
         {
-            body: dbSchema,
+            body: schema,
             method: "POST",
-            headers: { "content-length": dbSchema.byteLength.toString(), "content-type": "multipart/form-data" }
+            headers: { "content-length": schema.byteLength.toString(), "content-type": "multipart/form-data" }
         };
         while (true)
         {
@@ -82,12 +86,24 @@ export class GraphQL
             await async.delay(500);
         }
     }
+    private urlPlayground(url: string): string
+    {
+        const urlParsed = new URL(url);
+        switch (urlParsed.hostname)
+        {
+            case "localhost":
+                return this.secure ? "https://localhost" : "http://localhost";
+            default:
+                return url;
+        }
+    }
     private renderPlayground(url: string): void
     {
+        const urlPlayground = this.urlPlayground(url);
         const customPlaygroundOptions: playground.RenderPageOptions =
         {
-            endpoint: url + "/graphql/custom",
-            subscriptionEndpoint: url,
+            endpoint: urlPlayground + "/graphql/custom",
+            subscriptionEndpoint: urlPlayground,
             settings:
             {
                 "editor.cursorShape": "line",
@@ -105,10 +121,10 @@ export class GraphQL
                 "tracing.tracingSupported": true,
             }
         };
-        const dbPlaygroundOptions: playground.RenderPageOptions =
+        const playgroundOptions: playground.RenderPageOptions =
         {
-            endpoint: url + "/graphql/db",
-            subscriptionEndpoint: url,
+            endpoint: urlPlayground + "/graphql",
+            subscriptionEndpoint: urlPlayground,
             settings:
             {
                 "editor.cursorShape": "line",
@@ -127,7 +143,7 @@ export class GraphQL
             }
         };
         this.customPlayground.resolve(playground.renderPlaygroundPage(customPlaygroundOptions));
-        this.dbPlayground.resolve(playground.renderPlaygroundPage(dbPlaygroundOptions));
+        this.playground.resolve(playground.renderPlaygroundPage(playgroundOptions));
     }
     public async build(attributes: GraphQLBuildAttributes)
     {
@@ -195,7 +211,7 @@ export class GraphQL
         context.response.status = Oak.Status.MethodNotAllowed;
         context.response.body = undefined;
     }
-    public async dbPost(context: Oak.Context): Promise<void>
+    public async post(context: Oak.Context): Promise<void>
     {
         const request = context.request.originalRequest as Oak.NativeRequest;
         const requestInit: RequestInit =
@@ -209,14 +225,14 @@ export class GraphQL
         context.response.headers = response.headers;
     }
 
-    public async dbGet(context: Oak.Context): Promise<void>
+    public async get(context: Oak.Context): Promise<void>
     {
         context.response.status = Oak.Status.OK;
-        context.response.body = await this.dbPlayground;
+        context.response.body = await this.playground;
     }
-    public async dbHead(context: Oak.Context): Promise<void>
+    public async head(context: Oak.Context): Promise<void>
     {
-        await this.dbGet(context);
+        await this.get(context);
         context.response.status = Oak.Status.MethodNotAllowed;
         context.response.body = undefined;
     }

@@ -1,5 +1,0 @@
-
-type User @secret(field: "password")
-{
-    username: String! @id
-}
