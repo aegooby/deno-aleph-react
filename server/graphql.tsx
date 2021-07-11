@@ -83,6 +83,11 @@ export class GraphQL
                         const json = JSON.parse(body);
                         if (!json.errors)
                             break;
+                        else
+                        {
+                            for (const error of json.errors)
+                                Console.warn(error.message);
+                        }
                     }
                 }
                 catch { undefined; }
