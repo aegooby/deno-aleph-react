@@ -46,7 +46,7 @@ type ConnectionAsyncIter =
     {
         [Symbol.asyncIterator](): AsyncGenerator<Deno.Conn, never, unknown>;
     };
-class Listener 
+class Listener
 {
     private nativeListeners: Map<number, [boolean, Deno.Listener]> = new Map<number, [boolean, Deno.Listener]>();
     private options: Array<ListenOptions> = [];
@@ -96,7 +96,7 @@ class Listener
             {
                 while (true)
                 {
-                    try 
+                    try
                     {
                         const connection = await nativeListener.accept();
                         yield connection;
@@ -162,7 +162,8 @@ export interface ServerAttributes
     App: React.ReactElement;
     headElements: Array<React.ReactElement>;
 
-    schema: string;
+    customSchema: string;
+    dbSchema: string;
     resolvers: unknown;
 }
 
@@ -207,8 +208,10 @@ export class Server
             const url = new URL(`key://${key}`);
             switch (url.pathname)
             {
-                case "/graphql":
-                    throw new Error("Cannot reroute /graphql URL");
+                case "/graphql/db":
+                    throw new Error("Cannot reroute /graphql/db URL");
+                case "/graphql/custom":
+                    throw new Error("Cannot reroute /graphql/custom URL");
                 default:
                     this.routes.set(key, attributes.routes[key]);
                     break;
@@ -413,7 +416,7 @@ export class Server
             const httpConnection = Deno.serveHttp(connection);
             for await (const event of httpConnection)
             {
-                try 
+                try
                 {
                     const request = event.request;
                     const response = await this.oak.app.handle(request, connection, secure);
@@ -478,11 +481,18 @@ export class Server
         await this.scripts();
         Console.success(`Scripts collected`, { clear: true });
 
-        this.oak.router.head("/graphql", this.graphql.head);
-        this.oak.router.get("/graphql", this.graphql.get);
-        this.oak.router.post("/graphql", this.graphql.post);
+
+        this.oak.router.head("/graphql/custom", this.graphql.customHead);
+        this.oak.router.get("/graphql/custom", this.graphql.customGet);
+        this.oak.router.post("/graphql/custom", this.graphql.customPost);
+
+        this.oak.router.head("/graphql/db", this.graphql.dbHead);
+        this.oak.router.get("/graphql/db", this.graphql.dbGet);
+        this.oak.router.post("/graphql/db", this.graphql.dbPost);
+
         this.oak.router.head("/(.*)", this.head);
         this.oak.router.get("/(.*)", this.get);
+
 
         this.oak.app.proxy = true;
         this.oak.app.use(this.www);
@@ -497,7 +507,7 @@ export class Server
 
         while (true)
         {
-            try 
+            try
             {
                 this.listener.listen();
                 const keys = this.listener.keys();

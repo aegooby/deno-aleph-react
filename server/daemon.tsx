@@ -29,7 +29,8 @@ try
         App: <App client={undefined} />,
         headElements: [],
 
-        schema: "graphql/schema.gql",
+        customSchema: "graphql/custom.gql",
+        dbSchema: "graphql/db.gql",
         resolvers: { request: function () { return "response"; } },
     };
     const httpserver = new server.Server(serverAttributes);
