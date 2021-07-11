@@ -162,7 +162,8 @@ export interface ServerAttributes
     App: React.ReactElement;
     headElements: Array<React.ReactElement>;
 
-    schema: string;
+    customSchema: string;
+    dbSchema: string;
     resolvers: unknown;
 }
 
@@ -479,13 +480,13 @@ export class Server
         Console.success(`Scripts collected`, { clear: true });
 
 
-        this.oak.router.head("/custom", this.graphql.customHead);
-        this.oak.router.get("/custom", this.graphql.customGet);
-        this.oak.router.post("/custom", this.graphql.customPost);
+        this.oak.router.head("/graphql/custom", this.graphql.customHead);
+        this.oak.router.get("/graphql/custom", this.graphql.customGet);
+        this.oak.router.post("/graphql/custom", this.graphql.customPost);
 
-        this.oak.router.head("/db", this.graphql.dbHead);
-        this.oak.router.get("/db", this.graphql.dbGet);
-        this.oak.router.post("/db", this.graphql.dbPost);
+        this.oak.router.head("/graphql/db", this.graphql.dbHead);
+        this.oak.router.get("/graphql/db", this.graphql.dbGet);
+        this.oak.router.post("/graphql/db", this.graphql.dbPost);
 
         this.oak.router.head("/(.*)", this.head);
         this.oak.router.get("/(.*)", this.get);
