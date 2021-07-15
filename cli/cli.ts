@@ -98,7 +98,7 @@ export async function cache(args: Arguments)
 {
     if (args.help)
     {
-        Console.log(`usage: ${command} cache`);
+        Console.log(`usage: ${command} cache [--reload]`);
         return;
     }
     const files: string[] = [];
