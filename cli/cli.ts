@@ -106,6 +106,23 @@ export async function cache(args: Arguments)
         files.push(file.path);
 
     const flags = args.reload ? ["--reload"] : [];
+    switch (typeof args.reload)
+    {
+        case "string":
+            {
+                const reloads = args.reload.split(",");
+                const importMap = JSON.parse(await Deno.readTextFile("import-map.json"));
+                const urlReloads = reloads.map(function (value: string) { return importMap.imports[value]; });
+                const filteredReloads = urlReloads.filter(function (value: unknown) { return value !== undefined; });
+                if (!filteredReloads.length)
+                    flags.pop();
+                else
+                    flags.push(filteredReloads.join(","));
+                break;
+            }
+        default:
+            break;
+    }
     const denoRunOptions: Deno.RunOptions =
     {
         cmd: ["deno", "cache", "--unstable", ...flags, "--import-map", "import-map.json", ...files],
