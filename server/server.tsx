@@ -493,7 +493,6 @@ export class Server
         this.oak.router.head("/(.*)", this.head);
         this.oak.router.get("/(.*)", this.get);
 
-
         this.oak.app.proxy = true;
         this.oak.app.use(this.www);
         this.oak.app.use(this.oak.router.routes());

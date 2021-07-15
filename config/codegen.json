@@ -1,0 +1,12 @@
+{
+    "schema": "graphql/custom.gql",
+    "generates": {
+        "server/types.d.tsx": {
+            "plugins": [
+                "typescript",
+                "typescript-operations"
+            ]
+        }
+    },
+    "overwrite": true
+}

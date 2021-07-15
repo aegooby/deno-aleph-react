@@ -40,6 +40,11 @@ export function all(_: Arguments)
 }
 export async function clean(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} clean [--cache] [--dist] [--node]`);
+        return;
+    }
     if (!args.cache && !args.dist && !args.node)
         args.all = true;
 
@@ -65,15 +70,25 @@ export async function clean(args: Arguments)
     mkdirProcess.close();
     return mkdirStatus.code;
 }
-export async function install(_: Arguments)
+export async function install(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} install`);
+        return;
+    }
     const npmProcess = Deno.run({ cmd: ["npm", "install", "--global", "yarn"] });
     const npmStatus = await npmProcess.status();
     npmProcess.close();
     return npmStatus.code;
 }
-export async function upgrade(_: Arguments)
+export async function upgrade(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} upgrade`);
+        return;
+    }
     const process = Deno.run({ cmd: ["deno", "upgrade"] });
     const status = await process.status();
     process.close();
@@ -81,6 +96,11 @@ export async function upgrade(_: Arguments)
 }
 export async function cache(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} cache`);
+        return;
+    }
     const files: string[] = [];
     for await (const file of fs.expandGlob("**/*.tsx"))
         files.push(file.path);
@@ -108,6 +128,11 @@ export async function cache(args: Arguments)
 }
 export async function bundle(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} bundle --graphql <endpoint>`);
+        return;
+    }
     if (!args.graphql)
     {
         Console.error(`usage: ${command} bundle --graphql <endpoint>`);
@@ -126,8 +151,34 @@ export async function bundle(args: Arguments)
     process.close();
     return status.code;
 }
+export async function codegen(args: Arguments)
+{
+    if (args.help)
+    {
+        Console.error(`usage: ${command} codegen [--watch]`);
+        return;
+    }
+    const watchArgs = args.watch ? ["--watch"] : [];
+    const runOptions: Deno.RunOptions =
+    {
+        cmd:
+            [
+                "yarn", "run", "graphql-codegen", "--config",
+                "config/codegen.json", ...watchArgs
+            ],
+    };
+    const process = Deno.run(runOptions);
+    const status = await process.status();
+    process.close();
+    return status.code;
+}
 export async function localhost(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} localhost --server <snowpack | deno>`);
+        return;
+    }
     if (!args.server)
     {
         Console.error(`usage: ${command} localhost --server <snowpack | deno>`);
@@ -205,10 +256,14 @@ export async function localhost(args: Arguments)
 }
 export async function docker(args: Arguments)
 {
-    const usage = `usage: ${command} docker --target <localhost | dev | live> --domain <domain>`;
+    if (args.help)
+    {
+        Console.log(`usage: ${command} docker --target <localhost | dev | live> --domain <domain>`);
+        return;
+    }
     if (!args.target || !(["localhost", "dev", "live"].includes(args.target)))
     {
-        Console.error(usage);
+        Console.error(`usage: ${command} docker --target <localhost | dev | live> --domain <domain>`);
         return;
     }
 
@@ -242,8 +297,9 @@ export async function docker(args: Arguments)
         {
             cmd:
                 [
-                    "dgraph", "alpha", "--cache", "size-mb=2048",
-                    "--zero", "localhost:5080", "--security", "whitelist=0.0.0.0/0"
+                    "dgraph", "alpha", "--cache", "size-mb=2048", "--limit",
+                    "mutations=strict", "--zero", "localhost:5080",
+                    "--security", "whitelist=0.0.0.0/0"
                 ]
         };
         const alphaProcess = Deno.run(alphaRunOptions);
@@ -278,8 +334,13 @@ export async function docker(args: Arguments)
     };
     await Promise.race([server(), zero(), alpha(), ratel()]);
 }
-export async function test(_: Arguments)
+export async function test(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} test`);
+        return;
+    }
     const runOptions: Deno.RunOptions =
     {
         cmd:
@@ -294,8 +355,13 @@ export async function test(_: Arguments)
     process.close();
     return status.code;
 }
-export async function prune(_: Arguments)
+export async function prune(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} prune`);
+        return;
+    }
     const containerProcess =
         Deno.run({ cmd: ["docker", "container", "prune", "--force"] });
     const containerStatus = await containerProcess.status();
@@ -312,6 +378,11 @@ export async function prune(_: Arguments)
 }
 export async function image(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} image --target <value> --tag <name> [--prune]`);
+        return;
+    }
     if (!args.target || !args.tag)
     {
         Console.error(`usage: ${command} image --target <value> --tag <name> [--prune]`);
@@ -331,6 +402,11 @@ export async function image(args: Arguments)
 }
 export async function container(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} container --tag <name> [--prune]`);
+        return;
+    }
     if (!args.tag)
     {
         Console.error(`usage: ${command} container --tag <name> [--prune]`);
@@ -358,6 +434,11 @@ export async function container(args: Arguments)
 }
 export async function sync(args: Arguments)
 {
+    if (args.help)
+    {
+        Console.log(`usage: ${command} sync [--key <path>]`);
+        return;
+    }
     const file = await Deno.readFile("config/rsync.json");
     const decoder = new TextDecoder();
     const string = decoder.decode(file);
@@ -399,6 +480,7 @@ if (import.meta.main)
         .command("upgrade", "", {}, upgrade)
         .command("cache", "", {}, cache)
         .command("bundle", "", {}, bundle)
+        .command("codegen", "", {}, codegen)
         .command("localhost", "", {}, localhost)
         .command("docker", "", {}, docker)
         .command("test", "", {}, test)

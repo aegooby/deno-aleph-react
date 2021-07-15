@@ -7,6 +7,7 @@ import * as playground from "graphql-playground";
 
 import { Console } from "./console.tsx";
 import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
+import * as util from "./util.tsx";
 
 interface GraphQLAttributes
 {
@@ -33,6 +34,8 @@ export class GraphQL
     private customPlayground: async.Deferred<string> = async.deferred();
     private playground: async.Deferred<string> = async.deferred();
     private secure: boolean;
+
+    private static dgraphAdmin: string = "http://localhost:8080/admin/schema" as const;
 
     constructor(attributes: GraphQLAttributes)
     {
@@ -66,14 +69,15 @@ export class GraphQL
             method: "POST",
             headers: { "content-length": schema.byteLength.toString(), "content-type": "multipart/form-data" }
         };
+
         const loadSchema = async function ()
         {
-            await async.delay(1500);
             while (true)
             {
+                await async.delay(1500);
                 try 
                 {
-                    const response = await fetch("http://localhost:8080/admin/schema", requestInit);
+                    const response = await fetch(GraphQL.dgraphAdmin, requestInit);
                     if (response.ok && response.body)
                     {
                         let body = "";
@@ -95,7 +99,6 @@ export class GraphQL
                     }
                 }
                 catch { undefined; }
-                await async.delay(500);
             }
         };
         loadSchema();
@@ -126,7 +129,7 @@ export class GraphQL
                 "editor.reuseHeaders": true,
                 "editor.theme": "dark",
                 "general.betaUpdates": true,
-                "request.credentials": "omit",
+                "request.credentials": "include",
                 "request.globalHeaders": {},
                 "schema.polling.enable": true,
                 "schema.polling.endpointFilter": "*localhost",
@@ -208,7 +211,7 @@ export class GraphQL
             const jsonError =
             {
                 data: null,
-                errors: [{ message: error.message ? error.message : error }],
+                errors: [{ message: error.message ?? error }],
             };
             context.response.status = Oak.Status.OK;
             context.response.body = JSON.stringify(jsonError);
@@ -227,18 +230,8 @@ export class GraphQL
     }
     public async post(context: Oak.Context): Promise<void>
     {
-        const request = context.request.originalRequest as Oak.NativeRequest;
-        const requestInit: RequestInit =
-        {
-            body: request.body,
-            method: request.method,
-            headers: request.headers,
-        };
-        const response = await fetch("http://localhost:8080/graphql", requestInit);
-        context.response.body = response.body;
-        context.response.headers = response.headers;
+        await util.proxy(GraphQL.dgraphAdmin, context);
     }
-
     public async get(context: Oak.Context): Promise<void>
     {
         context.response.status = Oak.Status.OK;
