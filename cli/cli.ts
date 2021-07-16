@@ -504,14 +504,15 @@ export async function sync(args: Arguments)
     const json = JSON.parse(string);
 
     const keyArgs = args.key ? ["-e", "ssh", "-i", `${args.key}`] : [];
+    const flatMap = function (value: string) { return ["--exclude", value]; };
+    const exclude = (json.exclude as string[]).flatMap(flatMap);
 
     const runOptions: Deno.RunOptions =
     {
         cmd:
             [
                 "rsync", "--progress", "--archive", "--relative", ...keyArgs,
-                "--exclude", ".cache", "--exclude", "dist", "--exclude", ".git",
-                "--exclude", "node_modules", "--exclude", ".env", `${json.src}`,
+                ...exclude, `${json.src}`,
                 `${args.user ?? json.user}@${args.host ?? json.host}:${json.dest}`
             ],
         env: { DENO_DIR: ".cache/" }

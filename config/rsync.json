@@ -2,5 +2,12 @@
     "src": ".",
     "user": "root",
     "host": "localhost",
-    "dest": "~/httpsaurus"
+    "dest": "~/httpsaurus",
+    "exclude": [
+        ".git",
+        ".cache",
+        "dist",
+        "node_modules",
+        ".env"
+    ]
 }
