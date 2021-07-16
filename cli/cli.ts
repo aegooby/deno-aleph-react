@@ -94,6 +94,48 @@ export async function upgrade(args: Arguments)
     process.close();
     return status.code;
 }
+export async function pkgUpdate(args: Arguments)
+{
+    if (args.help)
+    {
+        Console.log(`usage: ${command} pkg-update <packages>... [--all]`);
+        return;
+    }
+    const importMap = JSON.parse(await Deno.readTextFile("import-map.json"));
+    const keys = (args.all ? Object.keys(importMap.imports) : args._) as string[];
+    for (const key of keys)
+    {
+        if (!importMap.imports[key])
+            continue;
+        try
+        {
+            const url = new URL(importMap.imports[key]);
+            switch (url.host)
+            {
+                case "deno.land":
+                    {
+                        const at = url.pathname.indexOf("@");
+                        if (at > 0)
+                        {
+                            const slash = url.pathname.indexOf("/", at);
+                            url.pathname = `${url.pathname.slice(0, at)}${url.pathname.slice(slash, undefined)}`;
+                        }
+                        const response = await fetch(url);
+                        if (response.headers.has("location"))
+                            url.pathname = response.headers.get("location") as string;
+                        else
+                            url.pathname = (new URL(response.url)).pathname;
+                        importMap.imports[key] = url.toString();
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+        catch { undefined; }
+    }
+    await Deno.writeTextFile("import-map.json", JSON.stringify(importMap, undefined, 4));
+}
 export async function cache(args: Arguments)
 {
     if (args.help)
@@ -495,6 +537,7 @@ if (import.meta.main)
         .command("clean", "", {}, clean)
         .command("install", "", {}, install)
         .command("upgrade", "", {}, upgrade)
+        .command("pkg-update", "", {}, pkgUpdate)
         .command("cache", "", {}, cache)
         .command("bundle", "", {}, bundle)
         .command("codegen", "", {}, codegen)
