@@ -35,7 +35,8 @@ export class GraphQL
     private playground: async.Deferred<string> = async.deferred();
     private secure: boolean;
 
-    private static dgraphAdmin: string = "http://localhost:8080/admin/schema" as const;
+    private static dgraphAdminSchema: string = "http://localhost:8080/admin/schema" as const;
+    private static dgraphGraphQL: string = "http://localhost:8080/graphql" as const;
 
     constructor(attributes: GraphQLAttributes)
     {
@@ -77,7 +78,7 @@ export class GraphQL
                 await async.delay(1500);
                 try 
                 {
-                    const response = await fetch(GraphQL.dgraphAdmin, requestInit);
+                    const response = await fetch(GraphQL.dgraphAdminSchema, requestInit);
                     if (response.ok && response.body)
                     {
                         let body = "";
@@ -230,7 +231,7 @@ export class GraphQL
     }
     public async post(context: Oak.Context): Promise<void>
     {
-        await util.proxy(GraphQL.dgraphAdmin, context);
+        await util.proxy(GraphQL.dgraphGraphQL, context);
     }
     public async get(context: Oak.Context): Promise<void>
     {

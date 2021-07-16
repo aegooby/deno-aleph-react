@@ -9,8 +9,10 @@ RUN apt-get install -y curl unzip nodejs npm git --no-install-recommends
 # Deno
 RUN curl -fsSL https://deno.land/x/install/install.sh | DENO_INSTALL=/usr/local sh
 
-# Yarn
+# Yarn & Node
 RUN npm install --global yarn
+RUN npm install --global n
+RUN n latest
 
 # DGraph
 RUN curl -sSf https://get.dgraph.io | bash
