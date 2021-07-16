@@ -1,8 +1,8 @@
 
-type User @secret(field: "password") 
+type User @secret(field: "password")
 {
     id: ID!
-    email: String!
+    email: String! @id
     admin: Boolean!
 }
 
