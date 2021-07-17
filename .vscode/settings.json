@@ -12,8 +12,8 @@
     "typescript.format.placeOpenBraceOnNewLineForControlBlocks": true,
     "javascript.format.placeOpenBraceOnNewLineForControlBlocks": true,
 
-    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
-    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
 
     "typescript.autoClosingTags": true,
     "javascript.autoClosingTags": true,
@@ -64,9 +64,6 @@
 
     "typescript.preferences.importModuleSpecifier": "shortest",
     "javascript.preferences.importModuleSpecifier": "shortest",
-
-    "typescript.preferences.importModuleSpecifierEnding": "js",
-    "javascript.preferences.importModuleSpecifierEnding": "js",
 
     "typescript.reportStyleChecksAsWarnings": true,
 

@@ -263,6 +263,20 @@ export async function localhost(args: Arguments)
             }
         case "deno":
             {
+                const snowpackRunOptions: Deno.RunOptions =
+                {
+                    cmd:
+                        [
+                            "yarn", "run", "snowpack", "--config",
+                            "config/localhost.snowpack.js", "build"
+                        ]
+                };
+                const snowpackProcess = Deno.run(snowpackRunOptions);
+                const snowpackStatus = await snowpackProcess.status();
+                snowpackProcess.close();
+                if (!snowpackStatus.success)
+                    return snowpackStatus.code;
+
                 const ready = async function (): Promise<void>
                 {
                     while (true)
@@ -278,20 +292,6 @@ export async function localhost(args: Arguments)
                     }
                 };
                 ready().then(async function () { await opener.open("https://localhost:3443/"); });
-
-                const snowpackRunOptions: Deno.RunOptions =
-                {
-                    cmd:
-                        [
-                            "yarn", "run", "snowpack", "--config",
-                            "config/localhost.snowpack.js", "build"
-                        ]
-                };
-                const snowpackProcess = Deno.run(snowpackRunOptions);
-                const snowpackStatus = await snowpackProcess.status();
-                snowpackProcess.close();
-                if (!snowpackStatus.success)
-                    return snowpackStatus.code;
 
                 const serverRunOptions: Deno.RunOptions =
                 {
