@@ -30,7 +30,7 @@ jobs:
               with:
                   deno-version: ${{ matrix.deno }}
             - name: Upgrade Node
-              run: npm install --global n && n latest
+              run: sudo npm install --global n && sudo n latest
             - name: Cache Dependencies
               run: deno run --unstable --allow-all --import-map import-map.json cli/cli.ts cache
             - name: Test Server
