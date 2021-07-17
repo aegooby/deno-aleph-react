@@ -263,20 +263,6 @@ export async function localhost(args: Arguments)
             }
         case "deno":
             {
-                const snowpackRunOptions: Deno.RunOptions =
-                {
-                    cmd:
-                        [
-                            "yarn", "run", "snowpack", "--config",
-                            "config/localhost.snowpack.js", "--watch", "build"
-                        ]
-                };
-                const snowpackProcess = Deno.run(snowpackRunOptions);
-                const snowpackStatus = await snowpackProcess.status();
-                snowpackProcess.close();
-                if (!snowpackStatus.success)
-                    return snowpackStatus.code;
-
                 const ready = async function (): Promise<void>
                 {
                     while (true)
@@ -292,6 +278,20 @@ export async function localhost(args: Arguments)
                     }
                 };
                 ready().then(async function () { await opener.open("https://localhost:3443/"); });
+
+                const snowpackRunOptions: Deno.RunOptions =
+                {
+                    cmd:
+                        [
+                            "yarn", "run", "snowpack", "--config",
+                            "config/localhost.snowpack.js", "build"
+                        ]
+                };
+                const snowpackProcess = Deno.run(snowpackRunOptions);
+                const snowpackStatus = await snowpackProcess.status();
+                snowpackProcess.close();
+                if (!snowpackStatus.success)
+                    return snowpackStatus.code;
 
                 const serverRunOptions: Deno.RunOptions =
                 {
@@ -382,7 +382,7 @@ export async function docker(args: Arguments)
                     "deno", "run", "--unstable", "--allow-all",
                     "--import-map", "import-map.json",
                     "server/daemon.tsx", "--hostname", "0.0.0.0",
-                    "--domain", args.domain, // "--tls", "cert/0.0.0.0"
+                    "--domain", args.domain, "--dgraph" // "--tls", "cert/0.0.0.0"
                 ],
             env: { DENO_DIR: ".cache/" }
         };

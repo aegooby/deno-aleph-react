@@ -1,4 +1,5 @@
+
 type Query 
 { 
-    request: String
+    request: String!
 }

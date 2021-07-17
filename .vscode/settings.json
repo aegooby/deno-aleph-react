@@ -3,5 +3,73 @@
     "deno.unstable": true,
     "deno.lint": true,
     "deno.importMap": "import-map.json",
-    "typescript.validate.enable": false
+    "typescript.validate.enable": false,
+    "editor.formatOnSave": true,
+
+    "typescript.format.placeOpenBraceOnNewLineForFunctions": true,
+    "javascript.format.placeOpenBraceOnNewLineForFunctions": true,
+    
+    "typescript.format.placeOpenBraceOnNewLineForControlBlocks": true,
+    "javascript.format.placeOpenBraceOnNewLineForControlBlocks": true,
+
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+
+    "typescript.autoClosingTags": true,
+    "javascript.autoClosingTags": true,
+
+    "typescript.format.enable": true,
+    "javascript.format.enable": true,
+
+    "typescript.format.insertSpaceAfterCommaDelimiter": true,
+    "javascript.format.insertSpaceAfterCommaDelimiter": true,
+
+    "typescript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": true,
+    "javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": true,
+
+    "typescript.format.insertSpaceAfterKeywordsInControlFlowStatements": true,
+    "javascript.format.insertSpaceAfterKeywordsInControlFlowStatements": true,
+
+    "typescript.preferences.quoteStyle": "double",
+    "javascript.preferences.quoteStyle": "double",
+
+    "typescript.format.semicolons": "insert",
+    "javascript.format.semicolons": "insert",
+
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": true,
+
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": false,
+
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": false,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": false,
+
+    "typescript.format.insertSpaceAfterConstructor": false,
+    "javascript.format.insertSpaceAfterConstructor": false,
+
+    "typescript.format.insertSpaceAfterSemicolonInForStatements": true,
+    "javascript.format.insertSpaceAfterSemicolonInForStatements": true,
+
+    "typescript.format.insertSpaceBeforeAndAfterBinaryOperators": true,
+    "javascript.format.insertSpaceBeforeAndAfterBinaryOperators": true,
+
+    "typescript.format.insertSpaceBeforeFunctionParenthesis": false,
+    "javascript.format.insertSpaceBeforeFunctionParenthesis": false,
+
+    "typescript.format.insertSpaceAfterTypeAssertion": false,
+
+    "typescript.preferences.importModuleSpecifier": "shortest",
+    "javascript.preferences.importModuleSpecifier": "shortest",
+
+    "typescript.preferences.importModuleSpecifierEnding": "js",
+    "javascript.preferences.importModuleSpecifierEnding": "js",
+
+    "typescript.reportStyleChecksAsWarnings": true,
+
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": true,
 }

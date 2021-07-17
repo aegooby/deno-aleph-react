@@ -13,6 +13,7 @@ import * as denoflate from "denoflate";
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
+import type { Resolvers } from "./types.d.tsx";
 
 class Version
 {
@@ -164,7 +165,8 @@ export interface ServerAttributes
 
     customSchema: string;
     schema: string;
-    resolvers: unknown;
+    resolvers: Resolvers;
+    dgraph: boolean;
 }
 
 interface OakServer

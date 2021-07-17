@@ -2,19 +2,21 @@
 import * as async from "@std/async";
 
 import * as Oak from "oak";
+import * as Apollo from "apollo-graphql";
 import * as graphql from "graphql";
 import * as playground from "graphql-playground";
 
 import { Console } from "./console.tsx";
 import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
-import * as util from "./util.tsx";
+import type { Resolvers } from "./types.d.tsx";
 
 interface GraphQLAttributes
 {
     customSchema: string;
     schema: string;
-    resolvers: unknown;
+    resolvers: Resolvers;
     secure: boolean;
+    dgraph: boolean;
 }
 interface GraphQLBuildAttributes
 {
@@ -30,10 +32,11 @@ export class GraphQL
 {
     private customSchema: GraphQLCustomSchema = { schema: undefined, path: "" };
     private schema: string = "" as const;
-    private resolvers: unknown;
+    private resolvers: Resolvers;
     private customPlayground: async.Deferred<string> = async.deferred();
     private playground: async.Deferred<string> = async.deferred();
     private secure: boolean;
+    private dgraph: boolean;
 
     private static dgraphAdminSchema: string = "http://localhost:8080/admin/schema" as const;
     private static dgraphGraphQL: string = "http://localhost:8080/graphql" as const;
@@ -44,6 +47,7 @@ export class GraphQL
         this.schema = attributes.schema;
         this.resolvers = attributes.resolvers;
         this.secure = attributes.secure;
+        this.dgraph = attributes.dgraph;
 
         this.buildSchema = this.buildSchema.bind(this);
         this.urlPlayground = this.urlPlayground.bind(this);
@@ -62,6 +66,7 @@ export class GraphQL
     {
         const customSchema = await Deno.readTextFile(this.customSchema.path);
         this.customSchema.schema = graphql.buildSchema(customSchema);
+        Apollo.addResolversToSchema(this.customSchema.schema!, this.resolvers);
 
         const schema = await Deno.readFile(this.schema);
         const requestInit: RequestInit =
@@ -102,7 +107,8 @@ export class GraphQL
                 catch { undefined; }
             }
         };
-        loadSchema();
+        if (this.dgraph)
+            loadSchema();
     }
     private urlPlayground(url: string): string
     {
@@ -192,16 +198,16 @@ export class GraphQL
                 default:
                     throw new Error("Invalid GraphQL MIME type");
             }
-            const graphqlargs: graphql.GraphQLArgs =
+            const graphQLArgs: graphql.GraphQLArgs =
             {
                 schema: this.customSchema.schema as graphql.GraphQLSchema,
                 source: query.query,
                 rootValue: this.resolvers,
+                contextValue: context,
                 variableValues: query.variables,
                 operationName: query.operationName,
             };
-            const result = await graphql.graphql(graphqlargs);
-
+            const result = await graphql.graphql(graphQLArgs);
             context.response.status = Oak.Status.OK;
             context.response.body = JSON.stringify(result);
         }
@@ -231,15 +237,47 @@ export class GraphQL
     }
     public async post(context: Oak.Context): Promise<void>
     {
-        await util.proxy(GraphQL.dgraphGraphQL, context);
+        if (!this.dgraph)
+        {
+            context.response.status = Oak.Status.InternalServerError;
+            context.response.body = "500 Internal Server Error: dgraph is disabled!";
+            return;
+        }
+        const request = context.request.originalRequest as Oak.NativeRequest;
+        const requestInit: RequestInit =
+        {
+            body: request.body,
+            method: request.method,
+            headers: request.headers,
+        };
+        try
+        {
+            const response = await fetch(GraphQL.dgraphGraphQL, requestInit);
+            context.response.status = response.status;
+            context.response.body = response.body;
+            context.response.headers = response.headers;
+        }
+        catch { context.response.status = Oak.Status.InternalServerError; }
     }
     public async get(context: Oak.Context): Promise<void>
     {
+        if (!this.dgraph)
+        {
+            context.response.status = Oak.Status.InternalServerError;
+            context.response.body = "500 Internal Server Error: dgraph is disabled!";
+            return;
+        }
         context.response.status = Oak.Status.OK;
         context.response.body = await this.playground;
     }
     public async head(context: Oak.Context): Promise<void>
     {
+        if (!this.dgraph)
+        {
+            context.response.status = Oak.Status.InternalServerError;
+            context.response.body = "500 Internal Server Error: dgraph is disabled!";
+            return;
+        }
         await this.get(context);
         context.response.status = Oak.Status.MethodNotAllowed;
         context.response.body = undefined;
