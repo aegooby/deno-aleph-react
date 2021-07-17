@@ -13,7 +13,6 @@ import * as denoflate from "denoflate";
 import { GraphQL } from "./graphql.tsx";
 import { Console } from "./console.tsx";
 export { Console } from "./console.tsx";
-import type { Resolvers } from "./types.d.tsx";
 
 class Version
 {
@@ -45,11 +44,11 @@ interface ListenTlsOptions extends Deno.ListenTlsOptions
 type ListenOptions = ListenBaseOptions | ListenTlsOptions;
 type ConnectionAsyncIter =
     {
-        [Symbol.asyncIterator](): AsyncGenerator<Deno.Conn, never, unknown>;
+        [ Symbol.asyncIterator ](): AsyncGenerator<Deno.Conn, never, unknown>;
     };
 class Listener
 {
-    private nativeListeners: Map<number, [boolean, Deno.Listener]> = new Map<number, [boolean, Deno.Listener]>();
+    private nativeListeners: Map<number, [ boolean, Deno.Listener ]> = new Map<number, [ boolean, Deno.Listener ]>();
     private options: Array<ListenOptions> = [];
 
     constructor(options?: Array<ListenOptions>)
@@ -64,22 +63,22 @@ class Listener
         this.keys = this.keys.bind(this);
         this.close = this.close.bind(this);
     }
-    private create(options: ListenOptions): [boolean, Deno.Listener]
+    private create(options: ListenOptions): [ boolean, Deno.Listener ]
     {
         if (options.secure)
         {
             const listener = Deno.listenTls(options as Deno.ListenTlsOptions);
-            this.nativeListeners.set(listener.rid, [options.secure, listener]);
-            return [options.secure, listener];
+            this.nativeListeners.set(listener.rid, [ options.secure, listener ]);
+            return [ options.secure, listener ];
         }
         else
         {
             const listener = Deno.listen(options as Deno.ListenOptions);
-            this.nativeListeners.set(listener.rid, [options.secure, listener]);
-            return [options.secure, listener];
+            this.nativeListeners.set(listener.rid, [ options.secure, listener ]);
+            return [ options.secure, listener ];
         }
     }
-    public listen(options?: Array<ListenOptions>): Array<[boolean, Deno.Listener]>
+    public listen(options?: Array<ListenOptions>): Array<[ boolean, Deno.Listener ]>
     {
         if (!options)
             return this.options.map(this.create);
@@ -90,10 +89,10 @@ class Listener
     {
         if (!this.nativeListeners.has(key))
             throw new Error("Listener not found");
-        const [_, nativeListener] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+        const [ _, nativeListener ] = this.nativeListeners.get(key) as [ boolean, Deno.Listener ];
         const iterable =
         {
-            async *[Symbol.asyncIterator]()
+            async *[ Symbol.asyncIterator ]()
             {
                 while (true)
                 {
@@ -112,14 +111,14 @@ class Listener
     {
         if (!this.nativeListeners.has(key))
             throw new Error("Listener not found");
-        const [secure, _] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+        const [ secure, _ ] = this.nativeListeners.get(key) as [ boolean, Deno.Listener ];
         return secure;
     }
     public listener(key: number): Deno.Listener
     {
         if (!this.nativeListeners.has(key))
             throw new Error("Listener not found");
-        const [_, native] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+        const [ _, native ] = this.nativeListeners.get(key) as [ boolean, Deno.Listener ];
         return native;
     }
     public keys(): Array<number>
@@ -130,13 +129,13 @@ class Listener
     {
         if (key && this.nativeListeners.has(key))
         {
-            const [_, listener] = this.nativeListeners.get(key) as [boolean, Deno.Listener];
+            const [ _, listener ] = this.nativeListeners.get(key) as [ boolean, Deno.Listener ];
             this.nativeListeners.delete(listener.rid);
             listener.close();
         }
         else
         {
-            for (const [_1, [_2, listener]] of this.nativeListeners)
+            for (const [ _1, [ _2, listener ] ] of this.nativeListeners)
                 listener.close();
             this.nativeListeners.clear();
         }
@@ -165,7 +164,7 @@ export interface ServerAttributes
 
     customSchema: string;
     schema: string;
-    resolvers: Resolvers;
+    resolvers: unknown;
     dgraph: boolean;
 }
 
@@ -215,7 +214,7 @@ export class Server
                 case "/graphql/custom":
                     throw new Error("Cannot reroute /graphql/custom URL");
                 default:
-                    this.routes.set(key, attributes.routes[key]);
+                    this.routes.set(key, attributes.routes[ key ]);
                     break;
             }
         }
@@ -241,7 +240,7 @@ export class Server
                 port: attributes.portTls as number,
                 certFile: path.join(attributes.cert ?? "", "fullchain.pem"),
                 keyFile: path.join(attributes.cert ?? "", "privkey.pem"),
-                alpnProtocols: ["http/1.1", "h2"],
+                alpnProtocols: [ "http/1.1", "h2" ],
                 transport: "tcp",
                 secure: true,
             };
@@ -445,7 +444,7 @@ export class Server
     }
     private async compress(): Promise<void>
     {
-        const ext = [".js", ".map", ".txt", ".css"];
+        const ext = [ ".js", ".map", ".txt", ".css" ];
         const folder = path.join(".", this.public, "**", "*");
         for await (const file of fs.expandGlob(folder))
         {
@@ -463,7 +462,7 @@ export class Server
         for await (const file of fs.expandGlob(folder))
         {
             const basename = path.basename(file.path);
-            const [name, id, _] = basename.split(".", 3);
+            const [ name, id, _ ] = basename.split(".", 3);
             if (name !== id)
                 this.scriptElements.push(<script src={`/scripts/webpack/${basename}`} defer></script>);
         }

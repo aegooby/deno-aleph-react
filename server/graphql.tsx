@@ -8,13 +8,12 @@ import * as playground from "graphql-playground";
 
 import { Console } from "./console.tsx";
 import type { Query } from "../components/Core/GraphQL/GraphQL.tsx";
-import type { Resolvers } from "./types.d.tsx";
 
 interface GraphQLAttributes
 {
     customSchema: string;
     schema: string;
-    resolvers: Resolvers;
+    resolvers: unknown;
     secure: boolean;
     dgraph: boolean;
 }
@@ -32,7 +31,7 @@ export class GraphQL
 {
     private customSchema: GraphQLCustomSchema = { schema: undefined, path: "" };
     private schema: string = "" as const;
-    private resolvers: Resolvers;
+    private resolvers: Apollo.GraphQLResolverMap;
     private customPlayground: async.Deferred<string> = async.deferred();
     private playground: async.Deferred<string> = async.deferred();
     private secure: boolean;
@@ -45,7 +44,7 @@ export class GraphQL
     {
         this.customSchema.path = attributes.customSchema;
         this.schema = attributes.schema;
-        this.resolvers = attributes.resolvers;
+        this.resolvers = attributes.resolvers as Apollo.GraphQLResolverMap;
         this.secure = attributes.secure;
         this.dgraph = attributes.dgraph;
 
@@ -218,7 +217,7 @@ export class GraphQL
             const jsonError =
             {
                 data: null,
-                errors: [{ message: error.message ?? error }],
+                errors: [ { message: error.message ?? error } ],
             };
             context.response.status = Oak.Status.OK;
             context.response.body = JSON.stringify(jsonError);
