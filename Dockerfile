@@ -6,16 +6,17 @@ EXPOSE 3080
 
 WORKDIR /root/httpsaurus
 ADD . /root/httpsaurus
-RUN build/linux upgrade
+RUN cli/install.sh
+RUN deno-cli upgrade
 
 FROM httpsaurus AS localhost
 
-CMD [ "build/linux", "docker", "--target", "localhost", "--domain", "localhost" ]
+CMD [ "deno-cli", "docker", "--target", "localhost", "--domain", "localhost" ]
 
 FROM httpsaurus AS dev
 
-CMD [ "build/linux", "docker", "--target", "dev", "--domain", "dev.example.com" ]
+CMD [ "deno-cli", "docker", "--target", "dev", "--domain", "dev.example.com" ]
 
 FROM httpsaurus AS live
 
-CMD [ "build/linux", "docker", "--target", "live", "--domain", "example.com" ]
+CMD [ "deno-cli", "docker", "--target", "live", "--domain", "example.com" ]
